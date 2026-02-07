@@ -25,6 +25,7 @@ export function Sidebar() {
     { name: 'Contacts', icon: '📇', href: '/contacts' },
     { name: 'Leads CRM', icon: '👥', href: '/leads' },
     { name: 'Projects', icon: '📁', href: '/projects' },
+    { name: 'Workflows', icon: '🔄', href: '/workflows' },
     { name: 'Content', icon: '📅', href: '/content' },
     { name: 'Settings', icon: '⚙️', href: '/settings' },
   ];

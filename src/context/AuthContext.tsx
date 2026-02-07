@@ -1,14 +1,13 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { auth } from '@/lib/firebase';
-import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  User
-} from 'firebase/auth';
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -24,53 +23,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Check session on mount
   useEffect(() => {
-    if (!auth) {
-      setLoading(false);
-      return;
-    }
-
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        // Get ID token and create session
-        const idToken = await firebaseUser.getIdToken();
-        await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idToken }),
-        });
-      }
-      setUser(firebaseUser);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    checkSession();
   }, []);
 
+  const checkSession = async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.user) {
+          setUser(data.user);
+        }
+      }
+    } catch (err) {
+      console.error('Session check failed:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const login = async (email: string, password: string) => {
-    if (!auth) throw new Error('Firebase not configured');
-    await signInWithEmailAndPassword(auth, email, password);
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    
+    const data = await res.json();
+    
+    if (!res.ok) {
+      throw new Error(data.error || 'Login failed');
+    }
+    
+    setUser(data.user);
   };
 
   const register = async (email: string, password: string, name?: string) => {
-    if (!auth) throw new Error('Firebase not configured');
-    // First register via API to create Firestore record
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, name }),
     });
+    
+    const data = await res.json();
+    
     if (!res.ok) {
-      const data = await res.json();
       throw new Error(data.error || 'Registration failed');
     }
-    // Then sign in
-    await signInWithEmailAndPassword(auth, email, password);
+    
+    // Auto-login after registration
+    await login(email, password);
   };
 
   const logout = async () => {
-    if (auth) await signOut(auth);
     await fetch('/api/auth/logout', { method: 'POST' });
+    setUser(null);
   };
 
   return (

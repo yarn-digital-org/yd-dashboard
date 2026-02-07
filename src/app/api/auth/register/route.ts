@@ -1,40 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { adminDb } from '@/lib/firebase-admin';
+import { validate, registerSchema } from '@/lib/validation';
 import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, name } = await request.json();
+    const body = await request.json();
 
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password required' }, { status: 400 });
+    // Validate input
+    const validation = validate(registerSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    if (!adminAuth || !adminDb) {
-      return NextResponse.json({ error: 'Firebase not configured' }, { status: 500 });
+    const { email, password, name } = validation.data;
+
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
-    // Create user in Firebase Auth
-    const userRecord = await adminAuth.createUser({
-      email,
-      password,
-      displayName: name || email.split('@')[0],
-    });
+    // Check if user already exists
+    const existingUser = await adminDb.collection('users').where('email', '==', email).get();
+    if (!existingUser.empty) {
+      return NextResponse.json({ error: 'An account with this email already exists' }, { status: 400 });
+    }
 
-    // Store additional user data in Firestore
-    await adminDb.collection('users').doc(userRecord.uid).set({
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Create user
+    const userId = uuidv4();
+    const now = new Date().toISOString();
+    
+    const userData = {
+      id: userId,
       email,
       name: name || email.split('@')[0],
-      createdAt: new Date().toISOString(),
+      password: hashedPassword,
       role: 'user',
-    });
+      emailVerified: false,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await adminDb.collection('users').doc(userId).set(userData);
 
     return NextResponse.json({ 
       success: true, 
-      user: { uid: userRecord.uid, email: userRecord.email } 
+      message: 'Account created successfully. You can now log in.'
     });
   } catch (error: any) {
     console.error('Registration error:', error);
-    return NextResponse.json({ error: error.message || 'Registration failed' }, { status: 400 });
+    return NextResponse.json({ error: 'Registration failed. Please try again.' }, { status: 500 });
   }
 }

@@ -42,70 +42,88 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-16">
-      <div className="bg-white p-8 rounded-xl shadow-md">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">Create Account</h1>
-        
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF', padding: '1rem' }}>
+      <div style={{ width: '100%', maxWidth: '400px' }}>
+        {/* Logo/Brand */}
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: '#0A0A0A', letterSpacing: '-0.02em' }}>
+            YARN<span style={{ color: '#FF3300' }}>.</span> Dashboard
+          </h1>
+          <p style={{ color: '#7A7A7A', marginTop: '0.5rem' }}>Create your account</p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-gray-700 mb-2">Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 mb-2">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 mb-2">Confirm Password</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition disabled:opacity-50"
-          >
-            {loading ? 'Creating Account...' : 'Register'}
-          </button>
-        </form>
+        <div style={{ backgroundColor: '#F5F5F5', padding: '2rem', borderRadius: '1rem', border: '1px solid #E0E0E0' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0A0A0A', marginBottom: '1.5rem', textAlign: 'center' }}>Get Started</h2>
+          
+          {error && (
+            <div style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', padding: '0.75rem 1rem', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.875rem' }}>
+              {error}
+            </div>
+          )}
 
-        <p className="mt-4 text-center text-gray-600">
-          Already have an account?{' '}
-          <Link href="/login" className="text-blue-600 hover:underline">
-            Login
-          </Link>
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', color: '#0A0A0A', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your name"
+                style={{ width: '100%', padding: '0.75rem 1rem', border: '1px solid #E0E0E0', borderRadius: '0.5rem', backgroundColor: '#FFFFFF', color: '#0A0A0A', fontSize: '1rem', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', color: '#0A0A0A', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                style={{ width: '100%', padding: '0.75rem 1rem', border: '1px solid #E0E0E0', borderRadius: '0.5rem', backgroundColor: '#FFFFFF', color: '#0A0A0A', fontSize: '1rem', boxSizing: 'border-box' }}
+                required
+              />
+            </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', color: '#0A0A0A', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                style={{ width: '100%', padding: '0.75rem 1rem', border: '1px solid #E0E0E0', borderRadius: '0.5rem', backgroundColor: '#FFFFFF', color: '#0A0A0A', fontSize: '1rem', boxSizing: 'border-box' }}
+                required
+              />
+            </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', color: '#0A0A0A', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>Confirm Password</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                style={{ width: '100%', padding: '0.75rem 1rem', border: '1px solid #E0E0E0', borderRadius: '0.5rem', backgroundColor: '#FFFFFF', color: '#0A0A0A', fontSize: '1rem', boxSizing: 'border-box' }}
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{ width: '100%', backgroundColor: '#FF3300', color: '#FFFFFF', padding: '0.75rem 1rem', borderRadius: '0.5rem', fontWeight: 500, fontSize: '1rem', border: 'none', cursor: 'pointer', marginTop: '0.5rem', opacity: loading ? 0.5 : 1 }}
+            >
+              {loading ? 'Creating Account...' : 'Create Account'}
+            </button>
+          </form>
+
+          <p style={{ marginTop: '1.5rem', textAlign: 'center', color: '#7A7A7A', fontSize: '0.875rem' }}>
+            Already have an account?{' '}
+            <Link href="/login" style={{ color: '#FF3300', fontWeight: 500, textDecoration: 'none' }}>
+              Sign in
+            </Link>
+          </p>
+        </div>
+
+        <p style={{ textAlign: 'center', color: '#7A7A7A', fontSize: '0.75rem', marginTop: '1.5rem' }}>
+          © 2026 Yarn Digital. All rights reserved.
         </p>
       </div>
     </div>

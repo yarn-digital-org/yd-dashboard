@@ -1,52 +1,87 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, adminDb } from '@/lib/firebase-admin';
+import { adminDb } from '@/lib/firebase-admin';
+import { getJwtSecret } from '@/lib/auth';
+import { validate, loginSchema } from '@/lib/validation';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'yd-dashboard-secret-key-change-in-production';
+import { cookies } from 'next/headers';
 
 export async function POST(request: NextRequest) {
   try {
-    const { idToken } = await request.json();
+    const body = await request.json();
 
-    if (!idToken) {
-      return NextResponse.json({ error: 'ID token required' }, { status: 400 });
+    // Validate input
+    const validation = validate(loginSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    if (!adminAuth) {
-      return NextResponse.json({ error: 'Firebase not configured' }, { status: 500 });
+    const { email, password } = validation.data;
+
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
-    // Verify the Firebase ID token
-    const decodedToken = await adminAuth.verifyIdToken(idToken);
-    const uid = decodedToken.uid;
+    // Get JWT secret (throws if not configured)
+    let jwtSecret: string;
+    try {
+      jwtSecret = getJwtSecret();
+    } catch (error) {
+      console.error('JWT_SECRET not configured');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
 
-    // Get user data from Firestore
-    const userDoc = await adminDb?.collection('users').doc(uid).get();
-    const userData = userDoc?.exists ? userDoc.data() : {};
+    // Find user by email
+    const userQuery = await adminDb.collection('users').where('email', '==', email).get();
+    
+    if (userQuery.empty) {
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+    }
 
-    // Create session token
-    const sessionToken = jwt.sign(
-      { uid, email: decodedToken.email, ...userData },
-      JWT_SECRET,
+    const userDoc = userQuery.docs[0];
+    const userData = userDoc.data();
+
+    // Verify password
+    const isValid = await bcrypt.compare(password, userData.password);
+    if (!isValid) {
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+    }
+
+    // Create JWT token
+    const token = jwt.sign(
+      { 
+        userId: userData.id,
+        email: userData.email,
+        role: userData.role 
+      },
+      jwtSecret,
       { expiresIn: '7d' }
     );
 
-    const response = NextResponse.json({ 
-      success: true, 
-      user: { uid, email: decodedToken.email, ...userData } 
-    });
-
-    // Set HTTP-only cookie
-    response.cookies.set('session', sessionToken, {
+    // Set cookie
+    const cookieStore = await cookies();
+    cookieStore.set('auth_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
     });
 
-    return response;
+    // Update last login
+    await adminDb.collection('users').doc(userDoc.id).update({
+      lastLoginAt: new Date().toISOString(),
+    });
+
+    // Return user (without password)
+    const { password: _, passwordResetToken: __, passwordResetExpires: ___, ...userWithoutSensitive } = userData;
+
+    return NextResponse.json({ 
+      success: true, 
+      user: userWithoutSensitive
+    });
   } catch (error: any) {
     console.error('Login error:', error);
-    return NextResponse.json({ error: error.message || 'Login failed' }, { status: 401 });
+    return NextResponse.json({ error: 'Login failed. Please try again.' }, { status: 500 });
   }
 }

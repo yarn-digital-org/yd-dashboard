@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { Sidebar } from '@/components/Sidebar';
 
 interface ContentItem {
   id: string;
@@ -54,18 +55,8 @@ export default function ContentPage() {
     try {
       const url = editingItem ? `/api/content/${editingItem.id}` : '/api/content';
       const method = editingItem ? 'PUT' : 'POST';
-      
-      const payload = {
-        ...formData,
-        hashtags: formData.hashtags.split(',').map(h => h.trim()).filter(Boolean),
-      };
-      
-      await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      
+      const payload = { ...formData, hashtags: formData.hashtags.split(',').map(h => h.trim()).filter(Boolean) };
+      await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       setShowModal(false);
       setEditingItem(null);
       setFormData({ title: '', content: '', platform: 'twitter', scheduledAt: '', hashtags: '', status: 'scheduled' });
@@ -83,122 +74,97 @@ export default function ContentPage() {
 
   const openEdit = (item: ContentItem) => {
     setEditingItem(item);
-    setFormData({
-      title: item.title,
-      content: item.content,
-      platform: item.platform,
-      scheduledAt: item.scheduledAt,
-      hashtags: item.hashtags?.join(', ') || '',
-      status: item.status,
-    });
+    setFormData({ title: item.title, content: item.content, platform: item.platform, scheduledAt: item.scheduledAt, hashtags: item.hashtags?.join(', ') || '', status: item.status });
     setShowModal(true);
   };
 
-  const platformIcon = (platform: string) => {
-    const icons: Record<string, string> = {
-      twitter: '𝕏',
-      linkedin: '🔗',
-      instagram: '📷',
-      facebook: '📘',
-      tiktok: '🎵',
-    };
-    return icons[platform] || '📱';
-  };
-
-  const statusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      scheduled: 'bg-blue-100 text-blue-800',
-      published: 'bg-green-100 text-green-800',
-      draft: 'bg-gray-100 text-gray-800',
-      failed: 'bg-red-100 text-red-800',
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
-  };
+  const platformIcons: Record<string, string> = { twitter: '𝕏', linkedin: '🔗', instagram: '📷', facebook: '📘', tiktok: '🎵' };
+  const statusColors: Record<string, string> = { scheduled: '#3B82F6', published: '#10B981', draft: '#7A7A7A', failed: '#EF4444' };
 
   const formatDate = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleString();
-    } catch {
-      return dateStr;
-    }
+    try { return new Date(dateStr).toLocaleString(); } catch { return dateStr; }
   };
 
   if (authLoading || loading) {
-    return <div className="text-center py-8">Loading...</div>;
+    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>;
   }
 
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">📅 Content Scheduler</h1>
-        <button
-          onClick={() => { setEditingItem(null); setFormData({ title: '', content: '', platform: 'twitter', scheduledAt: '', hashtags: '', status: 'scheduled' }); setShowModal(true); }}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition"
-        >
-          + Schedule Post
-        </button>
-      </div>
+  const inputStyle: React.CSSProperties = { width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #E0E0E0', borderRadius: '0.5rem', fontSize: '0.875rem', boxSizing: 'border-box', marginBottom: '0.75rem' };
 
-      <div className="grid gap-4">
-        {content.length === 0 ? (
-          <div className="bg-white rounded-xl p-8 text-center text-gray-500 shadow-md">
-            No scheduled content yet. Create your first post!
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#FFFFFF' }}>
+      <Sidebar />
+      <main style={{ flex: 1, padding: '1.5rem' }}>
+        <div style={{ borderBottom: '1px solid #E0E0E0', paddingBottom: '1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0A0A0A', margin: 0 }}>Content Scheduler</h1>
+            <p style={{ color: '#7A7A7A', margin: '0.25rem 0 0' }}>{content.length} scheduled posts</p>
           </div>
-        ) : content.map((item) => (
-          <div key={item.id} className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition">
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-2xl">{platformIcon(item.platform)}</span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor(item.status)}`}>
-                    {item.status}
-                  </span>
-                  <span className="text-gray-500 text-sm">{formatDate(item.scheduledAt)}</span>
-                </div>
-                {item.title && <h3 className="font-semibold text-lg mb-1">{item.title}</h3>}
-                <p className="text-gray-700 whitespace-pre-wrap">{item.content}</p>
-                {item.hashtags?.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {item.hashtags.map((tag, i) => (
-                      <span key={i} className="text-blue-600 text-sm">#{tag}</span>
-                    ))}
+          <button onClick={() => { setEditingItem(null); setFormData({ title: '', content: '', platform: 'twitter', scheduledAt: '', hashtags: '', status: 'scheduled' }); setShowModal(true); }} style={{ backgroundColor: '#FF3300', color: '#FFFFFF', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer' }}>
+            + Schedule Post
+          </button>
+        </div>
+
+        <div style={{ display: 'grid', gap: '1rem' }}>
+          {content.length === 0 ? (
+            <div style={{ backgroundColor: '#F5F5F5', borderRadius: '0.75rem', padding: '2rem', textAlign: 'center', color: '#7A7A7A', border: '1px solid #E0E0E0' }}>
+              No scheduled content yet. Create your first post!
+            </div>
+          ) : content.map((item) => (
+            <div key={item.id} style={{ backgroundColor: '#F5F5F5', borderRadius: '0.75rem', padding: '1.5rem', border: '1px solid #E0E0E0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '1.5rem' }}>{platformIcons[item.platform] || '📱'}</span>
+                    <span style={{ backgroundColor: statusColors[item.status] + '20', color: statusColors[item.status], padding: '0.25rem 0.5rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500 }}>{item.status}</span>
+                    <span style={{ color: '#7A7A7A', fontSize: '0.875rem' }}>{formatDate(item.scheduledAt)}</span>
                   </div>
-                )}
-              </div>
-              <div className="flex gap-2 ml-4">
-                <button onClick={() => openEdit(item)} className="text-blue-600 hover:underline">Edit</button>
-                <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:underline">Delete</button>
+                  {item.title && <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#0A0A0A', margin: '0 0 0.25rem' }}>{item.title}</h3>}
+                  <p style={{ color: '#0A0A0A', margin: 0, whiteSpace: 'pre-wrap' }}>{item.content}</p>
+                  {item.hashtags?.length > 0 && (
+                    <div style={{ marginTop: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                      {item.hashtags.map((tag, i) => <span key={i} style={{ color: '#FF3300', fontSize: '0.875rem' }}>#{tag}</span>)}
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '1rem' }}>
+                  <button onClick={() => openEdit(item)} style={{ color: '#FF3300', background: 'none', border: 'none', cursor: 'pointer' }}>Edit</button>
+                  <button onClick={() => handleDelete(item.id)} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>Delete</button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-lg">
-            <h2 className="text-xl font-bold mb-4">{editingItem ? 'Edit Post' : 'Schedule Post'}</h2>
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <input type="text" placeholder="Title (optional)" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="w-full px-3 py-2 border rounded-lg" />
-              <textarea placeholder="Content *" value={formData.content} onChange={(e) => setFormData({...formData, content: e.target.value})} className="w-full px-3 py-2 border rounded-lg" rows={4} required />
-              <div className="grid grid-cols-2 gap-3">
-                <select value={formData.platform} onChange={(e) => setFormData({...formData, platform: e.target.value})} className="w-full px-3 py-2 border rounded-lg">
-                  {PLATFORMS.map(p => <option key={p} value={p}>{platformIcon(p)} {p}</option>)}
-                </select>
-                <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} className="w-full px-3 py-2 border rounded-lg">
-                  {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-              <input type="datetime-local" value={formData.scheduledAt} onChange={(e) => setFormData({...formData, scheduledAt: e.target.value})} className="w-full px-3 py-2 border rounded-lg" required />
-              <input type="text" placeholder="Hashtags (comma separated)" value={formData.hashtags} onChange={(e) => setFormData({...formData, hashtags: e.target.value})} className="w-full px-3 py-2 border rounded-lg" />
-              <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border rounded-lg hover:bg-gray-100">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Save</button>
-              </div>
-            </form>
-          </div>
+          ))}
         </div>
-      )}
+
+        {showModal && (
+          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '0.75rem', padding: '1.5rem', width: '100%', maxWidth: '500px', border: '1px solid #E0E0E0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0A0A0A', margin: 0 }}>{editingItem ? 'Edit Post' : 'Schedule Post'}</h2>
+                <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#7A7A7A' }}>×</button>
+              </div>
+              <form onSubmit={handleSubmit}>
+                <input type="text" placeholder="Title (optional)" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} style={inputStyle} />
+                <textarea placeholder="Content *" value={formData.content} onChange={(e) => setFormData({...formData, content: e.target.value})} style={{...inputStyle, minHeight: '100px', resize: 'vertical'}} required />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <select value={formData.platform} onChange={(e) => setFormData({...formData, platform: e.target.value})} style={inputStyle}>
+                    {PLATFORMS.map(p => <option key={p} value={p}>{platformIcons[p]} {p}</option>)}
+                  </select>
+                  <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} style={inputStyle}>
+                    {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <input type="datetime-local" value={formData.scheduledAt} onChange={(e) => setFormData({...formData, scheduledAt: e.target.value})} style={inputStyle} required />
+                <input type="text" placeholder="Hashtags (comma separated)" value={formData.hashtags} onChange={(e) => setFormData({...formData, hashtags: e.target.value})} style={inputStyle} />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  <button type="button" onClick={() => setShowModal(false)} style={{ padding: '0.5rem 1rem', border: '1px solid #E0E0E0', borderRadius: '0.5rem', backgroundColor: '#FFFFFF', cursor: 'pointer' }}>Cancel</button>
+                  <button type="submit" style={{ padding: '0.5rem 1rem', backgroundColor: '#FF3300', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>Save</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

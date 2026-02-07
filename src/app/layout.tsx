@@ -1,21 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
-import Navbar from "@/components/Navbar";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "YD Dashboard",
+  title: "Yarn Digital - Dashboard",
   description: "Yarn Digital Dashboard - CRM & Content Management",
 };
 
@@ -26,12 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-100 min-h-screen`}>
+      <body className={inter.className} style={{ margin: 0, padding: 0, minHeight: '100vh' }}>
         <AuthProvider>
-          <Navbar />
-          <main className="max-w-7xl mx-auto px-4 py-8">
-            {children}
-          </main>
+          {children}
         </AuthProvider>
       </body>
     </html>

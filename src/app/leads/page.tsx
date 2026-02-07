@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { Sidebar } from '@/components/Sidebar';
 
 interface Lead {
   id: string;
@@ -55,13 +56,7 @@ export default function LeadsPage() {
     try {
       const url = editingLead ? `/api/leads/${editingLead.id}` : '/api/leads';
       const method = editingLead ? 'PUT' : 'POST';
-      
-      await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      
+      await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
       setShowModal(false);
       setEditingLead(null);
       setFormData({ name: '', email: '', company: '', phone: '', status: 'new', source: 'direct', notes: '' });
@@ -79,106 +74,94 @@ export default function LeadsPage() {
 
   const openEdit = (lead: Lead) => {
     setEditingLead(lead);
-    setFormData({
-      name: lead.name,
-      email: lead.email,
-      company: lead.company,
-      phone: lead.phone,
-      status: lead.status,
-      source: lead.source,
-      notes: lead.notes,
-    });
+    setFormData({ name: lead.name, email: lead.email, company: lead.company, phone: lead.phone, status: lead.status, source: lead.source, notes: lead.notes });
     setShowModal(true);
   };
 
-  const statusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      new: 'bg-blue-100 text-blue-800',
-      contacted: 'bg-yellow-100 text-yellow-800',
-      qualified: 'bg-purple-100 text-purple-800',
-      proposal: 'bg-orange-100 text-orange-800',
-      won: 'bg-green-100 text-green-800',
-      lost: 'bg-red-100 text-red-800',
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+  const statusColors: Record<string, string> = {
+    new: '#3B82F6', contacted: '#F59E0B', qualified: '#8B5CF6', proposal: '#F97316', won: '#10B981', lost: '#EF4444'
   };
 
   if (authLoading || loading) {
-    return <div className="text-center py-8">Loading...</div>;
+    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>;
   }
 
+  const inputStyle: React.CSSProperties = { width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #E0E0E0', borderRadius: '0.5rem', fontSize: '0.875rem', boxSizing: 'border-box', marginBottom: '0.75rem' };
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">📋 Leads CRM</h1>
-        <button
-          onClick={() => { setEditingLead(null); setFormData({ name: '', email: '', company: '', phone: '', status: 'new', source: 'direct', notes: '' }); setShowModal(true); }}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
-        >
-          + Add Lead
-        </button>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {leads.length === 0 ? (
-              <tr><td colSpan={6} className="px-6 py-8 text-center text-gray-500">No leads yet. Add your first lead!</td></tr>
-            ) : leads.map((lead) => (
-              <tr key={lead.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 font-medium">{lead.name}</td>
-                <td className="px-6 py-4 text-gray-600">{lead.email}</td>
-                <td className="px-6 py-4 text-gray-600">{lead.company}</td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor(lead.status)}`}>
-                    {lead.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-gray-600">{lead.source}</td>
-                <td className="px-6 py-4 space-x-2">
-                  <button onClick={() => openEdit(lead)} className="text-blue-600 hover:underline">Edit</button>
-                  <button onClick={() => handleDelete(lead.id)} className="text-red-600 hover:underline">Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">{editingLead ? 'Edit Lead' : 'Add Lead'}</h2>
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <input type="text" placeholder="Name *" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full px-3 py-2 border rounded-lg" required />
-              <input type="email" placeholder="Email *" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full px-3 py-2 border rounded-lg" required />
-              <input type="text" placeholder="Company" value={formData.company} onChange={(e) => setFormData({...formData, company: e.target.value})} className="w-full px-3 py-2 border rounded-lg" />
-              <input type="text" placeholder="Phone" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full px-3 py-2 border rounded-lg" />
-              <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} className="w-full px-3 py-2 border rounded-lg">
-                {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-              <select value={formData.source} onChange={(e) => setFormData({...formData, source: e.target.value})} className="w-full px-3 py-2 border rounded-lg">
-                {SOURCE_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-              <textarea placeholder="Notes" value={formData.notes} onChange={(e) => setFormData({...formData, notes: e.target.value})} className="w-full px-3 py-2 border rounded-lg" rows={3} />
-              <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 border rounded-lg hover:bg-gray-100">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save</button>
-              </div>
-            </form>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#FFFFFF' }}>
+      <Sidebar />
+      <main style={{ flex: 1, padding: '1.5rem' }}>
+        <div style={{ borderBottom: '1px solid #E0E0E0', paddingBottom: '1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0A0A0A', margin: 0 }}>Leads CRM</h1>
+            <p style={{ color: '#7A7A7A', margin: '0.25rem 0 0' }}>{leads.length} total leads</p>
           </div>
+          <button onClick={() => { setEditingLead(null); setFormData({ name: '', email: '', company: '', phone: '', status: 'new', source: 'direct', notes: '' }); setShowModal(true); }} style={{ backgroundColor: '#FF3300', color: '#FFFFFF', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            + Add Lead
+          </button>
         </div>
-      )}
+
+        <div style={{ backgroundColor: '#F5F5F5', borderRadius: '0.75rem', border: '1px solid #E0E0E0', overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#EFEFEF' }}>
+                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#7A7A7A', textTransform: 'uppercase' }}>Name</th>
+                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#7A7A7A', textTransform: 'uppercase' }}>Email</th>
+                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#7A7A7A', textTransform: 'uppercase' }}>Company</th>
+                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#7A7A7A', textTransform: 'uppercase' }}>Status</th>
+                <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#7A7A7A', textTransform: 'uppercase' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leads.length === 0 ? (
+                <tr><td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: '#7A7A7A' }}>No leads yet. Add your first lead!</td></tr>
+              ) : leads.map((lead) => (
+                <tr key={lead.id} style={{ borderTop: '1px solid #E0E0E0' }}>
+                  <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#0A0A0A' }}>{lead.name}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#7A7A7A' }}>{lead.email}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#7A7A7A' }}>{lead.company}</td>
+                  <td style={{ padding: '0.75rem 1rem' }}>
+                    <span style={{ backgroundColor: statusColors[lead.status] + '20', color: statusColors[lead.status], padding: '0.25rem 0.5rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500 }}>{lead.status}</span>
+                  </td>
+                  <td style={{ padding: '0.75rem 1rem' }}>
+                    <button onClick={() => openEdit(lead)} style={{ color: '#FF3300', background: 'none', border: 'none', cursor: 'pointer', marginRight: '0.5rem' }}>Edit</button>
+                    <button onClick={() => handleDelete(lead.id)} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {showModal && (
+          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '0.75rem', padding: '1.5rem', width: '100%', maxWidth: '400px', border: '1px solid #E0E0E0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0A0A0A', margin: 0 }}>{editingLead ? 'Edit Lead' : 'Add Lead'}</h2>
+                <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#7A7A7A' }}>×</button>
+              </div>
+              <form onSubmit={handleSubmit}>
+                <input type="text" placeholder="Name *" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} style={inputStyle} required />
+                <input type="email" placeholder="Email *" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} style={inputStyle} required />
+                <input type="text" placeholder="Company" value={formData.company} onChange={(e) => setFormData({...formData, company: e.target.value})} style={inputStyle} />
+                <input type="text" placeholder="Phone" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} style={inputStyle} />
+                <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} style={inputStyle}>
+                  {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <select value={formData.source} onChange={(e) => setFormData({...formData, source: e.target.value})} style={inputStyle}>
+                  {SOURCE_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <textarea placeholder="Notes" value={formData.notes} onChange={(e) => setFormData({...formData, notes: e.target.value})} style={{...inputStyle, minHeight: '80px', resize: 'vertical'}} />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  <button type="button" onClick={() => setShowModal(false)} style={{ padding: '0.5rem 1rem', border: '1px solid #E0E0E0', borderRadius: '0.5rem', backgroundColor: '#FFFFFF', cursor: 'pointer' }}>Cancel</button>
+                  <button type="submit" style={{ padding: '0.5rem 1rem', backgroundColor: '#FF3300', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>Save</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

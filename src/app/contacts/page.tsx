@@ -19,8 +19,14 @@ import {
   Trash2,
   Eye,
   X,
-  User
+  User,
+  Upload,
+  Download,
+  Users,
+  Loader2
 } from 'lucide-react';
+import CSVImportWizard from '@/components/CSVImportWizard';
+import DuplicateDetector from '@/components/DuplicateDetector';
 
 interface Contact {
   id: string;
@@ -64,6 +70,9 @@ export default function ContactsPage() {
   const [tagFilter, setTagFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [showImportWizard, setShowImportWizard] = useState(false);
+  const [showDuplicateDetector, setShowDuplicateDetector] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -159,6 +168,38 @@ export default function ContactsPage() {
     }
   };
 
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (typeFilter && typeFilter !== 'all') params.set('type', typeFilter);
+      if (tagFilter) params.set('tag', tagFilter);
+      
+      const res = await fetch(`/api/contacts/export?${params.toString()}`);
+      
+      if (!res.ok) {
+        const error = await res.json();
+        alert(error.error || 'Failed to export contacts');
+        return;
+      }
+      
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `contacts-export-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to export contacts:', err);
+      alert('Failed to export contacts');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const openEdit = (contact: Contact) => {
     setEditingContact(contact);
     setFormData({
@@ -235,17 +276,51 @@ export default function ContactsPage() {
               {contacts.length} {contacts.length === 1 ? 'contact' : 'contacts'}
             </p>
           </div>
-          <button
-            onClick={() => {
-              setEditingContact(null);
-              resetForm();
-              setShowModal(true);
-            }}
-            className="flex items-center gap-2 bg-[#FF3300] hover:bg-[#E62E00] text-white px-4 py-2 rounded-lg font-medium transition"
-          >
-            <UserPlus size={18} />
-            Add Contact
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Duplicate Detection */}
+            <button
+              onClick={() => setShowDuplicateDetector(true)}
+              className="flex items-center gap-2 px-3 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg font-medium transition"
+              title="Find Duplicates"
+            >
+              <Users size={18} />
+              <span className="hidden sm:inline">Duplicates</span>
+            </button>
+            
+            {/* Export */}
+            <button
+              onClick={handleExport}
+              disabled={exporting || contacts.length === 0}
+              className="flex items-center gap-2 px-3 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Export CSV"
+            >
+              {exporting ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
+              <span className="hidden sm:inline">Export</span>
+            </button>
+            
+            {/* Import */}
+            <button
+              onClick={() => setShowImportWizard(true)}
+              className="flex items-center gap-2 px-3 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg font-medium transition"
+              title="Import CSV"
+            >
+              <Upload size={18} />
+              <span className="hidden sm:inline">Import</span>
+            </button>
+            
+            {/* Add Contact */}
+            <button
+              onClick={() => {
+                setEditingContact(null);
+                resetForm();
+                setShowModal(true);
+              }}
+              className="flex items-center gap-2 bg-[#FF3300] hover:bg-[#E62E00] text-white px-4 py-2 rounded-lg font-medium transition"
+            >
+              <UserPlus size={18} />
+              Add Contact
+            </button>
+          </div>
         </div>
 
         {/* Search and Filters */}
@@ -635,6 +710,26 @@ export default function ContactsPage() {
               </form>
             </div>
           </div>
+        )}
+
+        {/* CSV Import Wizard */}
+        {showImportWizard && (
+          <CSVImportWizard
+            onClose={() => setShowImportWizard(false)}
+            onComplete={() => {
+              fetchContacts();
+            }}
+          />
+        )}
+
+        {/* Duplicate Detector */}
+        {showDuplicateDetector && (
+          <DuplicateDetector
+            onClose={() => setShowDuplicateDetector(false)}
+            onMergeComplete={() => {
+              fetchContacts();
+            }}
+          />
         )}
       </main>
     </div>

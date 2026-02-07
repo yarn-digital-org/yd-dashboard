@@ -24,6 +24,7 @@ export function Sidebar() {
     { name: 'Dashboard', icon: '🏠', href: '/dashboard' },
     { name: 'Contacts', icon: '📇', href: '/contacts' },
     { name: 'Leads CRM', icon: '👥', href: '/leads' },
+    { name: 'Projects', icon: '📁', href: '/projects' },
     { name: 'Content', icon: '📅', href: '/content' },
     { name: 'Settings', icon: '⚙️', href: '/settings' },
   ];

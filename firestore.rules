@@ -1,0 +1,388 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================
+    // Helper Functions
+    // ============================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if the user owns the document (userId field matches)
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Check if user is accessing their own data
+    function isOwnData() {
+      return isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    // Check if creating data with own userId
+    function isCreatingOwnData() {
+      return isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Validate timestamp fields
+    function hasValidTimestamps() {
+      return request.resource.data.createdAt is string 
+             || request.resource.data.createdAt is timestamp;
+    }
+    
+    // ============================================
+    // Users Collection
+    // ============================================
+    
+    match /users/{userId} {
+      // Users can only read/write their own user document
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false; // Users cannot delete their own account directly
+    }
+    
+    // ============================================
+    // Contacts Collection
+    // ============================================
+    
+    match /contacts/{contactId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    // ============================================
+    // Tags Collection
+    // ============================================
+    
+    match /tags/{tagId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    // ============================================
+    // Custom Field Definitions
+    // ============================================
+    
+    match /customFieldDefinitions/{fieldId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    // ============================================
+    // Leads Collection
+    // ============================================
+    
+    match /leads/{leadId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    // ============================================
+    // Lead Forms Collection
+    // ============================================
+    
+    match /leadForms/{formId} {
+      // Owner can CRUD
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    // Public lead form access (by slug) - handled by API
+    
+    // ============================================
+    // Proposals Collection
+    // ============================================
+    
+    match /proposals/{proposalId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    // ============================================
+    // Projects Collection
+    // ============================================
+    
+    match /projects/{projectId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    match /projectFiles/{fileId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    match /projectNotes/{noteId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    // ============================================
+    // Messages Collection
+    // ============================================
+    
+    match /conversations/{conversationId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    match /messages/{messageId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    match /messageTemplates/{templateId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    match /chatWidgetSettings/{settingsId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if false;
+    }
+    
+    // ============================================
+    // Calendar Collection
+    // ============================================
+    
+    match /calendarEvents/{eventId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    match /availabilitySettings/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false;
+    }
+    
+    match /appointmentTypes/{typeId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    match /bookings/{bookingId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    match /googleCalendarTokens/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
+    }
+    
+    // ============================================
+    // Forms Collection
+    // ============================================
+    
+    match /forms/{formId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    match /formSubmissions/{submissionId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    // ============================================
+    // Invoices Collection
+    // ============================================
+    
+    match /invoices/{invoiceId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    match /payments/{paymentId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if false; // Payments cannot be deleted
+    }
+    
+    match /taxRates/{rateId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    match /stripeAccounts/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false;
+    }
+    
+    // ============================================
+    // Contracts Collection
+    // ============================================
+    
+    match /contractTemplates/{templateId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    match /contracts/{contractId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    // ============================================
+    // Portal Collections
+    // ============================================
+    
+    match /portalSettings/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false;
+    }
+    
+    match /portalSessions/{sessionId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    match /portalActivity/{activityId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if false;
+      allow delete: if false;
+    }
+    
+    // ============================================
+    // Workflows Collection
+    // ============================================
+    
+    match /workflowTemplates/{templateId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    match /taskLabels/{labelId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    // ============================================
+    // Automations Collection
+    // ============================================
+    
+    match /automations/{automationId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    match /automationRuns/{runId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if false;
+    }
+    
+    match /automationQueue/{queueId} {
+      allow read: if isOwnData();
+      allow create: if isCreatingOwnData();
+      allow update: if isOwnData();
+      allow delete: if isOwnData();
+    }
+    
+    // ============================================
+    // Settings Collections
+    // ============================================
+    
+    match /businessSettings/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false;
+    }
+    
+    match /brandingSettings/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false;
+    }
+    
+    match /notificationSettings/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false;
+    }
+    
+    match /integrations/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false;
+    }
+    
+    match /subscriptions/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false;
+    }
+  }
+}

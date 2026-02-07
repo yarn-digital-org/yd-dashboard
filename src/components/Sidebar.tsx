@@ -21,7 +21,7 @@ export function Sidebar() {
   };
 
   const navItems = [
-    { name: 'Dashboard', icon: '🏠', href: '/' },
+    { name: 'Dashboard', icon: '🏠', href: '/dashboard' },
     { name: 'Contacts', icon: '📇', href: '/contacts' },
     { name: 'Leads CRM', icon: '👥', href: '/leads' },
     { name: 'Content', icon: '📅', href: '/content' },

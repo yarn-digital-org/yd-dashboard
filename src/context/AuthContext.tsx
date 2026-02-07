@@ -25,6 +25,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         // Get ID token and create session
@@ -43,22 +48,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
+    if (!auth) throw new Error('Firebase not configured');
     await signInWithEmailAndPassword(auth, email, password);
   };
 
   const register = async (email: string, password: string, name?: string) => {
+    if (!auth) throw new Error('Firebase not configured');
     // First register via API to create Firestore record
-    await fetch('/api/auth/register', {
+    const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, name }),
     });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Registration failed');
+    }
     // Then sign in
     await signInWithEmailAndPassword(auth, email, password);
   };
 
   const logout = async () => {
-    await signOut(auth);
+    if (auth) await signOut(auth);
     await fetch('/api/auth/logout', { method: 'POST' });
   };
 

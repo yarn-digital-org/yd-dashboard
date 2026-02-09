@@ -2,8 +2,25 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import {
+  LayoutDashboard,
+  Users,
+  FolderKanban,
+  Contact,
+  FileText,
+  Receipt,
+  FileSignature,
+  MessageSquare,
+  Calendar,
+  Zap,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
+  FormInput
+} from 'lucide-react';
 
 export function Sidebar() {
   const [isExpanded, setIsExpanded] = useState(true);
@@ -21,20 +38,23 @@ export function Sidebar() {
   };
 
   const navItems = [
-    { name: 'Dashboard', icon: '🏠', href: '/dashboard' },
-    { name: 'Contacts', icon: '📇', href: '/contacts' },
-    { name: 'Leads CRM', icon: '👥', href: '/leads' },
-    { name: 'Projects', icon: '📁', href: '/projects' },
-    { name: 'Workflows', icon: '🔄', href: '/workflows' },
-    { name: 'Content', icon: '📅', href: '/content' },
-    { name: 'Settings', icon: '⚙️', href: '/settings' },
+    { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
+    { name: 'Leads', icon: Users, href: '/leads' },
+    { name: 'Projects', icon: FolderKanban, href: '/projects' },
+    { name: 'Contacts', icon: Contact, href: '/contacts' },
+    { name: 'Forms', icon: FormInput, href: '/forms' },
+    { name: 'Invoices', icon: Receipt, href: '/invoices' },
+    { name: 'Contracts', icon: FileSignature, href: '/contracts' },
+    { name: 'Messages', icon: MessageSquare, href: '/messages' },
+    { name: 'Calendar', icon: Calendar, href: '/calendar' },
+    { name: 'Automations', icon: Zap, href: '/automations' },
   ];
 
   const sidebarStyle: React.CSSProperties = {
-    width: isExpanded ? '220px' : '64px',
-    minWidth: isExpanded ? '220px' : '64px',
-    backgroundColor: '#F5F5F5',
-    borderRight: '1px solid #E0E0E0',
+    width: isExpanded ? '240px' : '72px',
+    minWidth: isExpanded ? '240px' : '72px',
+    backgroundColor: '#FFFFFF',
+    borderRight: '1px solid #E5E7EB',
     display: 'flex',
     flexDirection: 'column',
     transition: 'width 0.2s ease, min-width 0.2s ease',
@@ -44,102 +64,180 @@ export function Sidebar() {
   };
 
   const logoStyle: React.CSSProperties = {
-    padding: '1rem',
-    borderBottom: '1px solid #E0E0E0',
+    padding: '1.25rem 1rem',
+    borderBottom: '1px solid #E5E7EB',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
   };
 
   const navStyle: React.CSSProperties = {
     flex: 1,
-    padding: '1rem 0.5rem',
+    padding: '1rem 0.75rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    overflowY: 'auto',
   };
 
   const navItemStyle = (isActive: boolean): React.CSSProperties => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.75rem',
-    padding: '0.625rem 0.75rem',
+    padding: '0.75rem 1rem',
     borderRadius: '0.5rem',
-    marginBottom: '0.25rem',
     backgroundColor: isActive ? '#FF3300' : 'transparent',
-    color: isActive ? '#FFFFFF' : '#0A0A0A',
+    color: isActive ? '#FFFFFF' : '#374151',
     textDecoration: 'none',
-    fontWeight: 500,
+    fontWeight: isActive ? 600 : 500,
     fontSize: '0.875rem',
     cursor: 'pointer',
     border: 'none',
     width: '100%',
     textAlign: 'left',
+    transition: 'all 0.15s ease',
   });
 
   const bottomStyle: React.CSSProperties = {
-    padding: '1rem',
-    borderTop: '1px solid #E0E0E0',
+    padding: '0.75rem',
+    borderTop: '1px solid #E5E7EB',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+  };
+
+  const userStyle: React.CSSProperties = {
+    padding: '0.75rem 1rem',
+    borderTop: '1px solid #E5E7EB',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+  };
+
+  const avatarStyle: React.CSSProperties = {
+    width: '36px',
+    height: '36px',
+    borderRadius: '50%',
+    backgroundColor: '#FF3300',
+    color: '#FFFFFF',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: 600,
+    fontSize: '0.875rem',
+    flexShrink: 0,
   };
 
   return (
     <aside style={sidebarStyle}>
       {/* Logo */}
       <div style={logoStyle}>
-        <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          {isExpanded ? (
-            <span style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0A0A0A' }}>
-              YARN<span style={{ color: '#FF3300' }}>.</span> Dashboard
-            </span>
-          ) : (
-            <span style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0A0A0A' }}>
-              Y<span style={{ color: '#FF3300' }}>.</span>
-            </span>
-          )}
-        </Link>
+        <div style={{
+          width: '32px',
+          height: '32px',
+          backgroundColor: '#FF3300',
+          borderRadius: '0.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#FFFFFF',
+          fontWeight: 700,
+          fontSize: '1rem',
+        }}>
+          Y
+        </div>
+        {isExpanded && (
+          <span style={{ fontSize: '1.125rem', fontWeight: 700, color: '#111827' }}>
+            Yarn Digital
+          </span>
+        )}
       </div>
 
       {/* Navigation */}
       <nav style={navStyle}>
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          const Icon = item.icon;
           return (
             <Link key={item.href} href={item.href} style={navItemStyle(isActive)}>
-              <span>{item.icon}</span>
+              <Icon size={20} />
               {isExpanded && <span>{item.name}</span>}
             </Link>
           );
         })}
       </nav>
 
-      {/* User info */}
-      {user && isExpanded && (
-        <div style={{ padding: '0 1rem 0.5rem', borderTop: '1px solid #E0E0E0', paddingTop: '0.5rem' }}>
-          <p style={{ fontSize: '0.75rem', color: '#7A7A7A', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</p>
-          <p style={{ fontSize: '0.75rem', color: '#FF3300', fontWeight: 500, margin: '0.125rem 0 0', textTransform: 'capitalize' }}>{user.role}</p>
-        </div>
-      )}
+      {/* Settings Link */}
+      <div style={{ padding: '0 0.75rem 0.5rem' }}>
+        <Link href="/settings" style={navItemStyle(pathname.startsWith('/settings'))}>
+          <Settings size={20} />
+          {isExpanded && <span>Settings</span>}
+        </Link>
+      </div>
 
       {/* Bottom Controls */}
       <div style={bottomStyle}>
         <button
-          onClick={() => window.location.reload()}
-          style={{ ...navItemStyle(false), marginBottom: '0.25rem' }}
-        >
-          <span>🔄</span>
-          {isExpanded && <span>Refresh</span>}
-        </button>
-        <button
           onClick={() => setIsExpanded(!isExpanded)}
-          style={{ ...navItemStyle(false), marginBottom: '0.25rem' }}
+          style={{ ...navItemStyle(false), color: '#6B7280' }}
         >
-          <span>{isExpanded ? '◀' : '▶'}</span>
+          {isExpanded ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
           {isExpanded && <span>Collapse</span>}
         </button>
-        {user && (
-          <button
-            onClick={handleLogout}
-            style={{ ...navItemStyle(false), color: '#DC2626' }}
-          >
-            <span>🚪</span>
-            {isExpanded && <span>Logout</span>}
-          </button>
-        )}
       </div>
+
+      {/* User info */}
+      {user && (
+        <div style={userStyle}>
+          <div style={avatarStyle}>
+            {user.email?.charAt(0).toUpperCase() || 'U'}
+          </div>
+          {isExpanded && (
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ 
+                fontSize: '0.875rem', 
+                fontWeight: 500, 
+                color: '#111827', 
+                margin: 0,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>
+                {user.email?.split('@')[0] || 'User'}
+              </p>
+              <p style={{ 
+                fontSize: '0.75rem', 
+                color: '#6B7280', 
+                margin: 0,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>
+                {user.email}
+              </p>
+            </div>
+          )}
+          {isExpanded && (
+            <button
+              onClick={handleLogout}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: '0.5rem',
+                cursor: 'pointer',
+                color: '#6B7280',
+                display: 'flex',
+                alignItems: 'center',
+                borderRadius: '0.375rem',
+                transition: 'color 0.15s',
+              }}
+              title="Logout"
+            >
+              <LogOut size={18} />
+            </button>
+          )}
+        </div>
+      )}
     </aside>
   );
 }

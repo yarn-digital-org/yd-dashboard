@@ -21,6 +21,7 @@ import {
   ArrowUpRight,
   Loader2
 } from 'lucide-react';
+import { CalendarWidget } from '@/components/dashboard/CalendarWidget';
 
 interface DashboardMetrics {
   revenue: number;
@@ -52,6 +53,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState('month');
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
@@ -92,12 +94,26 @@ export default function DashboardPage() {
   const fetchMetrics = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/dashboard?period=${period}`);
+      setError(null);
+      const res = await fetch(`/api/dashboard?period=${period}`, {
+        credentials: 'include',
+      });
       if (!res.ok) throw new Error('Failed to fetch metrics');
       const data = await res.json();
       setMetrics(data);
     } catch (err) {
       console.error('Failed to fetch dashboard metrics:', err);
+      setError('Failed to load dashboard data');
+      // Set empty metrics so the page still renders
+      setMetrics({
+        revenue: 0,
+        outstanding: 0,
+        projectsCount: 0,
+        leadsCount: 0,
+        clientsCount: 0,
+        contactsCount: 0,
+        recentActivity: [],
+      });
     } finally {
       setLoading(false);
     }
@@ -351,8 +367,11 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Three Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Calendar Widget */}
+          <CalendarWidget />
+
           {/* Recent Activity */}
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-gray-100">

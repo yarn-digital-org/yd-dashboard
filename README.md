@@ -1,5 +1,54 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment Variables
+
+Copy `.env.example` to `.env.local` and configure the following:
+
+### Required
+
+```bash
+# Firebase Configuration (Client)
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+
+# Firebase Admin SDK (Server-side)
+FIREBASE_SERVICE_ACCOUNT={"type":"service_account",...}
+# or use base64 encoded version:
+FIREBASE_CREDENTIALS_BASE64=
+
+# JWT Authentication
+JWT_SECRET=your-secure-secret-at-least-32-chars
+```
+
+### Google Calendar OAuth (Per-User Integration)
+
+To enable per-user Google Calendar integration:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable the Google Calendar API
+4. Go to "APIs & Services" > "Credentials"
+5. Create OAuth 2.0 Client ID (Web application)
+6. Add authorized redirect URI: `https://your-domain.com/api/auth/google/callback`
+7. Copy the Client ID and Client Secret
+
+```bash
+# Google OAuth for Calendar Integration
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-client-secret
+
+# Base URL for OAuth callbacks
+NEXTAUTH_URL=https://your-domain.com
+# or for local development:
+NEXTAUTH_URL=http://localhost:3000
+```
+
+**Note:** Users connect their own Google Calendar through Settings > Integrations. Each user's tokens are stored securely in Firebase.
+
 ## Getting Started
 
 First, run the development server:

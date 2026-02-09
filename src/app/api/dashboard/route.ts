@@ -19,15 +19,28 @@ export interface ActivityItem {
   timestamp: string;
 }
 
+// Empty metrics for when Firebase isn't configured
+const emptyMetrics: DashboardMetrics = {
+  revenue: 0,
+  outstanding: 0,
+  projectsCount: 0,
+  leadsCount: 0,
+  clientsCount: 0,
+  contactsCount: 0,
+  recentActivity: [],
+};
+
 // GET - Fetch dashboard metrics
 export async function GET(request: NextRequest) {
   try {
+    // If Firebase isn't configured, return empty metrics instead of error
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
+      console.warn('Dashboard: Firebase not configured, returning empty metrics');
+      return NextResponse.json(emptyMetrics);
     }
 
     const { searchParams } = new URL(request.url);
-    const period = searchParams.get('period') || 'month'; // month, 6months, year, all
+    const period = searchParams.get('period') || 'month';
 
     // Calculate date range based on period
     const now = new Date();
@@ -49,12 +62,17 @@ export async function GET(request: NextRequest) {
 
     const startDateISO = startDate.toISOString();
 
-    // Fetch contacts
-    const contactsSnapshot = await adminDb.collection('contacts').get();
-    const contacts = contactsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    // Fetch contacts (with error handling)
+    let contacts: any[] = [];
+    try {
+      const contactsSnapshot = await adminDb.collection('contacts').get();
+      contacts = contactsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (e) {
+      console.warn('Dashboard: Failed to fetch contacts', e);
+    }
 
     // Filter contacts by period
     const filteredContacts = period === 'all' 
@@ -63,7 +81,6 @@ export async function GET(request: NextRequest) {
 
     // Calculate metrics from contacts
     const allContacts = contacts as any[];
-    const periodContacts = filteredContacts as any[];
 
     // Contact type counts
     const leads = allContacts.filter(c => c.type === 'lead');
@@ -108,7 +125,7 @@ export async function GET(request: NextRequest) {
     const recentActivity: ActivityItem[] = recentContacts.map(c => ({
       id: c.id || '',
       type: c.type === 'lead' ? 'lead_created' : 'contact_created',
-      title: `${c.firstName} ${c.lastName}`,
+      title: `${c.firstName || ''} ${c.lastName || ''}`.trim() || 'Unknown',
       subtitle: c.company || c.email || '',
       timestamp: c.createdAt || new Date().toISOString(),
     }));
@@ -126,6 +143,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(metrics);
   } catch (error: any) {
     console.error('Error fetching dashboard metrics:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    // Return empty metrics on error instead of failing
+    return NextResponse.json(emptyMetrics);
   }
 }

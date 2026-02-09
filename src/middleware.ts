@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 
 // Routes that don't require authentication
 const publicRoutes = [
+  '/',
   '/login',
   '/register',
   '/forgot-password',
@@ -34,8 +35,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check if it's a public route
-  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
+  // Check if it's a public route (exact match for '/', startsWith for others)
+  const isPublicRoute = publicRoutes.some((route) => 
+    route === '/' ? pathname === '/' : pathname.startsWith(route)
+  );
   const isPublicApiRoute = publicApiRoutes.some((route) => pathname.startsWith(route));
 
   if (isPublicRoute || isPublicApiRoute) {

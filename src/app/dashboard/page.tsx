@@ -22,6 +22,8 @@ import {
   Loader2
 } from 'lucide-react';
 import { CalendarWidget } from '@/components/dashboard/CalendarWidget';
+import { RevenueChart } from '@/components/dashboard/RevenueChart';
+import type { RevenueDataPoint } from '@/components/dashboard/RevenueChart';
 
 interface DashboardMetrics {
   revenue: number;
@@ -31,6 +33,7 @@ interface DashboardMetrics {
   clientsCount: number;
   contactsCount: number;
   recentActivity: ActivityItem[];
+  revenueChart: RevenueDataPoint[];
 }
 
 interface ActivityItem {
@@ -57,6 +60,7 @@ export default function DashboardPage() {
   const [period, setPeriod] = useState('month');
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
+  const [chartPeriod, setChartPeriod] = useState('6m');
   const quickActionsRef = useRef<HTMLDivElement>(null);
   const periodRef = useRef<HTMLDivElement>(null);
 
@@ -74,7 +78,7 @@ export default function DashboardPage() {
     if (user) {
       fetchMetrics();
     }
-  }, [period]);
+  }, [period, chartPeriod]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -95,7 +99,7 @@ export default function DashboardPage() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`/api/dashboard?period=${period}`, {
+      const res = await fetch(`/api/dashboard?period=${period}&chartPeriod=${chartPeriod}`, {
         credentials: 'include',
       });
       if (!res.ok) throw new Error('Failed to fetch metrics');
@@ -113,6 +117,7 @@ export default function DashboardPage() {
         clientsCount: 0,
         contactsCount: 0,
         recentActivity: [],
+        revenueChart: [],
       });
     } finally {
       setLoading(false);
@@ -365,6 +370,15 @@ export default function DashboardPage() {
               }
             </p>
           </div>
+        </div>
+
+        {/* Revenue Chart */}
+        <div className="mb-8">
+          <RevenueChart
+            data={metrics?.revenueChart || []}
+            activePeriod={chartPeriod}
+            onPeriodChange={setChartPeriod}
+          />
         </div>
 
         {/* Three Column Layout */}

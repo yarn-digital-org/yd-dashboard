@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 
+export interface RevenueDataPoint {
+  month: string;
+  year: number;
+  revenue: number;
+  invoiceCount: number;
+  label: string;
+}
+
 export interface DashboardMetrics {
   revenue: number;
   outstanding: number;
@@ -9,6 +17,7 @@ export interface DashboardMetrics {
   clientsCount: number;
   contactsCount: number;
   recentActivity: ActivityItem[];
+  revenueChart: RevenueDataPoint[];
 }
 
 export interface ActivityItem {
@@ -28,6 +37,7 @@ const emptyMetrics: DashboardMetrics = {
   clientsCount: 0,
   contactsCount: 0,
   recentActivity: [],
+  revenueChart: [],
 };
 
 // GET - Fetch dashboard metrics
@@ -130,6 +140,52 @@ export async function GET(request: NextRequest) {
       timestamp: c.createdAt || new Date().toISOString(),
     }));
 
+    // Build revenue chart data
+    const chartPeriod = searchParams.get('chartPeriod') || '6m';
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    let chartMonths: number;
+    if (chartPeriod === '12m') {
+      chartMonths = 12;
+    } else if (chartPeriod === 'ytd') {
+      chartMonths = now.getMonth() + 1;
+    } else {
+      chartMonths = 6;
+    }
+
+    const revenueChart: RevenueDataPoint[] = [];
+    for (let i = chartMonths - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      revenueChart.push({
+        month: monthNames[d.getMonth()],
+        year: d.getFullYear(),
+        revenue: 0,
+        invoiceCount: 0,
+        label: `${monthNames[d.getMonth()]} '${String(d.getFullYear()).slice(2)}`,
+      });
+    }
+
+    // Fill revenue chart from invoices collection if it exists
+    try {
+      const invoicesSnapshot = await adminDb.collection('invoices').get();
+      invoicesSnapshot.docs.forEach(doc => {
+        const inv = doc.data();
+        if (inv.status === 'paid') {
+          const paidAt = inv.paidAt?.toDate?.() || (inv.paidAt ? new Date(inv.paidAt) : null);
+          if (paidAt) {
+            const bucket = revenueChart.find(
+              b => b.month === monthNames[paidAt.getMonth()] && b.year === paidAt.getFullYear()
+            );
+            if (bucket) {
+              bucket.revenue += inv.amountPaid || inv.total || 0;
+              bucket.invoiceCount += 1;
+            }
+          }
+        }
+      });
+    } catch {
+      // invoices collection may not exist yet
+    }
+
     const metrics: DashboardMetrics = {
       revenue: totalRevenue,
       outstanding: totalOutstanding,
@@ -138,6 +194,7 @@ export async function GET(request: NextRequest) {
       clientsCount: clients.length,
       contactsCount: allContacts.length,
       recentActivity,
+      revenueChart,
     };
 
     return NextResponse.json(metrics);

@@ -43,3 +43,6 @@ next-env.d.ts
 firebase-credentials.json
 .env.firebase*
 *-service-account.json
+.env.*
+*.key
+node_modules/

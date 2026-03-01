@@ -197,6 +197,18 @@ async function handlePost(
 
   const docRef = await db.collection(COLLECTIONS.LEADS).add(lead);
 
+  // Fire automations for new lead
+  try {
+    const { fireAutomations } = await import('@/lib/automation-engine');
+    await fireAutomations('new_lead', {
+      id: docRef.id,
+      _collection: COLLECTIONS.LEADS,
+      ...lead,
+    }, lead.userId);
+  } catch (e) {
+    console.error('Automation trigger error:', e);
+  }
+
   return successResponse(
     { id: docRef.id, ...lead },
     201

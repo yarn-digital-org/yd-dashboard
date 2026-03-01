@@ -168,6 +168,18 @@ export async function POST(request: NextRequest) {
     };
 
     const docRef = await adminDb.collection('contacts').add(contact);
+
+    // Fire automations for new contact
+    try {
+      const { fireAutomations } = await import('@/lib/automation-engine');
+      await fireAutomations('new_contact', {
+        id: docRef.id,
+        _collection: 'contacts',
+        ...contact,
+      }, (contact as any).userId || 'demo-user');
+    } catch (e) {
+      console.error('Automation trigger error:', e);
+    }
     
     return NextResponse.json({ 
       id: docRef.id, 

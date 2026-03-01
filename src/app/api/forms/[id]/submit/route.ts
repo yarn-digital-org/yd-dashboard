@@ -115,6 +115,20 @@ export async function POST(
       updatedAt: now,
     });
 
+    // Fire automations for form submission
+    try {
+      const { fireAutomations } = await import('@/lib/automation-engine');
+      await fireAutomations('form_submission', {
+        id: submissionRef.id,
+        formId: id,
+        formName: form.name,
+        _collection: 'form_submissions',
+        ...submission.data,
+      }, form.userId || 'demo-user');
+    } catch (e) {
+      console.error('Automation trigger error:', e);
+    }
+
     return NextResponse.json({ 
       id: submissionRef.id,
       message: 'Form submitted successfully',

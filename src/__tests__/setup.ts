@@ -1,22 +1,12 @@
-import '@testing-library/dom';
+// Test setup file
 import { vi } from 'vitest';
 
-// Mock Next.js router
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-    replace: vi.fn(),
-    prefetch: vi.fn(),
-    back: vi.fn(),
+// Mock Next.js headers/cookies
+vi.mock('next/headers', () => ({
+  cookies: () => ({
+    get: vi.fn().mockReturnValue({ value: 'mock-token' }),
+    set: vi.fn(),
+    delete: vi.fn(),
   }),
-  usePathname: () => '/dashboard',
-  useSearchParams: () => new URLSearchParams(),
+  headers: () => new Map(),
 }));
-
-// Mock fetch globally
-global.fetch = vi.fn();
-
-// Reset mocks before each test
-beforeEach(() => {
-  vi.clearAllMocks();
-});

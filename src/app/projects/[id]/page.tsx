@@ -821,12 +821,57 @@ export default function ProjectDetailPage() {
           {/* Files Tab */}
           {activeTab === 'files' && (
             <div>
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#111827', margin: '0 0 1rem' }}>Project Files</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#111827', margin: 0 }}>Project Files</h3>
+                <label
+                  style={{
+                    backgroundColor: '#FF3300',
+                    color: '#FFFFFF',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '0.5rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.375rem',
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                  }}
+                >
+                  <Plus size={16} />
+                  Upload File
+                  <input
+                    type="file"
+                    style={{ display: 'none' }}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        const res = await fetch(`/api/projects/${project!.id}/files`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            filename: file.name,
+                            mimeType: file.type,
+                            size: file.size,
+                            url: '',
+                            isShared: false,
+                          }),
+                        });
+                        if (res.ok) {
+                          const data = await res.json();
+                          setFiles((prev) => [data.data, ...prev]);
+                        }
+                      } catch {}
+                      e.target.value = '';
+                    }}
+                  />
+                </label>
+              </div>
               {files.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '2rem', color: '#6B7280' }}>
                   <FolderOpen size={40} style={{ color: '#D1D5DB', marginBottom: '0.75rem' }} />
                   <div>No files uploaded yet</div>
-                  <div style={{ fontSize: '0.875rem' }}>File uploads coming soon</div>
+                  <div style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>Upload files to keep your project organized</div>
                 </div>
               ) : (
                 <div style={{ display: 'grid', gap: '0.5rem' }}>
@@ -839,7 +884,23 @@ export default function ProjectDetailPage() {
                           <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>{(file.size / 1024).toFixed(1)} KB • {formatDate(file.uploadedAt)}</div>
                         </div>
                       </div>
-                      <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ color: '#FF3300', fontSize: '0.875rem' }}>Download</a>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        {file.url && (
+                          <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ color: '#FF3300', fontSize: '0.875rem' }}>Download</a>
+                        )}
+                        <button
+                          onClick={async () => {
+                            if (!confirm('Delete this file?')) return;
+                            try {
+                              const res = await fetch(`/api/projects/${project!.id}/files/${file.id}`, { method: 'DELETE' });
+                              if (res.ok) setFiles((prev) => prev.filter((f) => f.id !== file.id));
+                            } catch {}
+                          }}
+                          style={{ color: '#EF4444', fontSize: '0.875rem', background: 'none', border: 'none', cursor: 'pointer' }}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

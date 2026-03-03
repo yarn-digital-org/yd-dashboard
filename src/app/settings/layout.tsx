@@ -10,6 +10,7 @@ import {
   CreditCard, 
   Link2, 
   Shield,
+  Globe,
   ChevronRight
 } from 'lucide-react';
 
@@ -38,6 +39,12 @@ const settingsNav = [
     title: 'Integrations',
     items: [
       { name: 'Connected Apps', href: '/settings/integrations', icon: Link2 },
+    ],
+  },
+  {
+    title: 'Client Portal',
+    items: [
+      { name: 'Portal', href: '/settings/portal', icon: Globe },
     ],
   },
   {

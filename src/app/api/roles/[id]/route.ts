@@ -102,7 +102,7 @@ async function handlePut(
 
   await db.collection(COLLECTIONS.ROLES).doc(id).update(updates);
 
-  return successResponse({ id, ...role, ...updates });
+  return successResponse({ ...role, ...updates, id });
 }
 
 // DELETE - Delete role

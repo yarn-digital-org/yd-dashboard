@@ -77,12 +77,15 @@ interface ProjectFile {
   id: string;
   projectId: string;
   filename: string;
-  url: string;
+  url?: string;
+  downloadUrl?: string;
+  storagePath?: string;
   mimeType: string;
   size: number;
   folder?: string;
   isShared: boolean;
-  uploadedAt: string;
+  uploadedAt?: string;
+  createdAt?: string;
 }
 
 type ProjectStatus = 'draft' | 'active' | 'on_hold' | 'completed' | 'cancelled' | 'archived';
@@ -845,23 +848,39 @@ export default function ProjectDetailPage() {
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
+
+                      // Show upload indicator
+                      const uploadingMessage = document.createElement('div');
+                      uploadingMessage.innerHTML = 'Uploading...';
+                      uploadingMessage.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #FF3300; color: white; padding: 10px; border-radius: 5px; z-index: 1000;';
+                      document.body.appendChild(uploadingMessage);
+
                       try {
-                        const res = await fetch(`/api/projects/${project!.id}/files`, {
+                        // Use the actual upload endpoint with FormData
+                        const formData = new FormData();
+                        formData.append('file', file);
+
+                        const res = await fetch(`/api/projects/${project!.id}/files/upload`, {
                           method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            filename: file.name,
-                            mimeType: file.type,
-                            size: file.size,
-                            url: '',
-                            isShared: false,
-                          }),
+                          body: formData,
                         });
+
                         if (res.ok) {
                           const data = await res.json();
                           setFiles((prev) => [data.data, ...prev]);
+                          uploadingMessage.innerHTML = 'Upload complete!';
+                          setTimeout(() => document.body.removeChild(uploadingMessage), 2000);
+                        } else {
+                          const error = await res.json();
+                          uploadingMessage.innerHTML = `Upload failed: ${error.error}`;
+                          uploadingMessage.style.background = '#EF4444';
+                          setTimeout(() => document.body.removeChild(uploadingMessage), 3000);
                         }
-                      } catch {}
+                      } catch (err) {
+                        uploadingMessage.innerHTML = 'Upload failed';
+                        uploadingMessage.style.background = '#EF4444';
+                        setTimeout(() => document.body.removeChild(uploadingMessage), 3000);
+                      }
                       e.target.value = '';
                     }}
                   />
@@ -881,13 +900,18 @@ export default function ProjectDetailPage() {
                         <FileText size={20} style={{ color: '#6B7280' }} />
                         <div>
                           <div style={{ fontWeight: 500, color: '#111827' }}>{file.filename}</div>
-                          <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>{(file.size / 1024).toFixed(1)} KB • {formatDate(file.uploadedAt)}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>{(file.size / 1024).toFixed(1)} KB • {formatDate(file.uploadedAt || file.createdAt || '')}</div>
                         </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        {file.url && (
-                          <a href={file.url} target="_blank" rel="noopener noreferrer" style={{ color: '#FF3300', fontSize: '0.875rem' }}>Download</a>
-                        )}
+                        <a
+                          href={`/api/projects/${project!.id}/files/${file.id}/download`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: '#FF3300', fontSize: '0.875rem' }}
+                        >
+                          Download
+                        </a>
                         <button
                           onClick={async () => {
                             if (!confirm('Delete this file?')) return;

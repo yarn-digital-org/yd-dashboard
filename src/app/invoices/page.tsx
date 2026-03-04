@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
-import { 
-  Plus, 
-  Search, 
-  MoreVertical, 
-  Mail, 
+import {
+  Plus,
+  Search,
+  MoreVertical,
+  Mail,
   Receipt,
   ChevronDown,
   Edit,
@@ -17,7 +17,8 @@ import {
   X,
   Calendar,
   DollarSign,
-  Loader2
+  Loader2,
+  Download
 } from 'lucide-react';
 
 interface InvoiceItem {
@@ -169,12 +170,36 @@ export default function InvoicesPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this invoice?')) return;
-    
+
     try {
       await fetch(`/api/invoices/${id}`, { method: 'DELETE' });
       fetchInvoices();
     } catch (err) {
       console.error('Failed to delete invoice:', err);
+    }
+  };
+
+  const handleDownloadPDF = async (id: string, invoiceNumber: string) => {
+    try {
+      const response = await fetch(`/api/invoices/${id}/pdf`);
+
+      if (!response.ok) {
+        throw new Error('Failed to generate PDF');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `invoice-${invoiceNumber}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert('Failed to download PDF. Please try again.');
     }
   };
 
@@ -360,6 +385,16 @@ export default function InvoicesPage() {
                       >
                         <Edit size={14} />
                         Edit
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleDownloadPDF(invoice.id, invoice.invoiceNumber);
+                          setActiveMenu(null);
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full"
+                      >
+                        <Download size={14} />
+                        Download PDF
                       </button>
                       <button
                         onClick={() => {

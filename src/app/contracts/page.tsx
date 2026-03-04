@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
-import { 
-  Plus, 
-  Search, 
-  MoreVertical, 
-  Mail, 
+import {
+  Plus,
+  Search,
+  MoreVertical,
+  Mail,
   FileSignature,
   ChevronDown,
   Edit,
@@ -16,7 +16,8 @@ import {
   X,
   Calendar,
   Loader2,
-  CheckCircle
+  CheckCircle,
+  Download
 } from 'lucide-react';
 
 interface Contract {
@@ -122,12 +123,36 @@ export default function ContractsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this contract?')) return;
-    
+
     try {
       await fetch(`/api/contracts/${id}`, { method: 'DELETE' });
       fetchContracts();
     } catch (err) {
       console.error('Failed to delete contract:', err);
+    }
+  };
+
+  const handleDownloadPDF = async (id: string, contractTitle: string) => {
+    try {
+      const response = await fetch(`/api/contracts/${id}/pdf`);
+
+      if (!response.ok) {
+        throw new Error('Failed to generate PDF');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `contract-${contractTitle.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert('Failed to download PDF. Please try again.');
     }
   };
 
@@ -302,6 +327,16 @@ export default function ContractsPage() {
                       >
                         <Edit size={14} />
                         Edit
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleDownloadPDF(contract.id, contract.title);
+                          setActiveMenu(null);
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full"
+                      >
+                        <Download size={14} />
+                        Download PDF
                       </button>
                       <button
                         onClick={() => {

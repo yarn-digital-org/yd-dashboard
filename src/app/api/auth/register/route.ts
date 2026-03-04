@@ -48,8 +48,8 @@ export async function POST(request: NextRequest) {
 
     // Send welcome email (fire and forget)
     try {
-      const { sendWelcomeEmail } = await import('@/lib/email-service');
-      await sendWelcomeEmail(email, name || email.split('@')[0]);
+      const { sendWelcomeEmail } = await import('@/lib/email-notifications');
+      await sendWelcomeEmail(userId, email, name || email.split('@')[0]);
     } catch (e) {
       console.error('Failed to send welcome email:', e);
     }

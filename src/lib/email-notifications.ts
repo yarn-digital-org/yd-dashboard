@@ -263,6 +263,47 @@ export async function sendWeeklySummaryEmail(
 }
 
 /**
+ * Welcome email for new users
+ */
+export async function sendWelcomeEmail(
+  userId: string,
+  email: string,
+  userName: string
+): Promise<SendEmailResult> {
+  if (!(await shouldSendNotification(userId, 'welcomeEmail'))) {
+    return { success: true };
+  }
+
+  const branding = await getBranding();
+  const unsubscribeUrl = `${APP_URL}/settings/notifications?unsubscribe=welcomeEmail`;
+
+  const html = emailWrapper(branding, `
+    <h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 600; color: #0A0A0A;">Welcome to ${branding.companyName}!</h2>
+    <p style="margin: 0 0 16px; font-size: 16px; color: #0A0A0A;">
+      Hi ${userName},
+    </p>
+    <p style="margin: 0 0 24px; font-size: 16px; color: #4A4A4A; line-height: 1.5;">
+      Welcome to ${branding.companyName} Dashboard! Your account has been successfully created.
+    </p>
+    <p style="margin: 0 0 24px; font-size: 16px; color: #4A4A4A; line-height: 1.5;">
+      Get started by exploring your dashboard, managing projects, tracking leads, and automating your workflows.
+    </p>
+    <a href="${APP_URL}/dashboard" style="display: inline-block; background-color: ${branding.primaryColor}; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 16px; font-weight: 500; margin-bottom: 24px;">
+      Go to Dashboard
+    </a>
+    <p style="margin: 24px 0 0; font-size: 14px; color: #7A7A7A; line-height: 1.5;">
+      If you have any questions, feel free to reach out to our support team.
+    </p>
+  `, unsubscribeUrl);
+
+  return sendEmail({
+    to: email,
+    subject: `Welcome to ${branding.companyName}!`,
+    html,
+  });
+}
+
+/**
  * Cron job handler for invoice reminders
  * Call this from a cron API route (e.g. Vercel Cron)
  */

@@ -20,6 +20,12 @@ const publicApiRoutes = [
   '/api/auth/me', // Used to check session
 ];
 
+// System admin routes - use regular auth, then API checks systemAdmins collection
+const systemAdminRoutes = [
+  '/api/system-admin',
+  '/system-admin',
+];
+
 // Static file patterns to skip
 const staticPatterns = [
   '/_next',

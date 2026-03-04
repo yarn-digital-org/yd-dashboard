@@ -11,6 +11,7 @@ import {
   Link2, 
   Shield,
   Globe,
+  Users,
   ChevronRight
 } from 'lucide-react';
 
@@ -45,6 +46,12 @@ const settingsNav = [
     title: 'Client Portal',
     items: [
       { name: 'Portal', href: '/settings/portal', icon: Globe },
+    ],
+  },
+  {
+    title: 'Team',
+    items: [
+      { name: 'Users & Permissions', href: '/settings/users', icon: Users },
     ],
   },
   {

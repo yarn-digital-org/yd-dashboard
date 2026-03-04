@@ -50,6 +50,7 @@ export interface User {
   avatarUrl?: string;
   
   role: 'user' | 'admin';
+  orgId?: string; // organisation this user belongs to
   
   timezone?: string;
   language?: string;
@@ -66,6 +67,61 @@ export interface User {
   lastLoginAt?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+}
+
+// ============================================
+// MODULE: RBAC (Role-Based Access Control)
+// ============================================
+
+export type PermissionModule = 
+  | 'projects' | 'invoices' | 'contacts' | 'contracts' 
+  | 'messages' | 'workflows' | 'calendar' | 'leads' 
+  | 'forms' | 'content' | 'automations';
+
+export type PermissionLevel = 'none' | 'view' | 'edit' | 'manage';
+
+export interface Role {
+  id: string;
+  orgId: string;
+  name: string;
+  description?: string;
+  permissions: Record<PermissionModule, PermissionLevel>;
+  isPreset: boolean;
+  isSystemRole: boolean; // true for Owner role — cannot be deleted
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface Organisation {
+  id: string;
+  name: string;
+  ownerId: string;
+  logoUrl?: string;
+  projectSharingMode: 'all' | 'per_project';
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export type OrgMemberStatus = 'invited' | 'active' | 'suspended';
+
+export interface OrgMember {
+  id: string;
+  orgId: string;
+  userId: string;
+  roleId: string;
+  projectIds?: string[]; // when projectSharingMode is "per_project"
+  invitedBy: string;
+  invitedAt: Timestamp;
+  joinedAt?: Timestamp;
+  status: OrgMemberStatus;
+}
+
+export interface SystemAdmin {
+  id: string;
+  userId: string;
+  email: string;
+  superAdmin: boolean;
+  createdAt: Timestamp;
 }
 
 // ============================================
@@ -1069,6 +1125,12 @@ export interface Subscription {
 export const COLLECTIONS = {
   // Auth
   USERS: 'users',
+  
+  // RBAC
+  ORGANISATIONS: 'organisations',
+  ROLES: 'roles',
+  ORG_MEMBERS: 'orgMembers',
+  SYSTEM_ADMINS: 'systemAdmins',
   
   // Contacts
   CONTACTS: 'contacts',

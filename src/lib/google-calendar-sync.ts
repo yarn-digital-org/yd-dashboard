@@ -137,16 +137,16 @@ export async function importGoogleEvents(
       // Import event
       const appEvent: Partial<AppCalendarEvent> = {
         title: googleEvent.summary || 'Untitled Event',
-        description: googleEvent.description,
-        location: googleEvent.location,
+        description: googleEvent.description || undefined,
+        location: googleEvent.location || undefined,
         startDate:
           googleEvent.start?.dateTime || googleEvent.start?.date || new Date().toISOString(),
         endDate: googleEvent.end?.dateTime || googleEvent.end?.date || new Date().toISOString(),
         allDay: !googleEvent.start?.dateTime,
         attendees: googleEvent.attendees?.map((a) => ({
           email: a.email || '',
-          name: a.displayName,
-        })),
+          name: a.displayName || undefined,
+        })) || undefined,
         userId,
         googleEventId: googleEvent.id,
         createdAt: new Date().toISOString(),

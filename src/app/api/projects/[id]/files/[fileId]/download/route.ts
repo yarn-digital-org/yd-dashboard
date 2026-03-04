@@ -3,7 +3,7 @@ import { withAuth, errorResponse, requireDb } from '@/lib/api-middleware';
 import admin from '@/lib/firebase-admin';
 
 // GET - Download file from Firebase Storage
-export const GET = withAuth(async (request, { params, user }) => {
+export const GET = withAuth(async (request, { params, user }): Promise<any> => {
   const { id, fileId } = await params;
   const db = requireDb();
 
@@ -41,7 +41,7 @@ export const GET = withAuth(async (request, { params, user }) => {
     const [fileBuffer] = await fileRef.download();
 
     // Return file with appropriate headers
-    return new NextResponse(fileBuffer, {
+    return new NextResponse(new Uint8Array(fileBuffer), {
       headers: {
         'Content-Type': fileData.mimeType || 'application/octet-stream',
         'Content-Disposition': `attachment; filename="${fileData.filename}"`,

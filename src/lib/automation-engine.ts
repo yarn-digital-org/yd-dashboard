@@ -4,7 +4,7 @@
  */
 
 import { adminDb } from '@/lib/firebase-admin';
-import { sendEmail } from '@/lib/email';
+import { sendEmail } from '@/lib/email-service';
 
 // Types
 export type TriggerType = 'new_contact' | 'new_lead' | 'invoice_overdue' | 'form_submission';
@@ -79,12 +79,12 @@ async function executeAction(
         const to = interpolate(action.config.to, triggerData) || triggerData.email;
         const subject = interpolate(action.config.subject, triggerData);
         const body = interpolate(action.config.body, triggerData);
-        
+
         if (!to) {
           return { success: false, error: 'No recipient email address' };
         }
-        
-        const result = await sendEmail({ to, subject, body, html: true });
+
+        const result = await sendEmail({ to, subject, html: body });
         return { success: result.success, error: result.error, result: { to, subject } };
       }
 

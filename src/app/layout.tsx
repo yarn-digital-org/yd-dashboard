@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { CookieConsent } from "@/components/CookieConsent";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,11 +19,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className} style={{ margin: 0, padding: 0, minHeight: '100vh' }}>
-        <ErrorBoundary>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
-        </ErrorBoundary>
+        <AuthProvider>
+          {children}
+          <CookieConsent />
+        </AuthProvider>
       </body>
     </html>
   );

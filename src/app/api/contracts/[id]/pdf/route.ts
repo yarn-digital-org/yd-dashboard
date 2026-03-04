@@ -1,57 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase-admin';
-import { generateContractPDF } from '@/lib/pdf-generator';
+import { verifyAuth, requireDb } from '@/lib/api-middleware';
+import { generateContractHtml, ContractPdfData } from '@/lib/pdf-generator';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await verifyAuth(request);
     const { id } = await params;
+    const db = requireDb();
 
-    if (!adminDb) {
-      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
-    }
-
-    // Get contract
-    const contractDoc = await adminDb.collection('contracts').doc(id).get();
+    const contractDoc = await db.collection('contracts').doc(id).get();
     if (!contractDoc.exists) {
       return NextResponse.json({ error: 'Contract not found' }, { status: 404 });
     }
 
-    const contractData = contractDoc.data()!;
+    const contract = contractDoc.data() as Record<string, unknown>;
 
-    // Get contact details
-    const contactDoc = await adminDb.collection('contacts').doc(contractData.contactId).get();
-    if (!contactDoc.exists) {
-      return NextResponse.json({ error: 'Contact not found' }, { status: 404 });
+    if (contract.userId !== user.userId) {
+      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
-    const contactData = contactDoc.data()!;
+    const sections = (contract.sections as Array<Record<string, unknown>> || []).map((s) => ({
+      title: String(s.title || ''),
+      content: String(s.content || ''),
+    }));
 
-    // Prepare contract data for PDF generation
-    const contract = {
-      ...contractData,
-      id: contractDoc.id,
-      clientName: contactData.name || contactData.email,
-      clientEmail: contactData.email,
-    } as any;
+    if (sections.length === 0 && contract.content) {
+      sections.push({ title: 'Agreement', content: String(contract.content) });
+    }
 
-    // Generate PDF
-    const pdfBuffer = await generateContractPDF(contract);
-
-    // Return PDF response
-    return new NextResponse(pdfBuffer as any, {
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="contract-${contractData.name.replace(/[^a-zA-Z0-9]/g, '-')}.pdf"`,
+    const pdfData: ContractPdfData = {
+      title: String(contract.title || contract.name || 'Contract'),
+      date: String(contract.date || contract.createdAt || new Date().toISOString()),
+      parties: {
+        provider: {
+          name: String(contract.providerName || contract.businessName || 'Yarn Digital'),
+          address: contract.providerAddress ? String(contract.providerAddress) : undefined,
+        },
+        client: {
+          name: String(contract.clientName || ''),
+          address: contract.clientAddress ? String(contract.clientAddress) : undefined,
+        },
       },
+      sections,
+    };
+
+    const html = generateContractHtml(pdfData);
+
+    return new NextResponse(html, {
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('PDF generation error:', error);
-    return NextResponse.json(
-      { error: 'Failed to generate PDF', details: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to generate PDF' }, { status: 500 });
   }
 }

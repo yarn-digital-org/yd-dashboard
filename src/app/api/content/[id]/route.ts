@@ -19,8 +19,8 @@ export async function GET(
     }
 
     return NextResponse.json({ id: doc.id, ...doc.data() });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }
 
@@ -46,8 +46,8 @@ export async function PUT(
     const doc = await adminDb.collection('scheduled_content').doc(id).get();
 
     return NextResponse.json({ id: doc.id, ...doc.data() });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }
 
@@ -65,7 +65,7 @@ export async function DELETE(
     await adminDb.collection('scheduled_content').doc(id).delete();
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }

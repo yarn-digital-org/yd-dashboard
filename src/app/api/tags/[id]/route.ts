@@ -53,9 +53,9 @@ export async function PUT(
       ...updated.data(),
       message: 'Tag updated successfully'
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating tag:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }
 
@@ -104,8 +104,8 @@ export async function DELETE(
       message: 'Tag deleted successfully',
       id 
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error deleting tag:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }

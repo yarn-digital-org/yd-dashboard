@@ -355,41 +355,36 @@ export default function CalendarPage() {
                 Loading calendar...
               </div>
             ) : connectionStatus === 'not_connected' ? (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                height: '100%',
-                flexDirection: 'column',
-                textAlign: 'center',
-                padding: '2rem'
-              }}>
-                <CalendarIcon size={80} style={{ color: '#D1D5DB', marginBottom: '1.5rem' }} />
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111827', margin: '0 0 0.5rem' }}>
-                  Connect Your Google Calendar
-                </h3>
-                <p style={{ fontSize: '1rem', color: '#6B7280', margin: '0 0 1.5rem', maxWidth: '400px' }}>
-                  Connect your Google Calendar to view, create, and manage your events directly from your dashboard.
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '1rem', padding: '2rem' }}>
+                <CalendarIcon style={{ width: '48px', height: '48px', color: '#9CA3AF' }} />
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#374151', margin: 0 }}>Google Calendar Not Connected</h3>
+                <p style={{ color: '#6B7280', textAlign: 'center', maxWidth: '400px', margin: 0 }}>
+                  Connect your Google Calendar to see your events here and sync bookings automatically.
                 </p>
-                <button
-                  onClick={() => window.location.href = '/settings/integrations'}
+                <a
+                  href="/settings/integrations"
                   style={{
+                    display: 'inline-block',
                     backgroundColor: '#FF3300',
                     color: '#FFFFFF',
-                    padding: '0.75rem 1.5rem',
+                    padding: '0.625rem 1.5rem',
                     borderRadius: '0.5rem',
+                    textDecoration: 'none',
                     fontWeight: 500,
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
+                    fontSize: '0.875rem',
                   }}
                 >
-                  Connect Google Calendar
-                </button>
+                  Configure in Settings
+                </a>
               </div>
             ) : error ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#DC2626' }}>
-                {error}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '0.5rem', color: '#DC2626' }}>
+                <p>{error}</p>
+                {connectionStatus === 'token_expired' && (
+                  <a href="/settings/integrations" style={{ color: '#FF3300', textDecoration: 'none', fontWeight: 500 }}>
+                    Reconnect in Settings
+                  </a>
+                )}
               </div>
             ) : (
               <div style={{ backgroundColor: '#FFFFFF', borderRadius: '0.75rem', border: '1px solid #E5E7EB', padding: '0.5rem' }}>
@@ -420,29 +415,7 @@ export default function CalendarPage() {
               Upcoming Events
             </h2>
 
-            {connectionStatus === 'not_connected' ? (
-              <div style={{ padding: '2rem 1rem', textAlign: 'center' }}>
-                <CalendarIcon size={32} style={{ marginBottom: '0.5rem', color: '#D1D5DB' }} />
-                <p style={{ margin: '0 0 1rem', fontSize: '0.875rem', color: '#9CA3AF' }}>
-                  Connect your Google Calendar to see upcoming events
-                </p>
-                <button
-                  onClick={() => window.location.href = '/settings/integrations'}
-                  style={{
-                    backgroundColor: '#FF3300',
-                    color: '#FFFFFF',
-                    padding: '0.5rem 1rem',
-                    borderRadius: '0.375rem',
-                    fontWeight: 500,
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                  }}
-                >
-                  Connect
-                </button>
-              </div>
-            ) : upcomingEvents.length === 0 ? (
+            {upcomingEvents.length === 0 ? (
               <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#9CA3AF' }}>
                 <CalendarIcon size={32} style={{ marginBottom: '0.5rem', opacity: 0.5 }} />
                 <p style={{ margin: 0, fontSize: '0.875rem' }}>No upcoming events</p>

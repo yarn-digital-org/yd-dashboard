@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error disconnecting Google Calendar:', error);
     return NextResponse.json(
-      { error: 'Failed to disconnect Google Calendar', details: error.message },
+      { error: 'Failed to disconnect Google Calendar', details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined },
       { status: 500 }
     );
   }

@@ -19,9 +19,9 @@ export async function GET(
     }
 
     return NextResponse.json({ id: doc.id, ...doc.data() });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching contact:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }
 
@@ -92,9 +92,9 @@ export async function PUT(
       ...updated.data(),
       message: 'Contact updated successfully'
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating contact:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }
 
@@ -122,8 +122,8 @@ export async function DELETE(
       message: 'Contact deleted successfully',
       id 
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error deleting contact:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }

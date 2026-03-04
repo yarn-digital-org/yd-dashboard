@@ -24,8 +24,18 @@ export default function RegisterPage() {
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      setError('Password must contain at least one uppercase letter');
+      return;
+    }
+
+    if (!/[0-9]/.test(password)) {
+      setError('Password must contain at least one number');
       return;
     }
 
@@ -113,6 +123,13 @@ export default function RegisterPage() {
               {loading ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
+
+          <p style={{ marginTop: '1rem', textAlign: 'center', color: '#7A7A7A', fontSize: '0.75rem', lineHeight: '1.5' }}>
+            By creating an account, you agree to our{' '}
+            <Link href="/terms" style={{ color: '#FF3300', textDecoration: 'none' }}>Terms of Service</Link>
+            {' '}and{' '}
+            <Link href="/privacy" style={{ color: '#FF3300', textDecoration: 'none' }}>Privacy Policy</Link>.
+          </p>
 
           <p style={{ marginTop: '1.5rem', textAlign: 'center', color: '#7A7A7A', fontSize: '0.875rem' }}>
             Already have an account?{' '}

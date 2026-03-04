@@ -19,9 +19,9 @@ export async function GET(
     }
 
     return NextResponse.json({ id: doc.id, ...doc.data() });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching invoice:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }
 
@@ -75,9 +75,9 @@ export async function PUT(
       ...updated.data(),
       message: 'Invoice updated successfully'
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating invoice:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }
 
@@ -105,8 +105,8 @@ export async function DELETE(
       message: 'Invoice deleted successfully',
       id 
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error deleting invoice:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }

@@ -1,37 +1,41 @@
 import { NextRequest } from 'next/server';
-import { withAuth, successResponse, errorResponse, requireDb } from '@/lib/api-middleware';
+import { withAuth, successResponse, errorResponse } from '@/lib/api-middleware';
 import admin from '@/lib/firebase-admin';
 
-// POST - Upload avatar to Firebase Storage
-export const POST = withAuth(async (request: NextRequest, { user }) => {
-  const db = requireDb();
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+export const POST = withAuth(async (request, { user }) => {
+  const db = admin.apps.length ? admin.firestore() : null;
+  if (!db) {
+    return errorResponse('Database not configured', 500);
+  }
 
   try {
     const formData = await request.formData();
-    const file = formData.get('file') as File | null;
+    const file = formData.get('avatar') as File | null;
 
     if (!file) {
       return errorResponse('No file provided', 400, 'VALIDATION_ERROR');
     }
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      return errorResponse('File must be an image', 400, 'VALIDATION_ERROR');
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return errorResponse('Invalid file type. Allowed: JPEG, PNG, WebP, GIF', 400, 'VALIDATION_ERROR');
     }
 
-    // Validate file size (5MB limit for avatars)
-    const MAX_SIZE = 5 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      return errorResponse('Image must be less than 5MB', 400, 'VALIDATION_ERROR');
+      return errorResponse('File size exceeds 5MB limit', 400, 'VALIDATION_ERROR');
     }
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Store avatar at a predictable path (overwrites previous)
-    const ext = file.name.split('.').pop() || 'jpg';
-    const storagePath = `users/${user.userId}/avatar.${ext}`;
+    // Determine extension
+    const ext = file.type.split('/')[1] === 'jpeg' ? 'jpg' : file.type.split('/')[1];
+    const timestamp = Date.now();
+    const storagePath = `users/${user.userId}/avatar/${timestamp}.${ext}`;
 
+    // Upload to Firebase Storage
     const bucket = admin.storage().bucket();
     const fileRef = bucket.file(storagePath);
 
@@ -45,22 +49,19 @@ export const POST = withAuth(async (request: NextRequest, { user }) => {
       },
     });
 
-    // Generate signed URL (long-lived for avatars — 365 days)
-    const [avatarUrl] = await fileRef.getSignedUrl({
-      action: 'read',
-      expires: Date.now() + 365 * 24 * 60 * 60 * 1000,
+    // Make publicly accessible
+    await fileRef.makePublic();
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${storagePath}`;
+
+    // Update user profile
+    await db.collection('users').doc(user.userId).update({
+      avatarUrl: publicUrl,
+      updatedAt: new Date().toISOString(),
     });
 
-    // Update user profile in Firestore
-    await db.collection('users').doc(user.userId).set(
-      { avatarUrl, updatedAt: new Date().toISOString() },
-      { merge: true }
-    );
-
-    return successResponse({ avatarUrl }, 200);
+    return successResponse({ avatarUrl: publicUrl });
   } catch (error: unknown) {
-    console.error('Error uploading avatar:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return errorResponse('Failed to upload avatar', 500, 'UPLOAD_ERROR', message);
+    console.error('Avatar upload error:', error);
+    return errorResponse('Failed to upload avatar', 500, 'UPLOAD_ERROR');
   }
 });

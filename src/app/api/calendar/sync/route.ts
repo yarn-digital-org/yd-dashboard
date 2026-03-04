@@ -41,6 +41,6 @@ export const POST = withAuth(async (request, { user }) => {
     }
   } catch (error: any) {
     console.error('Error syncing calendar:', error);
-    return errorResponse('Failed to sync calendar', 500, 'SYNC_ERROR', error.message);
+    return errorResponse('Failed to sync calendar', 500, 'SYNC_ERROR');
   }
 });

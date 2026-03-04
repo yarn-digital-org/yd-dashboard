@@ -72,7 +72,7 @@ export async function GET(
   } catch (error: any) {
     console.error('Error fetching Google Calendar event:', error);
 
-    if (error.message === 'Google Calendar not connected') {
+    if (((error as Error)?.message || '') === 'Google Calendar not connected') {
       return NextResponse.json(
         { 
           error: 'Google Calendar not connected',
@@ -95,14 +95,14 @@ export async function GET(
         { 
           error: 'Calendar access denied',
           code: 'ACCESS_DENIED',
-          details: error.message,
+          details: process.env.NODE_ENV === 'development' ? String((error as Error)?.message || '') : undefined,
         },
         { status: 403 }
       );
     }
 
     return NextResponse.json(
-      { error: 'Failed to fetch calendar event', details: error.message },
+      { error: 'Failed to fetch calendar event', details: process.env.NODE_ENV === 'development' ? String((error as Error)?.message || '') : undefined },
       { status: 500 }
     );
   }
@@ -232,7 +232,7 @@ export async function PUT(
   } catch (error: any) {
     console.error('Error updating Google Calendar event:', error);
 
-    if (error.message === 'Google Calendar not connected') {
+    if (((error as Error)?.message || '') === 'Google Calendar not connected') {
       return NextResponse.json(
         { 
           error: 'Google Calendar not connected',
@@ -255,14 +255,14 @@ export async function PUT(
         { 
           error: 'Calendar access denied',
           code: 'ACCESS_DENIED',
-          details: error.message,
+          details: process.env.NODE_ENV === 'development' ? String((error as Error)?.message || '') : undefined,
         },
         { status: 403 }
       );
     }
 
     return NextResponse.json(
-      { error: 'Failed to update calendar event', details: error.message },
+      { error: 'Failed to update calendar event', details: process.env.NODE_ENV === 'development' ? String((error as Error)?.message || '') : undefined },
       { status: 500 }
     );
   }
@@ -317,7 +317,7 @@ export async function DELETE(
   } catch (error: any) {
     console.error('Error deleting Google Calendar event:', error);
 
-    if (error.message === 'Google Calendar not connected') {
+    if (((error as Error)?.message || '') === 'Google Calendar not connected') {
       return NextResponse.json(
         { 
           error: 'Google Calendar not connected',
@@ -340,14 +340,14 @@ export async function DELETE(
         { 
           error: 'Calendar access denied',
           code: 'ACCESS_DENIED',
-          details: error.message,
+          details: process.env.NODE_ENV === 'development' ? String((error as Error)?.message || '') : undefined,
         },
         { status: 403 }
       );
     }
 
     return NextResponse.json(
-      { error: 'Failed to delete calendar event', details: error.message },
+      { error: 'Failed to delete calendar event', details: process.env.NODE_ENV === 'development' ? String((error as Error)?.message || '') : undefined },
       { status: 500 }
     );
   }

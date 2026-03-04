@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Error generating Google OAuth URL:', error);
     return NextResponse.json(
-      { error: 'Failed to initiate Google OAuth', details: error.message },
+      { error: 'Failed to initiate Google OAuth', details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined },
       { status: 500 }
     );
   }

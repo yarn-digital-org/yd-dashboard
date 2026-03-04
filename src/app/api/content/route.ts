@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
     if (platform) content = content.filter((c: any) => c.platform === platform);
 
     return NextResponse.json({ content });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }
 
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     const docRef = await adminDb.collection('scheduled_content').add(post);
     return NextResponse.json({ id: docRef.id, ...post }, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }

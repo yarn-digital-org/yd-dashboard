@@ -88,8 +88,7 @@ export const POST = withAuth(async (request, { params, user }) => {
     return errorResponse(
       'Failed to upload file',
       500,
-      'UPLOAD_ERROR',
-      error.message
+      'UPLOAD_ERROR'
     );
   }
 });

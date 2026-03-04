@@ -118,13 +118,18 @@ export async function POST(
     // Fire automations for form submission
     try {
       const { fireAutomations } = await import('@/lib/automation-engine');
-      await fireAutomations('form_submission', {
-        id: submissionRef.id,
-        formId: id,
-        formName: form.name,
-        _collection: 'form_submissions',
-        ...submission.data,
-      }, form.userId || 'demo-user');
+      const formOwner = form.userId;
+      if (formOwner) {
+        await fireAutomations('form_submission', {
+          id: submissionRef.id,
+          formId: id,
+          formName: form.name,
+          _collection: 'form_submissions',
+          ...submission.data,
+        }, formOwner);
+      } else {
+        console.warn(`Form ${id} has no userId, skipping automations`);
+      }
     } catch (e) {
       console.error('Automation trigger error:', e);
     }
@@ -134,8 +139,8 @@ export async function POST(
       message: 'Form submitted successfully',
       submittedAt: now
     }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error submitting form:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to submit form' }, { status: 500 });
   }
 }

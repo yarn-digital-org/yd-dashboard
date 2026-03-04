@@ -53,8 +53,7 @@ export const GET = withAuth(async (request, { params, user }): Promise<any> => {
     return errorResponse(
       'Failed to download file',
       500,
-      'DOWNLOAD_ERROR',
-      error.message
+      'DOWNLOAD_ERROR'
     );
   }
 });

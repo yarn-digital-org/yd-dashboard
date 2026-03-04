@@ -68,9 +68,9 @@ export async function GET(request: NextRequest) {
       offset,
       hasMore: offset + forms.length < total
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching forms:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }
 
@@ -133,8 +133,8 @@ export async function POST(request: NextRequest) {
       ...form,
       message: 'Form created successfully'
     }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating form:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }

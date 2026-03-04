@@ -113,27 +113,26 @@ export default function ProfileSettingsPage() {
     };
     reader.readAsDataURL(file);
 
-    // Upload to Firebase Storage via API
+    // Upload to Firebase Storage
     try {
       const uploadData = new FormData();
-      uploadData.append('file', file);
-      
-      const uploadRes = await fetch('/api/settings/profile/avatar', {
+      uploadData.append('avatar', file);
+
+      const res = await fetch('/api/settings/profile/avatar', {
         method: 'POST',
         body: uploadData,
       });
-      
-      const uploadResult = await uploadRes.json();
-      
-      if (uploadRes.ok && uploadResult.success) {
-        setAvatarUrl(uploadResult.data.avatarUrl);
-        setMessage({ type: 'success', text: 'Profile photo updated' });
+
+      const result = await res.json();
+
+      if (res.ok && result.success) {
+        setAvatarUrl(result.data.avatarUrl);
+        setMessage({ type: 'success', text: 'Avatar updated successfully' });
       } else {
-        setMessage({ type: 'error', text: uploadResult.error || 'Failed to upload photo' });
+        setMessage({ type: 'error', text: result.error || 'Failed to upload avatar' });
       }
     } catch (err) {
-      console.error('Avatar upload failed:', err);
-      setMessage({ type: 'error', text: 'Failed to upload photo' });
+      setMessage({ type: 'error', text: 'Failed to upload avatar' });
     }
   };
 

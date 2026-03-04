@@ -32,8 +32,8 @@ export async function POST(
       enabled: newEnabled,
       message: `Automation ${newEnabled ? 'enabled' : 'disabled'} successfully`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error toggling automation:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }

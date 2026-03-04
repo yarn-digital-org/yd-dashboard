@@ -44,9 +44,9 @@ export async function GET(
       offset,
       hasMore: offset + submissions.length < total
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching submissions:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }
 
@@ -94,8 +94,8 @@ export async function DELETE(
     }
 
     return NextResponse.json({ message: 'Submission deleted successfully' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error deleting submission:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }

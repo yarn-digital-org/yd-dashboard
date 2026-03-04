@@ -1,437 +1,221 @@
 /**
- * PDF generation utilities using jsPDF
- * Generates branded invoices and contracts
+ * PDF Generator for invoices and contracts
+ * Uses a minimal HTML-to-PDF approach without external paid services
+ * Generates a well-structured HTML document suitable for browser print/PDF export
  */
 
-import jsPDF from 'jspdf';
-import { adminDb } from './firebase-admin';
-import { Invoice, Contract, LineItem } from '@/types/database';
-
-interface BrandingSettings {
-  companyName: string;
-  logoUrl: string;
-  primaryColor: string;
+export interface InvoicePdfData {
+  invoiceNumber: string;
+  date: string;
+  dueDate: string;
+  status: string;
+  from: {
+    name: string;
+    email?: string;
+    address?: string;
+    phone?: string;
+  };
+  to: {
+    name: string;
+    email?: string;
+    address?: string;
+  };
+  items: Array<{
+    description: string;
+    quantity: number;
+    rate: number;
+    amount: number;
+  }>;
+  subtotal: number;
+  tax?: number;
+  taxRate?: number;
+  total: number;
+  notes?: string;
+  currency?: string;
 }
 
-async function getBranding(): Promise<BrandingSettings> {
-  const defaults: BrandingSettings = {
-    companyName: 'Yarn Digital',
-    logoUrl: '',
-    primaryColor: '#FF3300',
+export interface ContractPdfData {
+  title: string;
+  date: string;
+  parties: {
+    provider: { name: string; address?: string };
+    client: { name: string; address?: string };
   };
-
-  if (!adminDb) return defaults;
-
-  try {
-    const doc = await adminDb.collection('settings').doc('branding').get();
-    if (doc.exists) {
-      const data = doc.data()!;
-      return {
-        companyName: data.companyName || defaults.companyName,
-        logoUrl: data.logoUrl || defaults.logoUrl,
-        primaryColor: data.primaryColor || defaults.primaryColor,
-      };
-    }
-  } catch {}
-  return defaults;
-}
-
-/**
- * Generate invoice PDF
- */
-export async function generateInvoicePDF(
-  invoice: Invoice & {
-    clientName: string;
-    clientEmail: string;
-    clientAddress?: string;
-  }
-): Promise<Buffer> {
-  const branding = await getBranding();
-  const doc = new jsPDF();
-
-  // Helper functions
-  const formatCurrency = (amount: number) => `£${amount.toFixed(2)}`;
-  const formatDate = (timestamp: any) => {
-    const date = timestamp?.toDate?.() || new Date(timestamp);
-    return date.toLocaleDateString('en-GB');
-  };
-
-  // Set colors
-  const primaryColor = branding.primaryColor || '#FF3300';
-  const hexToRgb = (hex: string) => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16),
-        }
-      : { r: 255, g: 51, b: 0 };
-  };
-
-  const rgb = hexToRgb(primaryColor);
-
-  let yPosition = 30;
-
-  // Header
-  doc.setFontSize(24);
-  doc.setTextColor(rgb.r, rgb.g, rgb.b);
-  doc.text(branding.companyName, 20, yPosition);
-
-  doc.setFontSize(20);
-  doc.setTextColor(0, 0, 0);
-  yPosition += 20;
-  doc.text(`Invoice ${invoice.invoiceNumber}`, 20, yPosition);
-
-  // Add line under header
-  yPosition += 10;
-  doc.setDrawColor(rgb.r, rgb.g, rgb.b);
-  doc.setLineWidth(1);
-  doc.line(20, yPosition, 190, yPosition);
-
-  yPosition += 20;
-
-  // Bill To section
-  doc.setFontSize(10);
-  doc.setTextColor(128, 128, 128);
-  doc.text('BILL TO', 20, yPosition);
-
-  doc.setFontSize(12);
-  doc.setTextColor(0, 0, 0);
-  yPosition += 8;
-  doc.text(invoice.clientName, 20, yPosition);
-  yPosition += 6;
-  doc.text(invoice.clientEmail, 20, yPosition);
-
-  if (invoice.clientAddress) {
-    yPosition += 6;
-    doc.text(invoice.clientAddress, 20, yPosition);
-  }
-
-  // Invoice details (right side)
-  const detailsX = 120;
-  let detailsY = 60;
-
-  doc.setFontSize(10);
-  doc.setTextColor(128, 128, 128);
-  doc.text('INVOICE DATE', detailsX, detailsY);
-
-  doc.setFontSize(12);
-  doc.setTextColor(0, 0, 0);
-  detailsY += 8;
-  doc.text(formatDate(invoice.invoiceDate), detailsX, detailsY);
-
-  detailsY += 12;
-  doc.setFontSize(10);
-  doc.setTextColor(128, 128, 128);
-  doc.text('DUE DATE', detailsX, detailsY);
-
-  doc.setFontSize(12);
-  doc.setTextColor(0, 0, 0);
-  detailsY += 8;
-  doc.text(formatDate(invoice.dueDate), detailsX, detailsY);
-
-  if (invoice.poNumber) {
-    detailsY += 12;
-    doc.setFontSize(10);
-    doc.setTextColor(128, 128, 128);
-    doc.text('PO NUMBER', detailsX, detailsY);
-
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    detailsY += 8;
-    doc.text(invoice.poNumber, detailsX, detailsY);
-  }
-
-  yPosition += 30;
-
-  // Line items table
-  yPosition += 20;
-
-  // Table header
-  doc.setDrawColor(224, 224, 224);
-  doc.setLineWidth(0.5);
-  doc.line(20, yPosition, 190, yPosition);
-
-  yPosition += 8;
-  doc.setFontSize(10);
-  doc.setTextColor(128, 128, 128);
-  doc.text('DESCRIPTION', 20, yPosition);
-  doc.text('QTY', 120, yPosition);
-  doc.text('RATE', 140, yPosition);
-  doc.text('AMOUNT', 170, yPosition);
-
-  yPosition += 8;
-  doc.line(20, yPosition, 190, yPosition);
-
-  // Line items
-  doc.setFontSize(11);
-  doc.setTextColor(0, 0, 0);
-
-  for (const item of invoice.lineItems) {
-    yPosition += 10;
-
-    // Check if we need a new page
-    if (yPosition > 250) {
-      doc.addPage();
-      yPosition = 30;
-    }
-
-    doc.text(item.description, 20, yPosition);
-    if (item.details) {
-      yPosition += 6;
-      doc.setFontSize(9);
-      doc.setTextColor(128, 128, 128);
-      doc.text(item.details, 20, yPosition);
-      doc.setFontSize(11);
-      doc.setTextColor(0, 0, 0);
-    }
-
-    doc.text(item.quantity.toString(), 120, yPosition);
-    doc.text(formatCurrency(item.rate), 140, yPosition);
-    doc.text(formatCurrency(item.amount), 170, yPosition);
-
-    yPosition += 5;
-    doc.setDrawColor(243, 244, 246);
-    doc.line(20, yPosition, 190, yPosition);
-  }
-
-  // Totals section
-  yPosition += 20;
-
-  // Check if we need a new page for totals
-  if (yPosition > 220) {
-    doc.addPage();
-    yPosition = 30;
-  }
-
-  const totalsX = 120;
-  doc.setDrawColor(224, 224, 224);
-  doc.line(totalsX, yPosition, 190, yPosition);
-
-  yPosition += 10;
-  doc.setFontSize(12);
-  doc.setTextColor(74, 74, 74);
-  doc.text('Subtotal', totalsX, yPosition);
-  doc.text(formatCurrency(invoice.subtotal), 170, yPosition);
-
-  if (invoice.discountAmount > 0) {
-    yPosition += 8;
-    doc.text('Discount', totalsX, yPosition);
-    doc.text(`-${formatCurrency(invoice.discountAmount)}`, 170, yPosition);
-  }
-
-  if (invoice.taxAmount > 0) {
-    yPosition += 8;
-    const taxText = invoice.taxRate ? `Tax (${invoice.taxRate}%)` : 'Tax';
-    doc.text(taxText, totalsX, yPosition);
-    doc.text(formatCurrency(invoice.taxAmount), 170, yPosition);
-  }
-
-  yPosition += 12;
-  doc.setDrawColor(224, 224, 224);
-  doc.line(totalsX, yPosition, 190, yPosition);
-
-  yPosition += 10;
-  doc.setFontSize(14);
-  doc.setTextColor(0, 0, 0);
-  doc.text('Total', totalsX, yPosition);
-  doc.setTextColor(rgb.r, rgb.g, rgb.b);
-  doc.text(formatCurrency(invoice.total), 170, yPosition);
-
-  // Notes
-  if (invoice.notes) {
-    yPosition += 30;
-    if (yPosition > 240) {
-      doc.addPage();
-      yPosition = 30;
-    }
-
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    doc.text('Notes', 20, yPosition);
-
-    yPosition += 10;
-    doc.setFontSize(10);
-    doc.setTextColor(74, 74, 74);
-    const notesLines = doc.splitTextToSize(invoice.notes, 170);
-    doc.text(notesLines, 20, yPosition);
-  }
-
-  // Footer
-  const pageHeight = doc.internal.pageSize.height;
-  doc.setFontSize(9);
-  doc.setTextColor(128, 128, 128);
-  doc.text(
-    `© ${new Date().getFullYear()} ${branding.companyName}. All rights reserved.`,
-    105,
-    pageHeight - 20,
-    { align: 'center' }
-  );
-
-  return Buffer.from(doc.output('arraybuffer'));
+  sections: Array<{
+    title: string;
+    content: string;
+  }>;
+  signatureDate?: string;
 }
 
 /**
- * Generate contract PDF
+ * Generate invoice HTML suitable for printing/PDF export
  */
-export async function generateContractPDF(
-  contract: Contract & {
-    clientName: string;
-    clientEmail: string;
+export function generateInvoiceHtml(data: InvoicePdfData): string {
+  const currency = data.currency || '£';
+  const itemRows = data.items
+    .map(
+      (item) => `
+    <tr>
+      <td style="padding: 10px 12px; border-bottom: 1px solid #E5E7EB;">${escapeHtml(item.description)}</td>
+      <td style="padding: 10px 12px; border-bottom: 1px solid #E5E7EB; text-align: center;">${item.quantity}</td>
+      <td style="padding: 10px 12px; border-bottom: 1px solid #E5E7EB; text-align: right;">${currency}${item.rate.toFixed(2)}</td>
+      <td style="padding: 10px 12px; border-bottom: 1px solid #E5E7EB; text-align: right;">${currency}${item.amount.toFixed(2)}</td>
+    </tr>`
+    )
+    .join('');
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Invoice ${escapeHtml(data.invoiceNumber)}</title>
+<style>
+  @media print {
+    body { margin: 0; padding: 20px; }
+    .no-print { display: none; }
   }
-): Promise<Buffer> {
-  const branding = await getBranding();
-  const doc = new jsPDF();
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1F2937; line-height: 1.5; max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+  table { border-collapse: collapse; width: 100%; }
+</style>
+</head>
+<body>
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px;">
+    <div>
+      <h1 style="font-size: 28px; font-weight: 700; margin: 0; color: #0A0A0A;">YARN<span style="color: #FF3300;">.</span></h1>
+      ${data.from.name ? `<p style="margin: 4px 0 0; color: #6B7280;">${escapeHtml(data.from.name)}</p>` : ''}
+      ${data.from.email ? `<p style="margin: 2px 0 0; color: #6B7280; font-size: 14px;">${escapeHtml(data.from.email)}</p>` : ''}
+      ${data.from.address ? `<p style="margin: 2px 0 0; color: #6B7280; font-size: 14px;">${escapeHtml(data.from.address)}</p>` : ''}
+    </div>
+    <div style="text-align: right;">
+      <h2 style="font-size: 24px; font-weight: 600; margin: 0; color: #374151;">INVOICE</h2>
+      <p style="margin: 4px 0 0; font-size: 16px; color: #6B7280;">${escapeHtml(data.invoiceNumber)}</p>
+      <p style="margin: 8px 0 0; font-size: 14px; color: #6B7280;">Date: ${escapeHtml(data.date)}</p>
+      <p style="margin: 2px 0 0; font-size: 14px; color: #6B7280;">Due: ${escapeHtml(data.dueDate)}</p>
+    </div>
+  </div>
 
-  const formatDate = (timestamp: any) => {
-    const date = timestamp?.toDate?.() || new Date(timestamp);
-    return date.toLocaleDateString('en-GB');
-  };
+  <div style="margin-bottom: 32px; padding: 16px; background-color: #F9FAFB; border-radius: 8px;">
+    <p style="margin: 0 0 4px; font-size: 12px; text-transform: uppercase; color: #9CA3AF; font-weight: 600;">Bill To</p>
+    <p style="margin: 0; font-weight: 600;">${escapeHtml(data.to.name)}</p>
+    ${data.to.email ? `<p style="margin: 2px 0 0; font-size: 14px; color: #6B7280;">${escapeHtml(data.to.email)}</p>` : ''}
+    ${data.to.address ? `<p style="margin: 2px 0 0; font-size: 14px; color: #6B7280;">${escapeHtml(data.to.address)}</p>` : ''}
+  </div>
 
-  // Set colors
-  const primaryColor = branding.primaryColor || '#FF3300';
-  const hexToRgb = (hex: string) => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16),
-        }
-      : { r: 255, g: 51, b: 0 };
-  };
+  <table style="margin-bottom: 24px;">
+    <thead>
+      <tr style="background-color: #F3F4F6;">
+        <th style="padding: 10px 12px; text-align: left; font-size: 12px; text-transform: uppercase; color: #6B7280; font-weight: 600;">Description</th>
+        <th style="padding: 10px 12px; text-align: center; font-size: 12px; text-transform: uppercase; color: #6B7280; font-weight: 600;">Qty</th>
+        <th style="padding: 10px 12px; text-align: right; font-size: 12px; text-transform: uppercase; color: #6B7280; font-weight: 600;">Rate</th>
+        <th style="padding: 10px 12px; text-align: right; font-size: 12px; text-transform: uppercase; color: #6B7280; font-weight: 600;">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${itemRows}
+    </tbody>
+  </table>
 
-  const rgb = hexToRgb(primaryColor);
+  <div style="display: flex; justify-content: flex-end;">
+    <table style="width: 250px;">
+      <tr>
+        <td style="padding: 6px 0; color: #6B7280;">Subtotal</td>
+        <td style="padding: 6px 0; text-align: right;">${currency}${data.subtotal.toFixed(2)}</td>
+      </tr>
+      ${data.tax !== undefined ? `
+      <tr>
+        <td style="padding: 6px 0; color: #6B7280;">Tax${data.taxRate ? ` (${data.taxRate}%)` : ''}</td>
+        <td style="padding: 6px 0; text-align: right;">${currency}${data.tax.toFixed(2)}</td>
+      </tr>` : ''}
+      <tr style="border-top: 2px solid #1F2937;">
+        <td style="padding: 10px 0; font-weight: 700; font-size: 18px;">Total</td>
+        <td style="padding: 10px 0; text-align: right; font-weight: 700; font-size: 18px;">${currency}${data.total.toFixed(2)}</td>
+      </tr>
+    </table>
+  </div>
 
-  let yPosition = 30;
+  ${data.notes ? `
+  <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #E5E7EB;">
+    <p style="font-size: 12px; text-transform: uppercase; color: #9CA3AF; font-weight: 600; margin: 0 0 8px;">Notes</p>
+    <p style="margin: 0; color: #6B7280; font-size: 14px;">${escapeHtml(data.notes)}</p>
+  </div>` : ''}
+</body>
+</html>`;
+}
 
-  // Header
-  doc.setFontSize(24);
-  doc.setTextColor(rgb.r, rgb.g, rgb.b);
-  doc.text(branding.companyName, 20, yPosition);
+/**
+ * Generate contract HTML suitable for printing/PDF export
+ */
+export function generateContractHtml(data: ContractPdfData): string {
+  const sections = data.sections
+    .map(
+      (section, i) => `
+    <div style="margin-bottom: 24px;">
+      <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 8px;">${i + 1}. ${escapeHtml(section.title)}</h3>
+      <p style="margin: 0; color: #374151; white-space: pre-wrap;">${escapeHtml(section.content)}</p>
+    </div>`
+    )
+    .join('');
 
-  doc.setFontSize(20);
-  doc.setTextColor(0, 0, 0);
-  yPosition += 20;
-  doc.text(contract.name, 20, yPosition);
-
-  // Add line under header
-  yPosition += 10;
-  doc.setDrawColor(rgb.r, rgb.g, rgb.b);
-  doc.setLineWidth(1);
-  doc.line(20, yPosition, 190, yPosition);
-
-  yPosition += 20;
-
-  // Contract details
-  doc.setFontSize(10);
-  doc.setTextColor(128, 128, 128);
-  doc.text('CLIENT', 20, yPosition);
-
-  doc.setFontSize(12);
-  doc.setTextColor(0, 0, 0);
-  yPosition += 8;
-  doc.text(contract.clientName, 20, yPosition);
-  yPosition += 6;
-  doc.text(contract.clientEmail, 20, yPosition);
-
-  // Contract details (right side)
-  const detailsX = 120;
-  let detailsY = 60;
-
-  doc.setFontSize(10);
-  doc.setTextColor(128, 128, 128);
-  doc.text('CREATED DATE', detailsX, detailsY);
-
-  doc.setFontSize(12);
-  doc.setTextColor(0, 0, 0);
-  detailsY += 8;
-  doc.text(formatDate(contract.createdAt), detailsX, detailsY);
-
-  if (contract.signedAt) {
-    detailsY += 12;
-    doc.setFontSize(10);
-    doc.setTextColor(128, 128, 128);
-    doc.text('SIGNED DATE', detailsX, detailsY);
-
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    detailsY += 8;
-    doc.text(formatDate(contract.signedAt), detailsX, detailsY);
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>${escapeHtml(data.title)}</title>
+<style>
+  @media print {
+    body { margin: 0; padding: 20px; }
+    .no-print { display: none; }
   }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1F2937; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+</style>
+</head>
+<body>
+  <div style="text-align: center; margin-bottom: 40px;">
+    <h1 style="font-size: 24px; font-weight: 700; margin: 0 0 8px;">${escapeHtml(data.title)}</h1>
+    <p style="color: #6B7280; margin: 0;">Date: ${escapeHtml(data.date)}</p>
+  </div>
 
-  yPosition += 30;
+  <div style="display: flex; justify-content: space-between; margin-bottom: 32px; gap: 24px;">
+    <div style="flex: 1; padding: 16px; background-color: #F9FAFB; border-radius: 8px;">
+      <p style="margin: 0 0 4px; font-size: 12px; text-transform: uppercase; color: #9CA3AF; font-weight: 600;">Provider</p>
+      <p style="margin: 0; font-weight: 600;">${escapeHtml(data.parties.provider.name)}</p>
+      ${data.parties.provider.address ? `<p style="margin: 2px 0 0; font-size: 14px; color: #6B7280;">${escapeHtml(data.parties.provider.address)}</p>` : ''}
+    </div>
+    <div style="flex: 1; padding: 16px; background-color: #F9FAFB; border-radius: 8px;">
+      <p style="margin: 0 0 4px; font-size: 12px; text-transform: uppercase; color: #9CA3AF; font-weight: 600;">Client</p>
+      <p style="margin: 0; font-weight: 600;">${escapeHtml(data.parties.client.name)}</p>
+      ${data.parties.client.address ? `<p style="margin: 2px 0 0; font-size: 14px; color: #6B7280;">${escapeHtml(data.parties.client.address)}</p>` : ''}
+    </div>
+  </div>
 
-  // Contract content
-  doc.setFontSize(12);
-  doc.setTextColor(0, 0, 0);
-  const contentLines = doc.splitTextToSize(contract.content, 170);
-  doc.text(contentLines, 20, yPosition);
+  <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 24px 0;">
 
-  // Calculate where content ends
-  yPosition += contentLines.length * 6;
+  ${sections}
 
-  // Signatures section
-  yPosition += 40;
+  <div style="margin-top: 48px; display: flex; justify-content: space-between; gap: 48px;">
+    <div style="flex: 1;">
+      <p style="font-size: 12px; text-transform: uppercase; color: #9CA3AF; font-weight: 600; margin: 0 0 32px;">Provider Signature</p>
+      <div style="border-bottom: 1px solid #1F2937; margin-bottom: 8px; height: 40px;"></div>
+      <p style="margin: 0; font-size: 14px; color: #6B7280;">${escapeHtml(data.parties.provider.name)}</p>
+      <p style="margin: 4px 0 0; font-size: 14px; color: #6B7280;">Date: ____________</p>
+    </div>
+    <div style="flex: 1;">
+      <p style="font-size: 12px; text-transform: uppercase; color: #9CA3AF; font-weight: 600; margin: 0 0 32px;">Client Signature</p>
+      <div style="border-bottom: 1px solid #1F2937; margin-bottom: 8px; height: 40px;"></div>
+      <p style="margin: 0; font-size: 14px; color: #6B7280;">${escapeHtml(data.parties.client.name)}</p>
+      <p style="margin: 4px 0 0; font-size: 14px; color: #6B7280;">Date: ____________</p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
 
-  // Check if we need a new page for signatures
-  if (yPosition > 200) {
-    doc.addPage();
-    yPosition = 30;
-  }
-
-  doc.setDrawColor(224, 224, 224);
-  doc.line(20, yPosition, 190, yPosition);
-
-  yPosition += 15;
-  doc.setFontSize(14);
-  doc.setTextColor(0, 0, 0);
-  doc.text('Signatures', 20, yPosition);
-
-  for (const signer of contract.signers) {
-    yPosition += 20;
-
-    // Check if we need a new page
-    if (yPosition > 240) {
-      doc.addPage();
-      yPosition = 30;
-    }
-
-    doc.setFontSize(10);
-    doc.setTextColor(128, 128, 128);
-    doc.text(signer.name.toUpperCase(), 20, yPosition);
-
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    yPosition += 8;
-    doc.text(signer.email, 20, yPosition);
-
-    // Signature line
-    yPosition += 15;
-    doc.setDrawColor(224, 224, 224);
-    doc.line(20, yPosition, 100, yPosition);
-
-    if (signer.signedAt) {
-      yPosition += 8;
-      doc.setFontSize(10);
-      doc.setTextColor(128, 128, 128);
-      doc.text(`Signed on ${formatDate(signer.signedAt)}`, 20, yPosition);
-    }
-
-    yPosition += 15;
-  }
-
-  // Footer
-  const pageHeight = doc.internal.pageSize.height;
-  doc.setFontSize(9);
-  doc.setTextColor(128, 128, 128);
-  doc.text(
-    `© ${new Date().getFullYear()} ${branding.companyName}. All rights reserved.`,
-    105,
-    pageHeight - 20,
-    { align: 'center' }
-  );
-
-  return Buffer.from(doc.output('arraybuffer'));
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }

@@ -191,8 +191,8 @@ export async function POST(request: NextRequest) {
           batchCount = 0;
         }
 
-      } catch (error: any) {
-        result.errors.push({ row: i + 1, error: error.message });
+      } catch (error: unknown) {
+        result.errors.push({ row: i + 1, error: error instanceof Error ? error.message : "Import failed" });
         result.skipped++;
       }
     }
@@ -204,8 +204,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error importing contacts:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }

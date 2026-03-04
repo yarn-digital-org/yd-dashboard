@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
     console.error('Error listing Google Calendar events:', error);
     
     // Handle specific errors
-    if (error.message === 'Google Calendar not connected') {
+    if (((error as Error)?.message || '') === 'Google Calendar not connected') {
       return NextResponse.json(
         { 
           error: 'Google Calendar not connected',
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (error.message?.includes('refresh token') || error.message?.includes('reconnect')) {
+    if (((error as Error)?.message || '')?.includes('refresh token') || ((error as Error)?.message || '')?.includes('reconnect')) {
       return NextResponse.json(
         { 
           error: 'Token expired',
@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
         { 
           error: 'Calendar access denied',
           code: 'ACCESS_DENIED',
-          details: error.message,
+          details: process.env.NODE_ENV === 'development' ? String((error as Error)?.message || '') : undefined,
         },
         { status: 403 }
       );
@@ -127,14 +127,14 @@ export async function GET(request: NextRequest) {
         { 
           error: 'Calendar not found',
           code: 'NOT_FOUND',
-          details: error.message,
+          details: process.env.NODE_ENV === 'development' ? String((error as Error)?.message || '') : undefined,
         },
         { status: 404 }
       );
     }
 
     return NextResponse.json(
-      { error: 'Failed to fetch calendar events', details: error.message },
+      { error: 'Failed to fetch calendar events', details: process.env.NODE_ENV === 'development' ? String((error as Error)?.message || '') : undefined },
       { status: 500 }
     );
   }
@@ -283,7 +283,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error creating Google Calendar event:', error);
 
-    if (error.message === 'Google Calendar not connected') {
+    if (((error as Error)?.message || '') === 'Google Calendar not connected') {
       return NextResponse.json(
         { 
           error: 'Google Calendar not connected',
@@ -299,14 +299,14 @@ export async function POST(request: NextRequest) {
         { 
           error: 'Calendar access denied',
           code: 'ACCESS_DENIED',
-          details: error.message,
+          details: process.env.NODE_ENV === 'development' ? String((error as Error)?.message || '') : undefined,
         },
         { status: 403 }
       );
     }
 
     return NextResponse.json(
-      { error: 'Failed to create calendar event', details: error.message },
+      { error: 'Failed to create calendar event', details: process.env.NODE_ENV === 'development' ? String((error as Error)?.message || '') : undefined },
       { status: 500 }
     );
   }

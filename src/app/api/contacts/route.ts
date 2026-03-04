@@ -1,20 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { adminDb } from '@/lib/firebase-admin';
+import { verifyAuth } from '@/lib/api-middleware';
 import { z } from 'zod';
-import {
-  withAuth,
-  successResponse,
-  errorResponse,
-  validateBody,
-  validateQuery,
-  requireDb,
-  AuthUser,
-  ValidationError
-} from '@/lib/api-middleware';
 
 // Contact type definitions
 export interface Contact {
   id: string;
-  userId: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -37,7 +28,7 @@ export interface Contact {
   avatarUrl?: string;
   type: 'lead' | 'client' | 'past_client' | 'vendor' | 'other';
   tags: string[];
-  customFields: Record<string, any>;
+  customFields: Record<string, unknown>;
   lifetimeValue: number;
   projectCount: number;
   outstandingAmount: number;
@@ -48,161 +39,174 @@ export interface Contact {
   updatedAt: string;
 }
 
-const getContactsQuerySchema = z.object({
-  type: z.string().optional(),
-  tag: z.string().optional(),
-  search: z.string().optional(),
-  limit: z.coerce.number().min(1).max(100).default(50),
-  offset: z.coerce.number().min(0).default(0),
-});
-
 const createContactSchema = z.object({
-  firstName: z.string().min(1, 'First name is required').max(50),
-  lastName: z.string().min(1, 'Last name is required').max(50),
-  email: z.string().email('Invalid email address'),
-  phone: z.string().max(20).optional(),
-  company: z.string().max(100).optional(),
-  jobTitle: z.string().max(100).optional(),
+  firstName: z.string().min(1, 'First name is required').max(100).transform(s => s.trim()),
+  lastName: z.string().min(1, 'Last name is required').max(100).transform(s => s.trim()),
+  email: z.string().email('Invalid email').max(255).transform(s => s.toLowerCase().trim()),
+  phone: z.string().max(50).optional().default(''),
+  company: z.string().max(200).optional().default(''),
+  jobTitle: z.string().max(200).optional().default(''),
   address: z.object({
-    street: z.string().max(200).optional(),
-    city: z.string().max(100).optional(),
-    state: z.string().max(50).optional(),
-    zip: z.string().max(20).optional(),
-    country: z.string().max(50).optional(),
-  }).optional(),
-  website: z.string().url('Invalid website URL').or(z.literal('')).optional(),
+    street: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    zip: z.string().optional(),
+    country: z.string().optional(),
+  }).optional().default({}),
+  website: z.string().max(500).optional().default(''),
   socialLinks: z.object({
-    instagram: z.string().max(200).optional(),
-    linkedin: z.string().max(200).optional(),
-    twitter: z.string().max(200).optional(),
-  }).optional(),
-  type: z.enum(['lead', 'client', 'past_client', 'vendor', 'other']).optional(),
-  tags: z.array(z.string().max(50)).max(20).optional(),
-  notes: z.string().max(1000).optional(),
-  customFields: z.record(z.string(), z.any()).optional(),
+    instagram: z.string().optional(),
+    linkedin: z.string().optional(),
+    twitter: z.string().optional(),
+  }).optional().default({}),
+  type: z.enum(['lead', 'client', 'past_client', 'vendor', 'other']).optional().default('client'),
+  tags: z.array(z.string()).optional().default([]),
+  notes: z.string().max(5000).optional().default(''),
+  customFields: z.record(z.string(), z.unknown()).optional().default({}),
 });
 
 // GET - List all contacts with filtering
-async function handleGet(
-  request: NextRequest,
-  context: { params: Promise<Record<string, string>>; user: AuthUser }
-) {
-  const db = requireDb();
-  const { user } = context;
-  const query = validateQuery(request, getContactsQuerySchema);
+export async function GET(request: NextRequest) {
+  try {
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
+    }
 
-  // Base query - scoped to user
-  let firebaseQuery: FirebaseFirestore.Query = db
-    .collection('contacts')
-    .where('userId', '==', user.userId)
-    .orderBy('createdAt', 'desc');
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type');
+    const tag = searchParams.get('tag');
+    const search = searchParams.get('search')?.toLowerCase();
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '100'), 1), 500);
+    const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0);
 
-  // Filter by type
-  if (query.type && query.type !== 'all') {
-    firebaseQuery = firebaseQuery.where('type', '==', query.type);
+    let query: FirebaseFirestore.Query = adminDb.collection('contacts').orderBy('createdAt', 'desc');
+
+    // Filter by type
+    if (type && type !== 'all') {
+      query = query.where('type', '==', type);
+    }
+
+    const snapshot = await query.get();
+    let contacts = snapshot.docs.map((doc) => ({ 
+      id: doc.id, 
+      ...doc.data() 
+    })) as Contact[];
+
+    // Filter by tag (post-query since Firestore doesn't support array-contains with other filters well)
+    if (tag) {
+      contacts = contacts.filter(c => c.tags?.includes(tag));
+    }
+
+    // Search filter (post-query for flexibility)
+    if (search) {
+      contacts = contacts.filter(c => 
+        c.firstName?.toLowerCase().includes(search) ||
+        c.lastName?.toLowerCase().includes(search) ||
+        c.email?.toLowerCase().includes(search) ||
+        c.company?.toLowerCase().includes(search) ||
+        c.phone?.includes(search)
+      );
+    }
+
+    // Pagination
+    const total = contacts.length;
+    contacts = contacts.slice(offset, offset + limit);
+
+    return NextResponse.json({ 
+      contacts, 
+      total,
+      limit,
+      offset,
+      hasMore: offset + contacts.length < total
+    });
+  } catch (error: unknown) {
+    console.error('Error fetching contacts:', error);
+    return NextResponse.json({ error: 'Failed to fetch contacts' }, { status: 500 });
   }
-
-  const snapshot = await firebaseQuery.get();
-  let contacts = snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data()
-  })) as Contact[];
-
-  // Filter by tag (post-query since Firestore doesn't support array-contains with other filters well)
-  if (query.tag) {
-    contacts = contacts.filter(c => c.tags?.includes(query.tag!));
-  }
-
-  // Search filter (post-query for flexibility)
-  if (query.search) {
-    const search = query.search.toLowerCase();
-    contacts = contacts.filter(c =>
-      c.firstName?.toLowerCase().includes(search) ||
-      c.lastName?.toLowerCase().includes(search) ||
-      c.email?.toLowerCase().includes(search) ||
-      c.company?.toLowerCase().includes(search) ||
-      c.phone?.includes(search)
-    );
-  }
-
-  // Pagination
-  const total = contacts.length;
-  contacts = contacts.slice(query.offset, query.offset + query.limit);
-
-  return successResponse({
-    contacts,
-    total,
-    limit: query.limit,
-    offset: query.offset,
-    hasMore: query.offset + contacts.length < total
-  });
 }
 
 // POST - Create new contact
-async function handlePost(
-  request: NextRequest,
-  context: { params: Promise<Record<string, string>>; user: AuthUser }
-) {
-  const db = requireDb();
-  const { user } = context;
-  const data = await validateBody(request, createContactSchema);
-
-  // Check for duplicate email (within user's contacts)
-  const existing = await db
-    .collection('contacts')
-    .where('userId', '==', user.userId)
-    .where('email', '==', data.email.toLowerCase().trim())
-    .limit(1)
-    .get();
-
-  if (!existing.empty) {
-    throw new ValidationError('A contact with this email already exists', {
-      email: ['Duplicate email address'],
-    });
-  }
-
-  const now = new Date().toISOString();
-
-  const contact: Omit<Contact, 'id'> = {
-    userId: user.userId,
-    firstName: data.firstName.trim(),
-    lastName: data.lastName.trim(),
-    email: data.email.toLowerCase().trim(),
-    phone: data.phone?.trim() || '',
-    company: data.company?.trim() || '',
-    jobTitle: data.jobTitle?.trim() || '',
-    address: data.address || {},
-    website: data.website?.trim() || '',
-    socialLinks: data.socialLinks || {},
-    avatarUrl: '',
-    type: data.type || 'client',
-    tags: data.tags || [],
-    customFields: data.customFields || {},
-    notes: data.notes?.trim() || '',
-    lifetimeValue: 0,
-    projectCount: 0,
-    outstandingAmount: 0,
-    createdAt: now,
-    updatedAt: now,
-  };
-
-  const docRef = await db.collection('contacts').add(contact);
-
-  // Fire automations for new contact
+export async function POST(request: NextRequest) {
   try {
-    const { fireAutomations } = await import('@/lib/automation-engine');
-    await fireAutomations('new_contact', {
-      id: docRef.id,
-      _collection: 'contacts',
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
+    }
+
+    // Authenticate the user
+    const user = await verifyAuth(request);
+
+    const body = await request.json();
+    const parsed = createContactSchema.safeParse(body);
+
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      return NextResponse.json({ error: firstError.message }, { status: 400 });
+    }
+
+    const data = parsed.data;
+
+    // Check for duplicate email
+    const existing = await adminDb.collection('contacts')
+      .where('email', '==', data.email)
+      .limit(1)
+      .get();
+    
+    if (!existing.empty) {
+      return NextResponse.json({ 
+        error: 'A contact with this email already exists',
+        duplicateId: existing.docs[0].id 
+      }, { status: 409 });
+    }
+
+    const now = new Date().toISOString();
+    
+    const contact: Omit<Contact, 'id'> = {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      phone: data.phone || '',
+      company: data.company || '',
+      jobTitle: data.jobTitle || '',
+      address: data.address || {},
+      website: data.website || '',
+      socialLinks: data.socialLinks || {},
+      avatarUrl: '',
+      type: data.type || 'client',
+      tags: data.tags || [],
+      customFields: data.customFields || {},
+      notes: data.notes || '',
+      lifetimeValue: 0,
+      projectCount: 0,
+      outstandingAmount: 0,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const docRef = await adminDb.collection('contacts').add(contact);
+
+    // Fire automations for new contact
+    try {
+      const { fireAutomations } = await import('@/lib/automation-engine');
+      await fireAutomations('new_contact', {
+        id: docRef.id,
+        _collection: 'contacts',
+        ...contact,
+      }, user.userId);
+    } catch (e) {
+      console.error('Automation trigger error:', e);
+    }
+    
+    return NextResponse.json({ 
+      id: docRef.id, 
       ...contact,
-    }, user.userId);
-  } catch (e) {
-    console.error('Automation trigger error:', e);
+      message: 'Contact created successfully'
+    }, { status: 201 });
+  } catch (error: unknown) {
+    console.error('Error creating contact:', error);
+    if (error && typeof error === 'object' && 'statusCode' in error) {
+      const apiErr = error as { statusCode: number; message: string };
+      return NextResponse.json({ error: apiErr.message }, { status: apiErr.statusCode });
+    }
+    return NextResponse.json({ error: 'Failed to create contact' }, { status: 500 });
   }
-
-  return successResponse({ id: docRef.id, ...contact }, 201);
 }
-
-// Export handlers with auth wrapper
-export const GET = withAuth(handleGet);
-export const POST = withAuth(handlePost);

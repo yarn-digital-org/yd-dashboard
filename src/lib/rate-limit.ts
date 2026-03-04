@@ -1,74 +1,149 @@
 /**
- * Simple in-memory rate limiter for API routes.
- * Uses a sliding window approach.
+ * In-memory rate limiter for auth endpoints
+ * Uses a Map with IP + timestamp tracking
  */
 
 interface RateLimitEntry {
   count: number;
-  resetTime: number;
+  resetAt: number;
 }
 
-const store = new Map<string, RateLimitEntry>();
+interface LockoutEntry {
+  failedAttempts: number;
+  lockedUntil: number | null;
+  lastAttempt: number;
+}
 
-// Cleanup old entries every 5 minutes
-setInterval(() => {
+// Rate limit store: IP -> entry
+const rateLimitStore = new Map<string, RateLimitEntry>();
+
+// Account lockout store: email -> entry  
+const lockoutStore = new Map<string, LockoutEntry>();
+
+// Clean up expired entries periodically
+const CLEANUP_INTERVAL = 5 * 60 * 1000; // 5 minutes
+let lastCleanup = Date.now();
+
+function cleanup() {
   const now = Date.now();
-  for (const [key, entry] of store.entries()) {
-    if (now > entry.resetTime) {
-      store.delete(key);
+  if (now - lastCleanup < CLEANUP_INTERVAL) return;
+  lastCleanup = now;
+
+  for (const [key, entry] of rateLimitStore) {
+    if (now > entry.resetAt) {
+      rateLimitStore.delete(key);
     }
   }
-}, 5 * 60 * 1000);
 
-export interface RateLimitConfig {
-  /** Maximum requests allowed in the window */
-  limit: number;
-  /** Window duration in seconds */
-  windowSeconds: number;
-}
-
-export interface RateLimitResult {
-  allowed: boolean;
-  remaining: number;
-  resetTime: number;
+  for (const [key, entry] of lockoutStore) {
+    if (entry.lockedUntil && now > entry.lockedUntil && entry.failedAttempts === 0) {
+      lockoutStore.delete(key);
+    }
+  }
 }
 
 /**
- * Check rate limit for a given key (usually IP or user ID).
+ * Check rate limit for an IP address
+ * @returns { allowed: boolean, retryAfterMs?: number }
  */
 export function checkRateLimit(
-  key: string,
-  config: RateLimitConfig = { limit: 60, windowSeconds: 60 }
-): RateLimitResult {
+  ip: string,
+  maxRequests: number = 10,
+  windowMs: number = 60 * 1000 // 1 minute
+): { allowed: boolean; retryAfterMs?: number } {
+  cleanup();
   const now = Date.now();
-  const entry = store.get(key);
+  const key = `rate:${ip}`;
+  const entry = rateLimitStore.get(key);
 
-  if (!entry || now > entry.resetTime) {
-    // New window
-    store.set(key, {
-      count: 1,
-      resetTime: now + config.windowSeconds * 1000,
-    });
-    return { allowed: true, remaining: config.limit - 1, resetTime: now + config.windowSeconds * 1000 };
+  if (!entry || now > entry.resetAt) {
+    rateLimitStore.set(key, { count: 1, resetAt: now + windowMs });
+    return { allowed: true };
+  }
+
+  if (entry.count >= maxRequests) {
+    return { allowed: false, retryAfterMs: entry.resetAt - now };
   }
 
   entry.count++;
-  const remaining = Math.max(0, config.limit - entry.count);
-
-  if (entry.count > config.limit) {
-    return { allowed: false, remaining: 0, resetTime: entry.resetTime };
-  }
-
-  return { allowed: true, remaining, resetTime: entry.resetTime };
+  return { allowed: true };
 }
 
 /**
- * Get client identifier from request headers.
+ * Record a failed login attempt for account lockout
  */
-export function getClientId(headers: Headers): string {
-  return (
-    headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    headers.get('x-real-ip') ||
-    'unknown'
-  );
+export function recordFailedLogin(email: string): void {
+  const normalizedEmail = email.toLowerCase().trim();
+  const now = Date.now();
+  const entry = lockoutStore.get(normalizedEmail);
+
+  if (!entry) {
+    lockoutStore.set(normalizedEmail, {
+      failedAttempts: 1,
+      lockedUntil: null,
+      lastAttempt: now,
+    });
+    return;
+  }
+
+  // If previously locked but lockout expired, reset
+  if (entry.lockedUntil && now > entry.lockedUntil) {
+    entry.failedAttempts = 1;
+    entry.lockedUntil = null;
+    entry.lastAttempt = now;
+    return;
+  }
+
+  entry.failedAttempts++;
+  entry.lastAttempt = now;
+
+  // Lock after 5 failed attempts (15 min cooldown)
+  if (entry.failedAttempts >= 5) {
+    entry.lockedUntil = now + 15 * 60 * 1000; // 15 minutes
+  }
+}
+
+/**
+ * Check if account is locked out
+ */
+export function isAccountLocked(email: string): { locked: boolean; retryAfterMs?: number } {
+  const normalizedEmail = email.toLowerCase().trim();
+  const entry = lockoutStore.get(normalizedEmail);
+
+  if (!entry || !entry.lockedUntil) {
+    return { locked: false };
+  }
+
+  const now = Date.now();
+  if (now > entry.lockedUntil) {
+    // Lockout expired, reset
+    entry.failedAttempts = 0;
+    entry.lockedUntil = null;
+    return { locked: false };
+  }
+
+  return { locked: true, retryAfterMs: entry.lockedUntil - now };
+}
+
+/**
+ * Record a successful login (resets failed attempts)
+ */
+export function recordSuccessfulLogin(email: string): void {
+  const normalizedEmail = email.toLowerCase().trim();
+  lockoutStore.delete(normalizedEmail);
+}
+
+/**
+ * Get client IP from request headers
+ */
+export function getClientIp(request: Request): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  const realIp = request.headers.get('x-real-ip');
+  if (realIp) {
+    return realIp;
+  }
+  return 'unknown';
 }

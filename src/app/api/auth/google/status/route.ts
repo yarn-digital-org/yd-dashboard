@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Error checking Google Calendar status:', error);
     return NextResponse.json(
-      { error: 'Failed to check connection status', details: error.message },
+      { error: 'Failed to check connection status', details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined },
       { status: 500 }
     );
   }

@@ -18,6 +18,7 @@ const publicApiRoutes = [
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
   '/api/auth/me', // Used to check session
+  '/api/webhooks/', // Webhook endpoints (email, etc.)
 ];
 
 // System admin routes - use regular auth, then API checks systemAdmins collection

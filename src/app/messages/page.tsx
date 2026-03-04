@@ -65,6 +65,8 @@ export default function MessagesPage() {
   const [showTemplates, setShowTemplates] = useState(false);
   const [contactSearch, setContactSearch] = useState('');
   const [showConvMenu, setShowConvMenu] = useState<string | null>(null);
+  const [messageChannel, setMessageChannel] = useState<'live_chat' | 'email'>('live_chat');
+  const [emailSubject, setEmailSubject] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -151,7 +153,11 @@ export default function MessagesPage() {
       const res = await fetch(`/api/messages/conversations/${selectedConv.id}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body: messageInput.trim(), channel: 'live_chat' }),
+        body: JSON.stringify({
+          body: messageInput.trim(),
+          channel: messageChannel,
+          ...(messageChannel === 'email' && emailSubject ? { subject: emailSubject } : {}),
+        }),
       });
       const data = await res.json();
       if (data.data) {
@@ -553,6 +559,9 @@ export default function MessagesPage() {
                             display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
                             gap: '4px', marginTop: '4px',
                           }}>
+                            {msg.channel === 'email' && (
+                              <span style={{ fontSize: '0.625rem', opacity: 0.7 }}>✉️</span>
+                            )}
                             <span style={{
                               fontSize: '0.6875rem',
                               opacity: msg.direction === 'outbound' ? 0.75 : 0.5,
@@ -573,6 +582,58 @@ export default function MessagesPage() {
                   padding: '0.875rem 1.25rem', backgroundColor: '#FFFFFF',
                   borderTop: '1px solid #E5E7EB',
                 }}>
+                  {/* Channel selector */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <div style={{
+                      display: 'inline-flex', borderRadius: '0.375rem', border: '1px solid #E5E7EB',
+                      overflow: 'hidden', fontSize: '0.75rem',
+                    }}>
+                      <button
+                        onClick={() => setMessageChannel('live_chat')}
+                        style={{
+                          padding: '0.25rem 0.625rem', border: 'none', cursor: 'pointer',
+                          backgroundColor: messageChannel === 'live_chat' ? '#FF3300' : '#FFFFFF',
+                          color: messageChannel === 'live_chat' ? '#FFFFFF' : '#6B7280',
+                          fontWeight: 500,
+                        }}
+                      >
+                        💬 Chat
+                      </button>
+                      <button
+                        onClick={() => setMessageChannel('email')}
+                        style={{
+                          padding: '0.25rem 0.625rem', border: 'none', cursor: 'pointer',
+                          borderLeft: '1px solid #E5E7EB',
+                          backgroundColor: messageChannel === 'email' ? '#FF3300' : '#FFFFFF',
+                          color: messageChannel === 'email' ? '#FFFFFF' : '#6B7280',
+                          fontWeight: 500,
+                        }}
+                      >
+                        ✉️ Email
+                      </button>
+                    </div>
+                    {messageChannel === 'email' && selectedConv?.contact?.email && (
+                      <span style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>
+                        to: {selectedConv.contact.email}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Email subject line */}
+                  {messageChannel === 'email' && (
+                    <input
+                      type="text"
+                      value={emailSubject}
+                      onChange={e => setEmailSubject(e.target.value)}
+                      placeholder="Email subject..."
+                      style={{
+                        width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #E5E7EB',
+                        borderRadius: '0.5rem', fontSize: '0.875rem', marginBottom: '0.5rem',
+                        outline: 'none', fontFamily: 'inherit',
+                      }}
+                    />
+                  )}
+
                   {/* Template dropdown */}
                   <div style={{ position: 'relative', marginBottom: '0.5rem' }}>
                     <button

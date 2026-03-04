@@ -1,41 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { executeAutomation } from '@/lib/automation-engine';
+import { withAuth, successResponse, errorResponse } from '@/lib/api-middleware';
 
 /**
  * POST /api/automations/execute
  * Manually test/trigger an automation
  * Body: { automationId, triggerData }
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, { user }) => {
   try {
-    // TODO: Get userId from auth session
-    const userId = 'demo-user';
-    
     const body = await request.json();
     const { automationId, triggerData = {} } = body;
 
     if (!automationId) {
-      return NextResponse.json(
-        { success: false, error: 'automationId is required' },
-        { status: 400 }
-      );
+      return errorResponse('automationId is required', 400, 'VALIDATION_ERROR');
     }
 
-    const result = await executeAutomation(automationId, triggerData, userId);
+    const result = await executeAutomation(automationId, triggerData, user.userId);
 
     if (!result) {
-      return NextResponse.json(
-        { success: false, error: 'Automation not found' },
-        { status: 404 }
-      );
+      return errorResponse('Automation not found', 404, 'NOT_FOUND');
     }
 
-    return NextResponse.json({ success: true, data: result });
+    return successResponse(result);
   } catch (error) {
     console.error('Error executing automation:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to execute automation' },
-      { status: 500 }
-    );
+    return errorResponse('Failed to execute automation', 500, 'INTERNAL_ERROR');
   }
-}
+});

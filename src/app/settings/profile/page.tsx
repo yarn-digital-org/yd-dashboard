@@ -113,8 +113,28 @@ export default function ProfileSettingsPage() {
     };
     reader.readAsDataURL(file);
 
-    // TODO: Upload to storage when file storage is implemented
-    setMessage({ type: 'success', text: 'Avatar preview updated (upload coming soon)' });
+    // Upload to Firebase Storage via API
+    try {
+      const uploadData = new FormData();
+      uploadData.append('file', file);
+      
+      const uploadRes = await fetch('/api/settings/profile/avatar', {
+        method: 'POST',
+        body: uploadData,
+      });
+      
+      const uploadResult = await uploadRes.json();
+      
+      if (uploadRes.ok && uploadResult.success) {
+        setAvatarUrl(uploadResult.data.avatarUrl);
+        setMessage({ type: 'success', text: 'Profile photo updated' });
+      } else {
+        setMessage({ type: 'error', text: uploadResult.error || 'Failed to upload photo' });
+      }
+    } catch (err) {
+      console.error('Avatar upload failed:', err);
+      setMessage({ type: 'error', text: 'Failed to upload photo' });
+    }
   };
 
   // Common timezones

@@ -4,6 +4,32 @@ import jwt from 'jsonwebtoken';
 import { z, ZodSchema, ZodError } from 'zod';
 import { adminDb } from './firebase-admin';
 
+// Simple in-memory rate limiting store (use Redis in production)
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+// XSS sanitization function
+function sanitizeString(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return value
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;');
+  }
+  if (Array.isArray(value)) {
+    return value.map(sanitizeString);
+  }
+  if (value && typeof value === 'object') {
+    const sanitized: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(value)) {
+      sanitized[key] = sanitizeString(val);
+    }
+    return sanitized;
+  }
+  return value;
+}
+
 // JWT_SECRET - must be set in environment
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
@@ -87,6 +113,86 @@ export class ValidationError extends ApiError {
 export class DatabaseError extends ApiError {
   constructor(message = 'Database error') {
     super(500, 'DATABASE_ERROR', message);
+  }
+}
+
+// ============================================
+// Rate Limiting & Security Helpers
+// ============================================
+
+export interface RateLimitConfig {
+  windowMs: number; // Time window in milliseconds
+  maxRequests: number; // Maximum requests per window
+  message?: string;
+}
+
+const defaultRateLimit: RateLimitConfig = {
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  maxRequests: 100, // 100 requests per 15 minutes
+  message: 'Too many requests, please try again later',
+};
+
+export function rateLimit(config: Partial<RateLimitConfig> = {}) {
+  const { windowMs, maxRequests, message } = { ...defaultRateLimit, ...config };
+
+  return async (request: NextRequest, identifier: string): Promise<void> => {
+    const now = Date.now();
+    const windowStart = Math.floor(now / windowMs) * windowMs;
+    const key = `${identifier}:${windowStart}`;
+
+    const current = rateLimitStore.get(key);
+
+    if (!current) {
+      rateLimitStore.set(key, { count: 1, resetTime: windowStart + windowMs });
+      // Clean up old entries
+      for (const [oldKey, data] of rateLimitStore.entries()) {
+        if (data.resetTime < now) {
+          rateLimitStore.delete(oldKey);
+        }
+      }
+      return;
+    }
+
+    if (current.count >= maxRequests) {
+      throw new ApiError(429, 'RATE_LIMIT_EXCEEDED', message || 'Too many requests');
+    }
+
+    current.count++;
+    rateLimitStore.set(key, current);
+  };
+}
+
+// Simple CSRF protection for state-changing operations
+export async function verifyCSRF(request: NextRequest): Promise<void> {
+  const method = request.method.toUpperCase();
+
+  // Skip CSRF for GET, HEAD, OPTIONS
+  if (['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+    return;
+  }
+
+  const origin = request.headers.get('origin');
+  const referer = request.headers.get('referer');
+  const host = request.headers.get('host');
+
+  // Check if origin matches host
+  const allowedOrigins = [
+    `https://${host}`,
+    `http://${host}`,
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.NEXTAUTH_URL,
+  ].filter(Boolean);
+
+  const isValidOrigin = origin && allowedOrigins.some(allowed =>
+    allowed && new URL(allowed).origin === origin
+  );
+
+  const isValidReferer = referer && allowedOrigins.some(allowed =>
+    allowed && referer.startsWith(allowed)
+  );
+
+  if (!isValidOrigin && !isValidReferer) {
+    throw new ForbiddenError('Invalid origin - potential CSRF attack');
   }
 }
 
@@ -196,18 +302,24 @@ export async function optionalAuth(request: NextRequest): Promise<AuthUser | nul
 
 export async function validateBody<T>(
   request: NextRequest,
-  schema: ZodSchema<T>
+  schema: ZodSchema<T>,
+  options: { sanitize?: boolean } = {}
 ): Promise<T> {
   let body: unknown;
-  
+
   try {
     body = await request.json();
   } catch {
     throw new ValidationError('Invalid JSON body');
   }
 
+  // Sanitize for XSS prevention by default
+  if (options.sanitize !== false) {
+    body = sanitizeString(body);
+  }
+
   const result = schema.safeParse(body);
-  
+
   if (!result.success) {
     const errors: Record<string, string[]> = {};
     result.error.issues.forEach((issue) => {
@@ -283,12 +395,58 @@ export function withErrorHandler<T>(handler: ApiHandler<T>): ApiHandler<T> {
   };
 }
 
-// Wrap handler with auth + error handling
-export function withAuth<T>(handler: AuthenticatedApiHandler<T>): ApiHandler<T> {
+// Enhanced wrapper with auth, rate limiting, and CSRF protection
+export function withAuth<T>(
+  handler: AuthenticatedApiHandler<T>,
+  options: {
+    rateLimit?: Partial<RateLimitConfig>;
+    skipCSRF?: boolean;
+    skipRateLimit?: boolean;
+  } = {}
+): ApiHandler<T> {
   return async (request, context): Promise<NextResponse<ApiResponse<T>>> => {
     try {
+      // CSRF protection for state-changing operations
+      if (!options.skipCSRF) {
+        await verifyCSRF(request);
+      }
+
       const user = await verifyAuth(request);
+
+      // Rate limiting based on user ID
+      if (!options.skipRateLimit) {
+        const rateLimitFn = rateLimit(options.rateLimit);
+        await rateLimitFn(request, `user:${user.userId}`);
+      }
+
       return await handler(request, { ...context, user });
+    } catch (error) {
+      return handleApiError(error) as NextResponse<ApiResponse<T>>;
+    }
+  };
+}
+
+// Public endpoint wrapper with basic rate limiting
+export function withPublicRateLimit<T>(
+  handler: ApiHandler<T>,
+  options: { rateLimit?: Partial<RateLimitConfig> } = {}
+): ApiHandler<T> {
+  return async (request, context): Promise<NextResponse<ApiResponse<T>>> => {
+    try {
+      // Rate limiting based on IP address for public endpoints
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ||
+                 request.headers.get('x-real-ip') ||
+                 (request as any).ip ||
+                 'unknown';
+
+      const rateLimitFn = rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        maxRequests: 50, // Lower limit for public endpoints
+        ...options.rateLimit,
+      });
+      await rateLimitFn(request, `ip:${ip}`);
+
+      return await handler(request, context);
     } catch (error) {
       return handleApiError(error) as NextResponse<ApiResponse<T>>;
     }

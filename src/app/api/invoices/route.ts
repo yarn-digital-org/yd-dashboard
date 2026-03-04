@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
+import { createInvoiceSchema } from '@/lib/validation-schemas';
 
 export interface InvoiceItem {
   description: string;
@@ -83,28 +84,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
-    const data = await request.json();
-    const { 
-      invoiceNumber,
-      clientName, 
-      clientEmail, 
-      items,
-      subtotal,
-      tax,
-      total,
-      status,
-      dueDate,
-      notes
-    } = data;
-
-    // Validation
-    if (!clientName) {
-      return NextResponse.json({ error: 'Client name is required' }, { status: 400 });
+    const body = await request.json();
+    const result = createInvoiceSchema.safeParse(body);
+    if (!result.success) {
+      const errors = result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', ');
+      return NextResponse.json({ success: false, error: errors, code: 'VALIDATION_ERROR' }, { status: 400 });
     }
-
-    if (!clientEmail) {
-      return NextResponse.json({ error: 'Client email is required' }, { status: 400 });
-    }
+    const { invoiceNumber, clientName, clientEmail, items, subtotal, tax, total, status, dueDate, notes } = result.data;
 
     // Generate invoice number if not provided
     let finalInvoiceNumber = invoiceNumber;

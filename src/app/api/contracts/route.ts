@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
+import { createContractSchema } from '@/lib/validation-schemas';
 
 export interface Contract {
   id: string;
@@ -73,28 +74,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
-    const data = await request.json();
-    const { 
-      title,
-      clientName, 
-      clientEmail, 
-      content,
-      status,
-      notes
-    } = data;
-
-    // Validation
-    if (!title) {
-      return NextResponse.json({ error: 'Contract title is required' }, { status: 400 });
+    const body = await request.json();
+    const result = createContractSchema.safeParse(body);
+    if (!result.success) {
+      const errors = result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', ');
+      return NextResponse.json({ success: false, error: errors, code: 'VALIDATION_ERROR' }, { status: 400 });
     }
-
-    if (!clientName) {
-      return NextResponse.json({ error: 'Client name is required' }, { status: 400 });
-    }
-
-    if (!clientEmail) {
-      return NextResponse.json({ error: 'Client email is required' }, { status: 400 });
-    }
+    const { title, clientName, clientEmail, content, status, notes } = result.data;
 
     const now = new Date().toISOString();
     

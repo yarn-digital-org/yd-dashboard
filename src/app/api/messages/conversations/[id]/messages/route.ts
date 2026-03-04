@@ -7,6 +7,7 @@ import {
   errorResponse,
   requireDb,
 } from '@/lib/api-middleware';
+import { sendEmail } from '@/lib/email-service';
 
 const sendMessageSchema = z.object({
   body: z.string().min(1, 'Message body is required').max(10000),
@@ -90,5 +91,41 @@ export const POST = withAuth(async (request, { user, params }) => {
     lastMessagePreview: data.body.substring(0, 100),
   });
 
-  return successResponse({ id: docRef.id, ...messageData });
+  // If channel is email, actually send the email via Resend
+  let emailStatus: 'sent' | 'failed' = 'sent';
+  let emailMessageId: string | undefined;
+  if (data.channel === 'email') {
+    // Get contact email
+    const contactId = convDoc.data()!.contactId;
+    const contactDoc = await db.collection('contacts').doc(contactId).get();
+    const contactEmail = contactDoc.data()?.email;
+
+    if (contactEmail) {
+      // Convert plain text body to HTML
+      const htmlBody = `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #333;">
+        ${data.body.replace(/\n/g, '<br>')}
+      </div>`;
+
+      const result = await sendEmail({
+        to: contactEmail,
+        subject: data.subject || 'Message from Yarn Digital',
+        html: htmlBody,
+      });
+
+      if (result.success) {
+        emailMessageId = result.messageId;
+      } else {
+        emailStatus = 'failed';
+        console.error('Failed to send email:', result.error);
+      }
+
+      // Update message with email status
+      await db.collection('messages').doc(docRef.id).update({
+        status: emailStatus,
+        externalMessageId: emailMessageId || null,
+      });
+    }
+  }
+
+  return successResponse({ id: docRef.id, ...messageData, status: emailStatus, externalMessageId: emailMessageId || null });
 });

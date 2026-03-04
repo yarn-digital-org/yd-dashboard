@@ -65,7 +65,7 @@ const startOfDay = (date: Date) => {
 export default function CalendarPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const { events, loading, error } = useCalendarEvents();
+  const { events, loading, error, connectionStatus } = useCalendarEvents();
 
   const [currentView, setCurrentView] = useState<ViewType>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -354,6 +354,39 @@ export default function CalendarPage() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#6B7280' }}>
                 Loading calendar...
               </div>
+            ) : connectionStatus === 'not_connected' ? (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+                flexDirection: 'column',
+                textAlign: 'center',
+                padding: '2rem'
+              }}>
+                <CalendarIcon size={80} style={{ color: '#D1D5DB', marginBottom: '1.5rem' }} />
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111827', margin: '0 0 0.5rem' }}>
+                  Connect Your Google Calendar
+                </h3>
+                <p style={{ fontSize: '1rem', color: '#6B7280', margin: '0 0 1.5rem', maxWidth: '400px' }}>
+                  Connect your Google Calendar to view, create, and manage your events directly from your dashboard.
+                </p>
+                <button
+                  onClick={() => window.location.href = '/settings/integrations'}
+                  style={{
+                    backgroundColor: '#FF3300',
+                    color: '#FFFFFF',
+                    padding: '0.75rem 1.5rem',
+                    borderRadius: '0.5rem',
+                    fontWeight: 500,
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                  }}
+                >
+                  Connect Google Calendar
+                </button>
+              </div>
             ) : error ? (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#DC2626' }}>
                 {error}
@@ -387,7 +420,29 @@ export default function CalendarPage() {
               Upcoming Events
             </h2>
 
-            {upcomingEvents.length === 0 ? (
+            {connectionStatus === 'not_connected' ? (
+              <div style={{ padding: '2rem 1rem', textAlign: 'center' }}>
+                <CalendarIcon size={32} style={{ marginBottom: '0.5rem', color: '#D1D5DB' }} />
+                <p style={{ margin: '0 0 1rem', fontSize: '0.875rem', color: '#9CA3AF' }}>
+                  Connect your Google Calendar to see upcoming events
+                </p>
+                <button
+                  onClick={() => window.location.href = '/settings/integrations'}
+                  style={{
+                    backgroundColor: '#FF3300',
+                    color: '#FFFFFF',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '0.375rem',
+                    fontWeight: 500,
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  Connect
+                </button>
+              </div>
+            ) : upcomingEvents.length === 0 ? (
               <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#9CA3AF' }}>
                 <CalendarIcon size={32} style={{ marginBottom: '0.5rem', opacity: 0.5 }} />
                 <p style={{ margin: 0, fontSize: '0.875rem' }}>No upcoming events</p>

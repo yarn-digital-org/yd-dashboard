@@ -46,6 +46,14 @@ export async function POST(request: NextRequest) {
 
     await adminDb.collection('users').doc(userId).set(userData);
 
+    // Send welcome email (fire and forget)
+    try {
+      const { sendWelcomeEmail } = await import('@/lib/email-service');
+      await sendWelcomeEmail(email, name || email.split('@')[0]);
+    } catch (e) {
+      console.error('Failed to send welcome email:', e);
+    }
+
     return NextResponse.json({ 
       success: true, 
       message: 'Account created successfully. You can now log in.'

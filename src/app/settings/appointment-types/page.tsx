@@ -295,7 +295,7 @@ export default function AppointmentTypesPage() {
                         </span>
                       )}
                       {type.addGoogleMeet && (
-                        <Video className="h-4 w-4 text-blue-600" title="Google Meet enabled" />
+                        <Video className="h-4 w-4 text-blue-600" />
                       )}
                     </div>
                     <p className="text-sm text-gray-600 mt-1">

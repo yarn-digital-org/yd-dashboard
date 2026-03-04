@@ -18,7 +18,7 @@ const createBookingSchema = z.object({
   guestName: z.string().min(1).max(100),
   guestEmail: z.string().email(),
   guestPhone: z.string().max(20).optional(),
-  customAnswers: z.record(z.string()).optional(),
+  customAnswers: z.record(z.string(), z.string()).optional(),
 });
 
 // POST - Create booking (public route, no auth)
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
     console.error('Booking creation error:', error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Invalid request data', details: error.errors },
+        { success: false, error: 'Invalid request data', details: error.issues },
         { status: 400 }
       );
     }

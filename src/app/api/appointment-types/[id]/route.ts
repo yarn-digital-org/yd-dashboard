@@ -28,7 +28,7 @@ const appointmentTypeSchema = z.object({
 // GET - Get single appointment type
 export const GET = withAuth(async (request, { user, params }) => {
   const db = requireDb();
-  const { id } = params;
+  const { id } = await params;
 
   const doc = await db.collection('appointmentTypes').doc(id).get();
 
@@ -47,7 +47,7 @@ export const GET = withAuth(async (request, { user, params }) => {
 // PUT - Update appointment type
 export const PUT = withAuth(async (request, { user, params }) => {
   const db = requireDb();
-  const { id } = params;
+  const { id } = await params;
   const updates = await validateBody(request, appointmentTypeSchema);
 
   const docRef = db.collection('appointmentTypes').doc(id);
@@ -79,7 +79,7 @@ export const PUT = withAuth(async (request, { user, params }) => {
 // DELETE - Delete appointment type
 export const DELETE = withAuth(async (request, { user, params }) => {
   const db = requireDb();
-  const { id } = params;
+  const { id } = await params;
 
   const docRef = db.collection('appointmentTypes').doc(id);
   const doc = await docRef.get();

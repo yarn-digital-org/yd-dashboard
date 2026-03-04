@@ -69,6 +69,12 @@ export class NotFoundError extends ApiError {
   }
 }
 
+export class BadRequestError extends ApiError {
+  constructor(message: string) {
+    super(400, 'BAD_REQUEST', message);
+  }
+}
+
 export class ValidationError extends ApiError {
   constructor(
     message: string,

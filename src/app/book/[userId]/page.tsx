@@ -19,6 +19,9 @@ interface AppointmentType {
   durationMinutes: number;
   description?: string;
   color?: string;
+  isActive?: boolean;
+  addGoogleMeet?: boolean;
+  bufferMinutes?: number;
   customQuestions?: {
     id: string;
     question: string;

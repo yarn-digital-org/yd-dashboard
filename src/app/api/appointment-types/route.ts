@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     }));
 
     return successResponse(appointmentTypes);
-  })(request);
+  })(request, { params: Promise.resolve({}) });
 }
 
 // POST - Create new appointment type

@@ -5,8 +5,14 @@
 
 import { Resend } from 'resend';
 
-// Initialize Resend (will use RESEND_API_KEY from env)
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend lazily (will use RESEND_API_KEY from env)
+let _resend: Resend | null = null;
+function getResend(): Resend {
+  if (!_resend) {
+    _resend = new Resend(process.env.RESEND_API_KEY || 'dummy_key_for_build');
+  }
+  return _resend;
+}
 
 // Default sender email
 const DEFAULT_FROM = process.env.EMAIL_FROM || 'noreply@yarndigital.co.uk';
@@ -37,7 +43,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
       return { success: false, error: 'Email service not configured' };
     }
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
       from: options.from || DEFAULT_FROM,
       to: options.to,
       subject: options.subject,

@@ -193,7 +193,7 @@ describe('Contracts API', () => {
 
       // Simulate signing
       contract.status = 'signed' as any;
-      contract.signedAt = new Date().toISOString();
+      (contract as any).signedAt = new Date().toISOString();
 
       expect(contract.status).toBe('signed');
       expect(contract.signedAt).toBeTruthy();

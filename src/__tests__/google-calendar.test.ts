@@ -53,7 +53,7 @@ describe('Google Calendar Integration', () => {
     it('should throw error if tokens not found', async () => {
       // Mock empty response
       const { adminDb } = await import('@/lib/firebase-admin');
-      vi.mocked(adminDb.collection).mockReturnValueOnce({
+      vi.mocked(adminDb!.collection).mockReturnValueOnce({
         doc: vi.fn(() => ({
           collection: vi.fn(() => ({
             doc: vi.fn(() => ({

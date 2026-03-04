@@ -7,7 +7,14 @@ import { adminDb } from '@/lib/firebase-admin';
 import { sendEmail } from '@/lib/email-service';
 
 // Types
-export type TriggerType = 'new_contact' | 'new_lead' | 'invoice_overdue' | 'form_submission';
+export type TriggerType =
+  | 'new_contact'
+  | 'new_lead'
+  | 'invoice_overdue'
+  | 'form_submission'
+  | 'new_booking'
+  | 'event_starting_soon'
+  | 'event_completed';
 export type ActionType = 'send_email' | 'create_task' | 'update_status' | 'notify';
 
 export interface AutomationTrigger {

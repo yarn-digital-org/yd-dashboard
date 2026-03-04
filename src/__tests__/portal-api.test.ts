@@ -84,7 +84,7 @@ describe('Portal Settings API', () => {
     const { PUT } = await import('@/app/api/portal/settings/route');
     const res = await PUT(new Request('http://localhost/api/portal/settings', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'origin': 'http://localhost', 'host': 'localhost' },
       body: JSON.stringify({ enabled: true, subdomain: 'test-biz', showProjects: true }),
     }) as any, { params: Promise.resolve({}) });
     const data = await res.json();
@@ -106,7 +106,7 @@ describe('Portal Settings API', () => {
     const { PUT } = await import('@/app/api/portal/settings/route');
     const res = await PUT(new Request('http://localhost/api/portal/settings', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'origin': 'http://localhost', 'host': 'localhost' },
       body: JSON.stringify({ enabled: false }),
     }) as any, { params: Promise.resolve({}) });
     const data = await res.json();
@@ -260,7 +260,7 @@ describe('Project Files API', () => {
     const { POST } = await import('@/app/api/projects/[id]/files/route');
     const res = await POST(new Request('http://localhost/api/projects/p1/files', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'origin': 'http://localhost', 'host': 'localhost' },
       body: JSON.stringify({ filename: 'report.pdf', mimeType: 'application/pdf', size: 2048 }),
     }) as any, { params: Promise.resolve({ id: 'p1' }) });
     const data = await res.json();
@@ -279,7 +279,7 @@ describe('Project Files API', () => {
     const { POST } = await import('@/app/api/projects/[id]/files/route');
     const res = await POST(new Request('http://localhost/api/projects/p1/files', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'origin': 'http://localhost', 'host': 'localhost' },
       body: JSON.stringify({ mimeType: 'application/pdf' }),
     }) as any, { params: Promise.resolve({ id: 'p1' }) });
     expect(res.status).toBe(400);

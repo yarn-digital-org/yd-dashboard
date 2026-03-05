@@ -62,6 +62,18 @@ const startOfDay = (date: Date) => {
   return result;
 };
 
+const getStartOfWeek = (date: Date) => {
+  const result = new Date(date);
+  const day = result.getDay();
+  // Start week on Monday (day=0 is Sunday, so go back 6 days; otherwise go back day-1)
+  const diff = day === 0 ? 6 : day - 1;
+  result.setDate(result.getDate() - diff);
+  result.setHours(0, 0, 0, 0);
+  return result;
+};
+
+const HOURS = Array.from({ length: 13 }, (_, i) => i + 8); // 8am to 8pm
+
 export default function CalendarPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -249,6 +261,293 @@ export default function CalendarPage() {
     );
   };
 
+  // Get events for a specific day within a time range
+  const getEventsInRange = (day: Date, startHour: number, endHour: number) => {
+    return events.filter(event => {
+      if (!isSameDay(event.start, day)) return false;
+      const eventHour = event.start.getHours();
+      return eventHour >= startHour && eventHour < endHour;
+    });
+  };
+
+  // Calculate event position within the time grid
+  const getEventStyle = (event: CalendarEvent): React.CSSProperties => {
+    const startMinutes = event.start.getHours() * 60 + event.start.getMinutes();
+    const endMinutes = event.end.getHours() * 60 + event.end.getMinutes();
+    const duration = Math.max(endMinutes - startMinutes, 30); // min 30 mins display
+    const topOffset = ((startMinutes - 8 * 60) / 60) * 60; // 60px per hour, starting from 8am
+    const height = (duration / 60) * 60;
+    
+    return {
+      position: 'absolute' as const,
+      top: `${topOffset}px`,
+      left: '2px',
+      right: '2px',
+      height: `${Math.max(height, 20)}px`,
+      backgroundColor: event.color || '#FF3300',
+      color: '#FFFFFF',
+      fontSize: '0.7rem',
+      padding: '2px 4px',
+      borderRadius: '4px',
+      overflow: 'hidden',
+      cursor: 'pointer',
+      border: 'none',
+      textAlign: 'left' as const,
+      zIndex: 1,
+    };
+  };
+
+  const renderWeekView = () => {
+    const weekStart = getStartOfWeek(currentDate);
+    const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+    const today = new Date();
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {/* Day headers */}
+        <div style={{ display: 'grid', gridTemplateColumns: '60px repeat(7, 1fr)', borderBottom: '1px solid #E5E7EB' }}>
+          <div style={{ padding: '0.5rem', borderRight: '1px solid #E5E7EB' }} />
+          {weekDays.map((day, i) => {
+            const isToday = isSameDay(day, today);
+            return (
+              <div key={i} style={{
+                padding: '0.75rem 0.5rem',
+                textAlign: 'center',
+                borderRight: i < 6 ? '1px solid #E5E7EB' : 'none',
+                backgroundColor: isToday ? '#FFF5F2' : 'transparent',
+              }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6B7280', marginBottom: '0.25rem' }}>
+                  {dayNames[i]}
+                </div>
+                <div style={{
+                  fontSize: '1.25rem',
+                  fontWeight: isToday ? 700 : 400,
+                  color: isToday ? '#FF3300' : '#374151',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto',
+                  backgroundColor: isToday ? '#FF330015' : 'transparent',
+                }}>
+                  {day.getDate()}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Time grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '60px repeat(7, 1fr)', maxHeight: '600px', overflow: 'auto' }}>
+          {/* Time labels + grid rows */}
+          {HOURS.map((hour) => (
+            <div key={hour} style={{ display: 'contents' }}>
+              <div style={{
+                padding: '0.25rem 0.5rem',
+                fontSize: '0.75rem',
+                color: '#9CA3AF',
+                textAlign: 'right',
+                borderRight: '1px solid #E5E7EB',
+                borderBottom: '1px solid #F3F4F6',
+                height: '60px',
+                boxSizing: 'border-box',
+              }}>
+                {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
+              </div>
+              {weekDays.map((day, dayIdx) => {
+                const hourEvents = getEventsInRange(day, hour, hour + 1);
+                return (
+                  <div key={dayIdx} style={{
+                    position: 'relative',
+                    borderRight: dayIdx < 6 ? '1px solid #E5E7EB' : 'none',
+                    borderBottom: '1px solid #F3F4F6',
+                    height: '60px',
+                    backgroundColor: isSameDay(day, today) ? '#FFFBFA' : 'transparent',
+                  }}>
+                    {hourEvents.map((event) => (
+                      <button
+                        key={event.id}
+                        onClick={() => handleSelectEvent(event)}
+                        style={{
+                          position: 'absolute',
+                          top: `${(event.start.getMinutes() / 60) * 60}px`,
+                          left: '2px',
+                          right: '2px',
+                          height: `${Math.max(((event.end.getTime() - event.start.getTime()) / 3600000) * 60, 20)}px`,
+                          backgroundColor: event.color || '#FF3300',
+                          color: '#FFFFFF',
+                          fontSize: '0.7rem',
+                          padding: '2px 4px',
+                          borderRadius: '4px',
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          border: 'none',
+                          textAlign: 'left',
+                          zIndex: 1,
+                        }}
+                      >
+                        <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {event.title}
+                        </div>
+                        <div style={{ opacity: 0.9 }}>{formatDate(event.start, 'HH:mm')}</div>
+                      </button>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderDayView = () => {
+    const today = new Date();
+    const isToday = isSameDay(currentDate, today);
+    const dayEvents = getEventsForDay(currentDate);
+
+    return (
+      <div style={{ display: 'flex', gap: '1rem' }}>
+        {/* Time grid */}
+        <div style={{ flex: 1 }}>
+          <div style={{
+            padding: '0.75rem 1rem',
+            borderBottom: '1px solid #E5E7EB',
+            backgroundColor: isToday ? '#FFF5F2' : 'transparent',
+          }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6B7280' }}>
+              {formatDate(currentDate, 'EEEE')}
+            </div>
+            <div style={{
+              fontSize: '1.5rem',
+              fontWeight: isToday ? 700 : 500,
+              color: isToday ? '#FF3300' : '#374151',
+            }}>
+              {formatDate(currentDate, 'MMMM d, yyyy')}
+            </div>
+          </div>
+
+          <div style={{ maxHeight: '600px', overflow: 'auto' }}>
+            {HOURS.map((hour) => {
+              const hourEvents = getEventsInRange(currentDate, hour, hour + 1);
+              return (
+                <div key={hour} style={{
+                  display: 'grid',
+                  gridTemplateColumns: '80px 1fr',
+                  minHeight: '60px',
+                  borderBottom: '1px solid #F3F4F6',
+                }}>
+                  <div style={{
+                    padding: '0.25rem 0.75rem',
+                    fontSize: '0.8rem',
+                    color: '#9CA3AF',
+                    textAlign: 'right',
+                    borderRight: '1px solid #E5E7EB',
+                  }}>
+                    {hour === 12 ? '12:00 PM' : hour > 12 ? `${hour - 12}:00 PM` : `${hour}:00 AM`}
+                  </div>
+                  <div style={{ position: 'relative', minHeight: '60px' }}>
+                    {hourEvents.map((event) => (
+                      <button
+                        key={event.id}
+                        onClick={() => handleSelectEvent(event)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '0.5rem',
+                          width: 'calc(100% - 8px)',
+                          margin: '2px 4px',
+                          padding: '0.5rem',
+                          backgroundColor: event.color || '#FF3300',
+                          color: '#FFFFFF',
+                          borderRadius: '6px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          minHeight: `${Math.max(((event.end.getTime() - event.start.getTime()) / 3600000) * 60, 30)}px`,
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{event.title}</div>
+                          <div style={{ opacity: 0.9, fontSize: '0.75rem', marginTop: '2px' }}>
+                            {formatEventTime(event.start, event.end)}
+                          </div>
+                          {event.description && (
+                            <div style={{ opacity: 0.8, fontSize: '0.7rem', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '300px' }}>
+                              {event.description}
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Day event list sidebar */}
+        <div style={{
+          width: '260px',
+          borderLeft: '1px solid #E5E7EB',
+          padding: '1rem',
+        }}>
+          <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827', margin: '0 0 1rem' }}>
+            Events for {formatDate(currentDate, 'MMM d')}
+          </h3>
+          {dayEvents.length === 0 ? (
+            <div style={{ padding: '2rem 0', textAlign: 'center', color: '#9CA3AF', fontSize: '0.875rem' }}>
+              No events scheduled
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {dayEvents.sort((a, b) => a.start.getTime() - b.start.getTime()).map((event) => (
+                <button
+                  key={event.id}
+                  onClick={() => handleSelectEvent(event)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '0.5rem',
+                    padding: '0.625rem',
+                    backgroundColor: '#F9FAFB',
+                    borderRadius: '0.5rem',
+                    border: 'none',
+                    cursor: 'pointer',
+                    width: '100%',
+                    textAlign: 'left',
+                  }}
+                >
+                  <div style={{
+                    width: '4px',
+                    height: '32px',
+                    backgroundColor: event.color || '#FF3300',
+                    borderRadius: '2px',
+                    flexShrink: 0,
+                  }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#111827', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {event.title}
+                    </p>
+                    <p style={{ fontSize: '0.725rem', color: '#6B7280', margin: '0.125rem 0 0', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <Clock size={10} />
+                      {formatEventTime(event.start, event.end)}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   if (authLoading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -302,7 +601,16 @@ export default function CalendarPage() {
             </div>
 
             <span style={{ fontSize: '1rem', fontWeight: 500, color: '#374151' }}>
-              {formatDate(currentDate, 'MMMM yyyy')}
+              {currentView === 'month' && formatDate(currentDate, 'MMMM yyyy')}
+              {currentView === 'week' && (() => {
+                const weekStart = getStartOfWeek(currentDate);
+                const weekEnd = addDays(weekStart, 6);
+                if (weekStart.getMonth() === weekEnd.getMonth()) {
+                  return `${formatDate(weekStart, 'MMMM d')} – ${weekEnd.getDate()}, ${weekEnd.getFullYear()}`;
+                }
+                return `${formatDate(weekStart, 'MMM d')} – ${formatDate(weekEnd, 'MMM d')}, ${weekEnd.getFullYear()}`;
+              })()}
+              {currentView === 'day' && formatDate(currentDate, 'EEEE, MMMM d, yyyy')}
             </span>
           </div>
 
@@ -389,16 +697,8 @@ export default function CalendarPage() {
             ) : (
               <div style={{ backgroundColor: '#FFFFFF', borderRadius: '0.75rem', border: '1px solid #E5E7EB', padding: '0.5rem' }}>
                 {currentView === 'month' && renderMonthView()}
-                {currentView === 'week' && (
-                  <div style={{ padding: '2rem', textAlign: 'center', color: '#6B7280' }}>
-                    Week view coming soon
-                  </div>
-                )}
-                {currentView === 'day' && (
-                  <div style={{ padding: '2rem', textAlign: 'center', color: '#6B7280' }}>
-                    Day view coming soon
-                  </div>
-                )}
+                {currentView === 'week' && renderWeekView()}
+                {currentView === 'day' && renderDayView()}
               </div>
             )}
           </div>

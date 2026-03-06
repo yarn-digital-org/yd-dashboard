@@ -60,17 +60,6 @@ export default function OnboardingPage() {
   const [importStatus, setImportStatus] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Check auth and load saved progress
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login');
-      return;
-    }
-    if (user) {
-      loadProgress();
-    }
-  }, [user, authLoading]);
-
   const loadProgress = async () => {
     try {
       const res = await fetch('/api/onboarding');
@@ -86,6 +75,17 @@ export default function OnboardingPage() {
       }
     } catch {}
   };
+
+  // Check auth and load saved progress
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+      return;
+    }
+    if (user) {
+      loadProgress();
+    }
+  }, [user, authLoading]);
 
   const saveProgress = async (updates: Partial<OnboardingState>) => {
     const newState = { ...state, ...updates };

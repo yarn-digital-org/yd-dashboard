@@ -271,7 +271,7 @@ function IntegrationsContent() {
         <div className="mt-6 p-4 bg-blue-50 rounded-lg">
           <h4 className="text-sm font-medium text-blue-900 mb-1">Need another integration?</h4>
           <p className="text-sm text-blue-700">
-            We're constantly adding new integrations. Let us know what you need!
+            We&apos;re constantly adding new integrations. Let us know what you need!
           </p>
         </div>
       </div>

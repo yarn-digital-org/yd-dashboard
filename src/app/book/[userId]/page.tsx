@@ -200,7 +200,7 @@ export default function PublicBookingPage() {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Booking Confirmed!</h2>
           <p className="text-gray-600 mb-6">
-            Your appointment has been scheduled. You'll receive a confirmation email shortly.
+            Your appointment has been scheduled. You&apos;ll receive a confirmation email shortly.
           </p>
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <p className="text-sm text-gray-600 mb-1">Appointment Type</p>

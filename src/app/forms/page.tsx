@@ -567,7 +567,7 @@ export default function FormsPage() {
                   {formData.fields.length === 0 ? (
                     <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center">
                       <Type className="mx-auto text-gray-300 mb-2" size={32} />
-                      <p className="text-gray-500 text-sm">No fields yet. Click "Add Field" to start building your form.</p>
+                      <p className="text-gray-500 text-sm">No fields yet. Click &ldquo;Add Field&rdquo; to start building your form.</p>
                     </div>
                   ) : (
                     <div className="space-y-3">

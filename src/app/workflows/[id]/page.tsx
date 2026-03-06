@@ -1033,7 +1033,7 @@ export default function WorkflowBuilderPage() {
                 <li>Drag tasks to reorder them</li>
                 <li>Use due day offsets for automatic deadline calculation</li>
                 <li>Add subtasks for detailed checklists</li>
-                <li>Labels help categorize tasks (e.g., "Client-facing", "Internal")</li>
+                <li>Labels help categorize tasks (e.g., &ldquo;Client-facing&rdquo;, &ldquo;Internal&rdquo;)</li>
               </ul>
             </div>
           </div>

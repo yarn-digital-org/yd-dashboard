@@ -275,9 +275,9 @@ export default function InvoicesPage() {
       <Sidebar />
       <main className="flex-1 p-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Invoices</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Invoices</h1>
             <p className="text-gray-500 text-sm mt-1">
               {invoices.length} {invoices.length === 1 ? 'invoice' : 'invoices'}
             </p>
@@ -288,7 +288,7 @@ export default function InvoicesPage() {
               resetForm();
               setShowModal(true);
             }}
-            className="flex items-center gap-2 bg-[#FF3300] hover:bg-[#E62E00] text-white px-4 py-2 rounded-lg font-medium transition"
+            className="flex items-center justify-center gap-2 bg-[#FF3300] hover:bg-[#E62E00] text-white px-4 py-2 rounded-lg font-medium transition w-full sm:w-auto"
           >
             <Plus size={18} />
             Create Invoice
@@ -370,7 +370,7 @@ export default function InvoicesPage() {
                 <div className="absolute top-4 right-4">
                   <button
                     onClick={() => setActiveMenu(activeMenu === invoice.id ? null : invoice.id)}
-                    className="p-1 rounded hover:bg-gray-100 transition opacity-0 group-hover:opacity-100"
+                    className="p-1 rounded hover:bg-gray-100 transition sm:opacity-0 sm:group-hover:opacity-100"
                   >
                     <MoreVertical size={18} className="text-gray-400" />
                   </button>
@@ -466,7 +466,7 @@ export default function InvoicesPage() {
             onClick={() => setShowModal(false)}
           >
             <div 
-              className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-none sm:rounded-xl w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center p-6 border-b border-gray-200">
@@ -481,8 +481,8 @@ export default function InvoicesPage() {
                 </button>
               </div>
               
-              <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+              <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Client Name *
@@ -516,7 +516,7 @@ export default function InvoicesPage() {
                   </label>
                   <div className="space-y-2">
                     {formData.items.map((item, index) => (
-                      <div key={index} className="flex gap-2 items-start">
+                      <div key={index} className="flex flex-col sm:flex-row gap-2 items-start p-3 sm:p-0 bg-gray-50 sm:bg-transparent rounded-lg sm:rounded-none">
                         <input
                           type="text"
                           placeholder="Description"
@@ -526,42 +526,46 @@ export default function InvoicesPage() {
                             newItems[index].description = e.target.value;
                             setFormData({ ...formData, items: newItems });
                           }}
-                          className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300]"
+                          className="w-full sm:flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300]"
                         />
-                        <input
-                          type="number"
-                          placeholder="Qty"
-                          min="1"
-                          value={item.quantity}
-                          onChange={(e) => {
-                            const newItem = { ...item, quantity: parseInt(e.target.value) || 0 };
-                            updateItemAmount(index, newItem);
-                          }}
-                          className="w-20 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300]"
-                        />
-                        <input
-                          type="number"
-                          placeholder="Rate"
-                          min="0"
-                          step="0.01"
-                          value={item.rate}
-                          onChange={(e) => {
-                            const newItem = { ...item, rate: parseFloat(e.target.value) || 0 };
-                            updateItemAmount(index, newItem);
-                          }}
-                          className="w-28 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300]"
-                        />
-                        <div className="w-28 px-3 py-2 bg-gray-50 rounded-lg text-gray-700">
-                          {formatCurrency(item.amount)}
+                        <div className="flex gap-2 w-full sm:w-auto">
+                          <input
+                            type="number"
+                            placeholder="Qty"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const newItem = { ...item, quantity: parseInt(e.target.value) || 0 };
+                              updateItemAmount(index, newItem);
+                            }}
+                            className="w-full sm:w-20 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300]"
+                          />
+                          <input
+                            type="number"
+                            placeholder="Rate"
+                            min="0"
+                            step="0.01"
+                            value={item.rate}
+                            onChange={(e) => {
+                              const newItem = { ...item, rate: parseFloat(e.target.value) || 0 };
+                              updateItemAmount(index, newItem);
+                            }}
+                            className="w-full sm:w-28 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300]"
+                          />
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => removeItem(index)}
-                          className="p-2 text-gray-400 hover:text-red-500 transition"
-                          disabled={formData.items.length === 1}
-                        >
-                          <X size={18} />
-                        </button>
+                        <div className="flex gap-2 w-full sm:w-auto items-center">
+                          <div className="flex-1 sm:w-28 px-3 py-2 bg-white sm:bg-gray-50 rounded-lg text-gray-700 border border-gray-200 sm:border-0">
+                            {formatCurrency(item.amount)}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeItem(index)}
+                            className="p-2 text-gray-400 hover:text-red-500 transition"
+                            disabled={formData.items.length === 1}
+                          >
+                            <X size={18} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -598,7 +602,7 @@ export default function InvoicesPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Status

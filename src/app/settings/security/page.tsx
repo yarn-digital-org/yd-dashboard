@@ -255,7 +255,7 @@ export default function SecuritySettingsPage() {
                     <p className="text-sm font-medium text-gray-900">Save your backup codes</p>
                   </div>
                   <p className="text-sm text-gray-600 mb-4">Store these codes in a safe place. Each code can only be used once if you lose access to your authenticator.</p>
-                  <div className="grid grid-cols-2 gap-2 mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 p-4 bg-white rounded-lg border border-gray-200">
                     {backupCodes.map((code) => (
                       <code key={code} className="text-sm font-mono text-gray-700 py-1">{code}</code>
                     ))}

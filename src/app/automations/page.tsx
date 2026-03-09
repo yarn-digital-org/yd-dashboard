@@ -260,11 +260,11 @@ export default function AutomationsPage() {
   return (
     <div className="flex min-h-screen bg-white">
       <Sidebar />
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-4 sm:p-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Automations</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Automations</h1>
             <p className="text-gray-500 text-sm mt-1">
               {automations.length} {automations.length === 1 ? 'automation' : 'automations'}
             </p>
@@ -275,7 +275,7 @@ export default function AutomationsPage() {
               resetForm();
               setShowModal(true);
             }}
-            className="flex items-center gap-2 bg-[#FF3300] hover:bg-[#E62E00] text-white px-4 py-2 rounded-lg font-medium transition"
+            className="flex items-center justify-center gap-2 bg-[#FF3300] hover:bg-[#E62E00] text-white px-4 py-2 min-h-[44px] rounded-lg font-medium transition w-full sm:w-auto"
           >
             <Plus size={18} />
             Create Automation
@@ -396,7 +396,7 @@ export default function AutomationsPage() {
                     <div className="relative">
                       <button
                         onClick={() => setActiveMenu(activeMenu === automation.id ? null : automation.id)}
-                        className="p-2 rounded-lg hover:bg-gray-100 transition opacity-0 group-hover:opacity-100"
+                        className="p-2 rounded-lg hover:bg-gray-100 transition sm:opacity-0 sm:group-hover:opacity-100"
                       >
                         <MoreVertical size={18} className="text-gray-400" />
                       </button>
@@ -446,7 +446,7 @@ export default function AutomationsPage() {
         {showModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
             <div
-              className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-none sm:rounded-xl w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center p-6 border-b border-gray-200">
@@ -458,7 +458,7 @@ export default function AutomationsPage() {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
                 {/* Name and Description */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
@@ -491,7 +491,7 @@ export default function AutomationsPage() {
                       When this happens (Trigger)
                     </span>
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {TRIGGER_OPTIONS.map((option) => {
                       const Icon = option.icon;
                       const isSelected = formData.trigger.type === option.value;

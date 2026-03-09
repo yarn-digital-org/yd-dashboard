@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { Sidebar } from '@/components/Sidebar';
 import {
   MessageSquare, Send, Search, Plus, MoreVertical,
@@ -51,6 +52,7 @@ interface Template {
 export default function MessagesPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const isMobile = useIsMobile();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -292,13 +294,13 @@ export default function MessagesPage() {
       <Sidebar />
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
         {/* Header */}
-        <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #E5E7EB', backgroundColor: '#FFFFFF' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', margin: 0 }}>Messages</h1>
-              <p style={{ color: '#6B7280', margin: '0.25rem 0 0', fontSize: '0.875rem' }}>
+        <div style={{ padding: isMobile ? '0.75rem 1rem' : '1rem 1.5rem', borderBottom: '1px solid #E5E7EB', backgroundColor: '#FFFFFF' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ flex: 1 }}>
+              <h1 style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: 700, color: '#111827', margin: 0 }}>Messages</h1>
+              {!isMobile && <p style={{ color: '#6B7280', margin: '0.25rem 0 0', fontSize: '0.875rem' }}>
                 {conversations.length} conversation{conversations.length !== 1 ? 's' : ''}
-              </p>
+              </p>}
             </div>
             <button
               onClick={() => setShowNewConv(true)}
@@ -306,11 +308,11 @@ export default function MessagesPage() {
                 display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
                 padding: '0.5rem 1rem', backgroundColor: '#FF3300', color: '#FFFFFF',
                 border: 'none', borderRadius: '0.5rem', fontSize: '0.875rem',
-                fontWeight: 600, cursor: 'pointer',
+                fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
               }}
             >
               <Plus size={16} />
-              New Conversation
+              {isMobile ? 'New' : 'New Conversation'}
             </button>
           </div>
         </div>
@@ -319,8 +321,12 @@ export default function MessagesPage() {
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           {/* Conversation List */}
           <div style={{
-            width: '360px', borderRight: '1px solid #E5E7EB', backgroundColor: '#FFFFFF',
-            display: 'flex', flexDirection: 'column', flexShrink: 0,
+            width: isMobile ? '100%' : '360px',
+            borderRight: isMobile ? 'none' : '1px solid #E5E7EB',
+            backgroundColor: '#FFFFFF',
+            display: (isMobile && selectedConv) ? 'none' : 'flex',
+            flexDirection: 'column',
+            flexShrink: 0,
           }}>
             {/* Search */}
             <div style={{ padding: '0.75rem', borderBottom: '1px solid #F3F4F6' }}>
@@ -466,7 +472,12 @@ export default function MessagesPage() {
           </div>
 
           {/* Message Thread */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: '#F9FAFB' }}>
+          <div style={{
+            flex: 1,
+            display: (isMobile && !selectedConv) ? 'none' : 'flex',
+            flexDirection: 'column',
+            backgroundColor: '#F9FAFB',
+          }}>
             {!selectedConv ? (
               <div style={{
                 flex: 1, display: 'flex', flexDirection: 'column',
@@ -494,6 +505,19 @@ export default function MessagesPage() {
                   borderBottom: '1px solid #E5E7EB', display: 'flex',
                   alignItems: 'center', gap: '0.75rem',
                 }}>
+                  {/* Mobile back button */}
+                  {isMobile && (
+                    <button
+                      onClick={() => { setSelectedConv(null); setMessages([]); }}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        padding: '0.5rem', color: '#6B7280', display: 'flex',
+                        alignItems: 'center', flexShrink: 0,
+                      }}
+                    >
+                      ← 
+                    </button>
+                  )}
                   <div style={{
                     width: '36px', height: '36px', borderRadius: '50%',
                     backgroundColor: '#FF3300', display: 'flex', alignItems: 'center',
@@ -535,7 +559,7 @@ export default function MessagesPage() {
                         }}
                       >
                         <div style={{
-                          maxWidth: '70%', padding: '0.625rem 0.875rem',
+                          maxWidth: isMobile ? '85%' : '70%', padding: '0.625rem 0.875rem',
                           borderRadius: msg.direction === 'outbound'
                             ? '1rem 1rem 0.25rem 1rem'
                             : '1rem 1rem 1rem 0.25rem',
@@ -731,7 +755,8 @@ export default function MessagesPage() {
             <div
               style={{
                 backgroundColor: '#FFFFFF', borderRadius: '0.75rem',
-                width: '420px', maxHeight: '500px', display: 'flex', flexDirection: 'column',
+                width: isMobile ? '95vw' : '420px', maxHeight: isMobile ? '85vh' : '500px',
+                display: 'flex', flexDirection: 'column',
                 boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
               }}
               onClick={e => e.stopPropagation()}

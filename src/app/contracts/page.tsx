@@ -217,9 +217,9 @@ export default function ContractsPage() {
       <Sidebar />
       <main className="flex-1 p-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Contracts</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Contracts</h1>
             <p className="text-gray-500 text-sm mt-1">
               {contracts.length} {contracts.length === 1 ? 'contract' : 'contracts'}
             </p>
@@ -230,7 +230,7 @@ export default function ContractsPage() {
               resetForm();
               setShowModal(true);
             }}
-            className="flex items-center gap-2 bg-[#FF3300] hover:bg-[#E62E00] text-white px-4 py-2 rounded-lg font-medium transition"
+            className="flex items-center justify-center gap-2 bg-[#FF3300] hover:bg-[#E62E00] text-white px-4 py-2 rounded-lg font-medium transition w-full sm:w-auto"
           >
             <Plus size={18} />
             Create Contract
@@ -312,7 +312,7 @@ export default function ContractsPage() {
                 <div className="absolute top-4 right-4">
                   <button
                     onClick={() => setActiveMenu(activeMenu === contract.id ? null : contract.id)}
-                    className="p-1 rounded hover:bg-gray-100 transition opacity-0 group-hover:opacity-100"
+                    className="p-1 rounded hover:bg-gray-100 transition sm:opacity-0 sm:group-hover:opacity-100"
                   >
                     <MoreVertical size={18} className="text-gray-400" />
                   </button>
@@ -411,7 +411,7 @@ export default function ContractsPage() {
             onClick={() => setShowModal(false)}
           >
             <div 
-              className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-none sm:rounded-xl w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center p-6 border-b border-gray-200">
@@ -426,7 +426,7 @@ export default function ContractsPage() {
                 </button>
               </div>
               
-              <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Contract Title *
@@ -441,7 +441,7 @@ export default function ContractsPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Client Name *

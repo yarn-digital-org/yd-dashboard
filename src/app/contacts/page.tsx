@@ -269,14 +269,14 @@ export default function ContactsPage() {
       <Sidebar />
       <main className="flex-1 p-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Contacts</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Contacts</h1>
             <p className="text-gray-500 text-sm mt-1">
               {contacts.length} {contacts.length === 1 ? 'contact' : 'contacts'}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
             {/* Duplicate Detection */}
             <button
               onClick={() => setShowDuplicateDetector(true)}
@@ -416,7 +416,7 @@ export default function ContactsPage() {
                 <div className="absolute top-4 right-4">
                   <button
                     onClick={() => setActiveMenu(activeMenu === contact.id ? null : contact.id)}
-                    className="p-1 rounded hover:bg-gray-100 transition opacity-0 group-hover:opacity-100"
+                    className="p-2 rounded hover:bg-gray-100 transition sm:opacity-0 sm:group-hover:opacity-100"
                   >
                     <MoreVertical size={18} className="text-gray-400" />
                   </button>
@@ -538,7 +538,7 @@ export default function ContactsPage() {
             onClick={() => setShowModal(false)}
           >
             <div 
-              className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-none sm:rounded-xl w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center p-6 border-b border-gray-200">
@@ -553,8 +553,8 @@ export default function ContactsPage() {
                 </button>
               </div>
               
-              <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+              <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       First Name *
@@ -606,7 +606,7 @@ export default function ContactsPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Company

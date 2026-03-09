@@ -1119,6 +1119,60 @@ export interface Subscription {
 }
 
 // ============================================
+// MODULE: Skills Library
+// ============================================
+
+export type SkillCategory = 'Content' | 'SEO' | 'Development' | 'Marketing' | 'Design' | 'Analytics' | 'Operations';
+export type SkillSource = 'internal' | 'imported';
+
+export interface Skill {
+  id: string;
+  orgId: string;
+  name: string;
+  description: string;
+  category: SkillCategory;
+  content: string; // markdown
+  tags: string[];
+  agentIds: string[]; // which agents have this skill
+  source: SkillSource;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// ============================================
+// MODULE: Client Knowledge Base
+// ============================================
+
+export type ClientDocStatus = 'active' | 'prospect' | 'past';
+
+export interface ClientDocContact {
+  name: string;
+  role: string;
+  email: string;
+  phone?: string;
+}
+
+export interface ClientDocProject {
+  name: string;
+  status: string;
+  description: string;
+}
+
+export interface ClientDoc {
+  id: string;
+  orgId: string;
+  clientName: string;
+  industry: string;
+  status: ClientDocStatus;
+  overview: string; // markdown
+  contacts: ClientDocContact[];
+  projects: ClientDocProject[];
+  meetingNotes: string; // markdown
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// ============================================
 // MODULE: Agents (AI Team)
 // ============================================
 
@@ -1261,6 +1315,10 @@ export const COLLECTIONS = {
   // Agents & Tasks
   AGENTS: 'agents',
   TASKS: 'tasks',
+  
+  // Skills & Client Docs
+  SKILLS: 'skills',
+  CLIENT_DOCS: 'clientDocs',
 } as const;
 
 export type CollectionName = typeof COLLECTIONS[keyof typeof COLLECTIONS];

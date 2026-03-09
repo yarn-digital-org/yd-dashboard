@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { Sidebar } from '@/components/Sidebar';
 import Link from 'next/link';
 import { 
@@ -90,6 +91,7 @@ const STATUS_CONFIG: Record<ProjectStatus, { label: string; color: string; bgCol
 export default function ProjectsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const isMobile = useIsMobile();
 
   // Data state
   const [projects, setProjects] = useState<Project[]>([]);
@@ -376,17 +378,17 @@ export default function ProjectsPage() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F9FAFB' }}>
       <Sidebar />
-      <main style={{ flex: 1, padding: '1.5rem 2rem' }}>
+      <main style={{ flex: 1, padding: isMobile ? '1rem' : '1.5rem 2rem' }}>
         {/* Header */}
         <div style={{ marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
             <div>
-              <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#111827', margin: 0 }}>Projects</h1>
+              <h1 style={{ fontSize: isMobile ? '1.5rem' : '1.75rem', fontWeight: 700, color: '#111827', margin: 0 }}>Projects</h1>
               <p style={{ color: '#6B7280', margin: '0.25rem 0 0', fontSize: '0.875rem' }}>
                 Manage your client projects and workflows
               </p>
             </div>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', width: isMobile ? '100%' : 'auto' }}>
               {/* View Toggle */}
               <div style={{ display: 'flex', border: '1px solid #E5E7EB', borderRadius: '0.5rem', overflow: 'hidden' }}>
                 <button
@@ -451,7 +453,7 @@ export default function ProjectsPage() {
 
         {/* Stats Cards */}
         {stats && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.75rem', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(6, 1fr)', gap: '0.75rem', marginBottom: '1.5rem' }}>
             {STATUS_OPTIONS.filter(s => s !== 'archived').map((status) => {
               const config = STATUS_CONFIG[status];
               const count = stats.byStatus[status] || 0;
@@ -496,8 +498,8 @@ export default function ProjectsPage() {
         )}
 
         {/* Search and Filters */}
-        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
-          <div style={{ flex: 1, position: 'relative' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
+          <div style={{ flex: 1, minWidth: isMobile ? '100%' : '200px', position: 'relative' }}>
             <Search
               size={18}
               style={{
@@ -567,7 +569,7 @@ export default function ProjectsPage() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
               gap: '1rem',
               padding: '1rem',
               backgroundColor: '#FFFFFF',
@@ -630,7 +632,7 @@ export default function ProjectsPage() {
           </div>
         ) : viewMode === 'grid' ? (
           // Grid View
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
             {projects.map((project) => {
               const statusConfig = STATUS_CONFIG[project.status];
               const progress = getTaskProgress(project.workflowTasks);
@@ -777,7 +779,8 @@ export default function ProjectsPage() {
               overflow: 'hidden',
             }}
           >
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
               <thead>
                 <tr style={{ backgroundColor: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
                   <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -969,6 +972,7 @@ export default function ProjectsPage() {
                 })}
               </tbody>
             </table>
+            </div>{/* end scroll wrapper */}
 
             {/* Pagination */}
             {totalPages > 1 && (
@@ -1049,11 +1053,11 @@ export default function ProjectsPage() {
             <div
               style={{
                 backgroundColor: '#FFFFFF',
-                borderRadius: '0.75rem',
-                padding: '1.5rem',
-                width: '100%',
-                maxWidth: '600px',
-                maxHeight: '90vh',
+                borderRadius: isMobile ? '0.5rem' : '0.75rem',
+                padding: isMobile ? '1rem' : '1.5rem',
+                width: isMobile ? '95vw' : '100%',
+                maxWidth: isMobile ? '95vw' : '600px',
+                maxHeight: isMobile ? '92vh' : '90vh',
                 overflow: 'auto',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
               }}
@@ -1122,7 +1126,7 @@ export default function ProjectsPage() {
                   </div>
 
                   {/* Service Type & Location */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '1rem' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#374151', marginBottom: '0.375rem' }}>
                         Service Type

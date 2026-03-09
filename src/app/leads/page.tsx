@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { Sidebar } from '@/components/Sidebar';
 import Link from 'next/link';
 import { 
@@ -82,6 +83,7 @@ const PRIORITY_CONFIG: Record<LeadPriority, { label: string; color: string; bgCo
 export default function LeadsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const isMobile = useIsMobile();
 
   // Data state
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -327,12 +329,12 @@ export default function LeadsPage() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F9FAFB' }}>
       <Sidebar />
-      <main style={{ flex: 1, padding: '1.5rem 2rem' }}>
+      <main style={{ flex: 1, padding: isMobile ? '1rem' : '1.5rem 2rem' }}>
         {/* Header */}
         <div style={{ marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
             <div>
-              <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#111827', margin: 0 }}>Leads</h1>
+              <h1 style={{ fontSize: isMobile ? '1.5rem' : '1.75rem', fontWeight: 700, color: '#111827', margin: 0 }}>Leads</h1>
               <p style={{ color: '#6B7280', margin: '0.25rem 0 0', fontSize: '0.875rem' }}>
                 Manage and track your potential clients
               </p>
@@ -356,6 +358,8 @@ export default function LeadsPage() {
                 gap: '0.5rem',
                 fontSize: '0.875rem',
                 transition: 'background-color 0.15s',
+                width: isMobile ? '100%' : 'auto',
+                justifyContent: 'center',
               }}
               onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#E62E00')}
               onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#FF3300')}
@@ -368,7 +372,7 @@ export default function LeadsPage() {
 
         {/* Stats Cards */}
         {stats && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.75rem', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(6, 1fr)', gap: '0.75rem', marginBottom: '1.5rem' }}>
             {STATUS_OPTIONS.map((status) => {
               const config = STATUS_CONFIG[status];
               const count = stats.byStatus[status] || 0;
@@ -399,9 +403,9 @@ export default function LeadsPage() {
         )}
 
         {/* Search and Filters */}
-        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
           {/* Search */}
-          <div style={{ flex: 1, position: 'relative' }}>
+          <div style={{ flex: 1, minWidth: isMobile ? '100%' : '200px', position: 'relative' }}>
             <Search
               size={18}
               style={{
@@ -474,7 +478,7 @@ export default function LeadsPage() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
               gap: '1rem',
               padding: '1rem',
               backgroundColor: '#FFFFFF',
@@ -546,6 +550,7 @@ export default function LeadsPage() {
             overflow: 'hidden',
           }}
         >
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           {loading ? (
             <div style={{ padding: '3rem', textAlign: 'center', color: '#6B7280' }}>Loading leads...</div>
           ) : error ? (
@@ -776,6 +781,7 @@ export default function LeadsPage() {
               </tbody>
             </table>
           )}
+          </div>{/* end scroll wrapper */}
 
           {/* Pagination */}
           {totalPages > 1 && (
@@ -855,11 +861,11 @@ export default function LeadsPage() {
             <div
               style={{
                 backgroundColor: '#FFFFFF',
-                borderRadius: '0.75rem',
-                padding: '1.5rem',
-                width: '100%',
-                maxWidth: '500px',
-                maxHeight: '90vh',
+                borderRadius: isMobile ? '0.5rem' : '0.75rem',
+                padding: isMobile ? '1rem' : '1.5rem',
+                width: isMobile ? '95vw' : '100%',
+                maxWidth: isMobile ? '95vw' : '500px',
+                maxHeight: isMobile ? '92vh' : '90vh',
                 overflow: 'auto',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
               }}
@@ -880,7 +886,7 @@ export default function LeadsPage() {
               <form onSubmit={handleSubmit}>
                 <div style={{ display: 'grid', gap: '1rem' }}>
                   {/* Name & Email */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '1rem' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#374151', marginBottom: '0.375rem' }}>
                         Name *
@@ -910,7 +916,7 @@ export default function LeadsPage() {
                   </div>
 
                   {/* Company & Phone */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '1rem' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#374151', marginBottom: '0.375rem' }}>
                         Company
@@ -952,7 +958,7 @@ export default function LeadsPage() {
                   </div>
 
                   {/* Budget Range */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '1rem' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#374151', marginBottom: '0.375rem' }}>
                         Budget Min (£)
@@ -980,7 +986,7 @@ export default function LeadsPage() {
                   </div>
 
                   {/* Status, Priority, Source */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '1rem' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: '#374151', marginBottom: '0.375rem' }}>
                         Status

@@ -92,44 +92,44 @@ export default function ContentPage() {
   const inputStyle: React.CSSProperties = { width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #E0E0E0', borderRadius: '0.5rem', fontSize: '0.875rem', boxSizing: 'border-box', marginBottom: '0.75rem' };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#FFFFFF' }}>
+    <div className="flex min-h-screen bg-white">
       <Sidebar />
-      <main style={{ flex: 1, padding: '1.5rem' }}>
-        <div style={{ borderBottom: '1px solid #E0E0E0', paddingBottom: '1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <main className="flex-1 p-4 sm:p-6">
+        <div className="border-b border-gray-200 pb-4 sm:pb-6 mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0A0A0A', margin: 0 }}>Content Scheduler</h1>
-            <p style={{ color: '#7A7A7A', margin: '0.25rem 0 0' }}>{content.length} scheduled posts</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Content Scheduler</h1>
+            <p className="text-gray-500 text-sm mt-1">{content.length} scheduled posts</p>
           </div>
-          <button onClick={() => { setEditingItem(null); setFormData({ title: '', content: '', platform: 'twitter', scheduledAt: '', hashtags: '', status: 'scheduled' }); setShowModal(true); }} style={{ backgroundColor: '#FF3300', color: '#FFFFFF', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: 500, border: 'none', cursor: 'pointer' }}>
+          <button onClick={() => { setEditingItem(null); setFormData({ title: '', content: '', platform: 'twitter', scheduledAt: '', hashtags: '', status: 'scheduled' }); setShowModal(true); }} className="w-full sm:w-auto bg-[#FF3300] hover:bg-[#E62E00] text-white px-4 py-2 min-h-[44px] rounded-lg font-medium transition border-none cursor-pointer flex items-center justify-center gap-2">
             + Schedule Post
           </button>
         </div>
 
-        <div style={{ display: 'grid', gap: '1rem' }}>
+        <div className="grid gap-4">
           {content.length === 0 ? (
-            <div style={{ backgroundColor: '#F5F5F5', borderRadius: '0.75rem', padding: '2rem', textAlign: 'center', color: '#7A7A7A', border: '1px solid #E0E0E0' }}>
+            <div className="bg-gray-50 rounded-xl p-8 text-center text-gray-500 border border-gray-200">
               No scheduled content yet. Create your first post!
             </div>
           ) : content.map((item) => (
-            <div key={item.id} style={{ backgroundColor: '#F5F5F5', borderRadius: '0.75rem', padding: '1.5rem', border: '1px solid #E0E0E0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                    <span style={{ fontSize: '1.5rem' }}>{platformIcons[item.platform] || '📱'}</span>
-                    <span style={{ backgroundColor: statusColors[item.status] + '20', color: statusColors[item.status], padding: '0.25rem 0.5rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500 }}>{item.status}</span>
-                    <span style={{ color: '#7A7A7A', fontSize: '0.875rem' }}>{formatDate(item.scheduledAt)}</span>
+            <div key={item.id} className="bg-gray-50 rounded-xl p-4 sm:p-6 border border-gray-200">
+              <div className="flex flex-col sm:flex-row justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                    <span className="text-xl">{platformIcons[item.platform] || '📱'}</span>
+                    <span style={{ backgroundColor: statusColors[item.status] + '20', color: statusColors[item.status] }} className="px-2 py-0.5 rounded-full text-xs font-medium">{item.status}</span>
+                    <span className="text-gray-500 text-sm">{formatDate(item.scheduledAt)}</span>
                   </div>
-                  {item.title && <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#0A0A0A', margin: '0 0 0.25rem' }}>{item.title}</h3>}
-                  <p style={{ color: '#0A0A0A', margin: 0, whiteSpace: 'pre-wrap' }}>{item.content}</p>
+                  {item.title && <h3 className="text-base font-semibold text-gray-900 mb-1">{item.title}</h3>}
+                  <p className="text-gray-900 whitespace-pre-wrap break-words">{item.content}</p>
                   {item.hashtags?.length > 0 && (
-                    <div style={{ marginTop: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                      {item.hashtags.map((tag, i) => <span key={i} style={{ color: '#FF3300', fontSize: '0.875rem' }}>#{tag}</span>)}
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {item.hashtags.map((tag, i) => <span key={i} className="text-[#FF3300] text-sm">#{tag}</span>)}
                     </div>
                   )}
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '1rem' }}>
-                  <button onClick={() => openEdit(item)} style={{ color: '#FF3300', background: 'none', border: 'none', cursor: 'pointer' }}>Edit</button>
-                  <button onClick={() => handleDelete(item.id)} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>Delete</button>
+                <div className="flex gap-2 sm:ml-4 sm:flex-col">
+                  <button onClick={() => openEdit(item)} className="text-[#FF3300] bg-transparent border-none cursor-pointer min-h-[44px] min-w-[44px] rounded-lg hover:bg-[#FF3300]/10 transition text-sm font-medium px-3">Edit</button>
+                  <button onClick={() => handleDelete(item.id)} className="text-red-500 bg-transparent border-none cursor-pointer min-h-[44px] min-w-[44px] rounded-lg hover:bg-red-50 transition text-sm font-medium px-3">Delete</button>
                 </div>
               </div>
             </div>
@@ -137,28 +137,28 @@ export default function ContentPage() {
         </div>
 
         {showModal && (
-          <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '0.75rem', padding: '1.5rem', width: '100%', maxWidth: '500px', border: '1px solid #E0E0E0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0A0A0A', margin: 0 }}>{editingItem ? 'Edit Post' : 'Schedule Post'}</h2>
-                <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#7A7A7A' }}>×</button>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-none sm:rounded-xl w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6 border border-gray-200" onClick={(e) => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900">{editingItem ? 'Edit Post' : 'Schedule Post'}</h2>
+                <button onClick={() => setShowModal(false)} className="bg-transparent border-none text-2xl cursor-pointer text-gray-500 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center">×</button>
               </div>
-              <form onSubmit={handleSubmit}>
-                <input type="text" placeholder="Title (optional)" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} style={inputStyle} />
-                <textarea placeholder="Content *" value={formData.content} onChange={(e) => setFormData({...formData, content: e.target.value})} style={{...inputStyle, minHeight: '100px', resize: 'vertical'}} required />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                  <select value={formData.platform} onChange={(e) => setFormData({...formData, platform: e.target.value})} style={inputStyle}>
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <input type="text" placeholder="Title (optional)" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="w-full px-3 py-2.5 min-h-[44px] border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300]" />
+                <textarea placeholder="Content *" value={formData.content} onChange={(e) => setFormData({...formData, content: e.target.value})} className="w-full px-3 py-2.5 min-h-[100px] border border-gray-200 rounded-lg text-sm resize-y focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300]" required />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <select value={formData.platform} onChange={(e) => setFormData({...formData, platform: e.target.value})} className="w-full px-3 py-2.5 min-h-[44px] border border-gray-200 rounded-lg text-sm bg-white">
                     {PLATFORMS.map(p => <option key={p} value={p}>{platformIcons[p]} {p}</option>)}
                   </select>
-                  <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} style={inputStyle}>
+                  <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} className="w-full px-3 py-2.5 min-h-[44px] border border-gray-200 rounded-lg text-sm bg-white">
                     {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
-                <input type="datetime-local" value={formData.scheduledAt} onChange={(e) => setFormData({...formData, scheduledAt: e.target.value})} style={inputStyle} required />
-                <input type="text" placeholder="Hashtags (comma separated)" value={formData.hashtags} onChange={(e) => setFormData({...formData, hashtags: e.target.value})} style={inputStyle} />
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
-                  <button type="button" onClick={() => setShowModal(false)} style={{ padding: '0.5rem 1rem', border: '1px solid #E0E0E0', borderRadius: '0.5rem', backgroundColor: '#FFFFFF', cursor: 'pointer' }}>Cancel</button>
-                  <button type="submit" style={{ padding: '0.5rem 1rem', backgroundColor: '#FF3300', color: '#FFFFFF', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>Save</button>
+                <input type="datetime-local" value={formData.scheduledAt} onChange={(e) => setFormData({...formData, scheduledAt: e.target.value})} className="w-full px-3 py-2.5 min-h-[44px] border border-gray-200 rounded-lg text-sm" required />
+                <input type="text" placeholder="Hashtags (comma separated)" value={formData.hashtags} onChange={(e) => setFormData({...formData, hashtags: e.target.value})} className="w-full px-3 py-2.5 min-h-[44px] border border-gray-200 rounded-lg text-sm" />
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
+                  <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2.5 min-h-[44px] border border-gray-200 rounded-lg bg-white cursor-pointer font-medium text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+                  <button type="submit" className="px-4 py-2.5 min-h-[44px] bg-[#FF3300] hover:bg-[#E62E00] text-white border-none rounded-lg cursor-pointer font-medium transition">Save</button>
                 </div>
               </form>
             </div>

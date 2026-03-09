@@ -23,6 +23,7 @@
 
 * {
   font-family: var(--font-sans);
+  box-sizing: border-box;
 }
 
 html {
@@ -38,6 +39,7 @@ html.dark {
 body {
   font-family: var(--font-sans);
   letter-spacing: -0.01em;
+  overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -98,45 +100,98 @@ select option {
   background-color: #FFFFFF;
 }
 
-/* Mobile responsiveness */
+/* ==========================================
+   Touch-friendly interactive elements
+   ========================================== */
 @media (max-width: 767px) {
-  /* Add left padding for hamburger menu button */
+  /* Ensure minimum touch target size */
+  button, 
+  a[href], 
+  select,
+  [role="button"] {
+    min-height: 2.75rem; /* 44px */
+  }
+  
+  /* Form inputs touch-friendly */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="password"],
+  textarea,
+  select {
+    min-height: 2.75rem;
+    font-size: 1rem !important; /* Prevents iOS zoom on focus */
+  }
+}
+
+/* ==========================================
+   Mobile responsiveness
+   ========================================== */
+@media (max-width: 639px) {
+  /* Add padding for hamburger menu button and bottom nav */
   main {
     padding-top: 3.5rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    padding-bottom: 5rem !important; /* Space for bottom nav */
   }
 
-  /* Make tables horizontally scrollable */
-  table {
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    white-space: nowrap;
+  /* Prevent horizontal overflow */
+  body, html {
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 
-  /* Responsive modals */
-  [role="dialog"],
-  .modal-content {
-    width: 95vw !important;
-    max-width: 95vw !important;
-    margin: 1rem auto !important;
-    max-height: 90vh !important;
-    overflow-y: auto !important;
+  /* Card action menus visible on mobile (no hover) */
+  .group .opacity-0 {
+    opacity: 1 !important;
   }
+}
 
-  /* Single-column forms on mobile */
-  .grid-cols-2,
-  .md\:grid-cols-2,
-  .lg\:grid-cols-2 {
-    grid-template-columns: 1fr !important;
+/* Tablet adjustments */
+@media (min-width: 640px) and (max-width: 1023px) {
+  main {
+    padding-bottom: 1.5rem !important;
   }
+}
 
-  /* Stack dashboard cards */
-  .grid-cols-3,
-  .md\:grid-cols-3,
-  .lg\:grid-cols-3,
-  .grid-cols-4,
-  .md\:grid-cols-4,
-  .lg\:grid-cols-4 {
-    grid-template-columns: 1fr !important;
+/* ==========================================
+   Utility classes for responsive layouts
+   ========================================== */
+
+/* Table wrapper for horizontal scroll */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+.table-responsive table {
+  min-width: 600px;
+  white-space: nowrap;
+}
+
+/* Sticky first column in scrollable tables */
+.table-responsive th:first-child,
+.table-responsive td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background-color: inherit;
+}
+
+/* Mobile-only / desktop-only visibility */
+@media (max-width: 639px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+@media (min-width: 640px) {
+  .hide-desktop {
+    display: none !important;
   }
 }

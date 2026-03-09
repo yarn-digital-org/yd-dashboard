@@ -23,6 +23,8 @@ import {
   X,
   Bot,
   CheckSquare,
+  BookOpen,
+  Building2,
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -64,6 +66,8 @@ export function Sidebar() {
     { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
     { name: 'Agents', icon: Bot, href: '/agents' },
     { name: 'Tasks', icon: CheckSquare, href: '/tasks' },
+    { name: 'Skills', icon: BookOpen, href: '/skills' },
+    { name: 'Clients', icon: Building2, href: '/clients' },
     { name: 'Leads', icon: Users, href: '/leads' },
     { name: 'Projects', icon: FolderKanban, href: '/projects' },
     { name: 'Contacts', icon: Contact, href: '/contacts' },

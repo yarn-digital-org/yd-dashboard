@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import Link from 'next/link';
 import { 
   Search, Plus, Filter, ChevronDown, ChevronLeft, ChevronRight,
@@ -82,6 +83,7 @@ function getServiceTypeColor(type?: string) {
 export default function WorkflowsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const isMobile = useIsMobile();
 
   // Data state
   const [workflows, setWorkflows] = useState<WorkflowTemplate[]>([]);
@@ -232,12 +234,12 @@ export default function WorkflowsPage() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F9FAFB' }}>
       <Sidebar />
-      <main style={{ flex: 1, padding: '1.5rem 2rem' }}>
+      <main style={{ flex: 1, padding: isMobile ? '1rem' : '1.5rem 2rem' }}>
         {/* Header */}
         <div style={{ marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
             <div>
-              <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#111827', margin: 0 }}>Workflow Templates</h1>
+              <h1 style={{ fontSize: isMobile ? '1.25rem' : '1.75rem', fontWeight: 700, color: '#111827', margin: 0 }}>Workflow Templates</h1>
               <p style={{ color: '#6B7280', margin: '0.25rem 0 0', fontSize: '0.875rem' }}>
                 Create reusable task sequences for your projects
               </p>
@@ -254,10 +256,13 @@ export default function WorkflowsPage() {
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'center',
                 gap: '0.5rem',
                 fontSize: '0.875rem',
                 textDecoration: 'none',
                 transition: 'background-color 0.15s',
+                minHeight: '44px',
+                width: isMobile ? '100%' : 'auto',
               }}
             >
               <Plus size={18} />
@@ -268,7 +273,7 @@ export default function WorkflowsPage() {
 
         {/* Stats Cards */}
         {stats && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.5rem' }}>
             <div
               style={{
                 padding: '1rem',
@@ -317,7 +322,7 @@ export default function WorkflowsPage() {
         )}
 
         {/* Search and Filters */}
-        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '0.75rem', marginBottom: '1rem' }}>
           {/* Search */}
           <div style={{ flex: 1, position: 'relative' }}>
             <Search
@@ -347,7 +352,7 @@ export default function WorkflowsPage() {
             <select
               value={serviceTypeFilter}
               onChange={(e) => setServiceTypeFilter(e.target.value)}
-              style={{ ...selectStyle, width: '200px' }}
+              style={{ ...selectStyle, width: isMobile ? '100%' : '200px' }}
             >
               <option value="all">All Service Types</option>
               {serviceTypes.map((type) => (
@@ -424,7 +429,7 @@ export default function WorkflowsPage() {
             )}
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1rem' }}>
             {workflows.map((workflow) => {
               const typeColor = getServiceTypeColor(workflow.serviceType);
               const taskCount = workflow.tasks?.length || 0;

@@ -89,7 +89,33 @@ export default function SettingsLayout({
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Settings Sub-nav */}
             <nav className="w-full lg:w-64 flex-shrink-0">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              {/* Mobile: horizontal scrolling nav */}
+              <div className="lg:hidden overflow-x-auto -mx-4 px-4 pb-2">
+                <div className="flex gap-2 min-w-max">
+                  {settingsNav.flatMap((section) =>
+                    section.items.map((item) => {
+                      const isActive = pathname === item.href;
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors min-h-[44px] ${
+                            isActive
+                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                              : 'text-gray-700 bg-white border border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          <Icon className="h-4 w-4" />
+                          {item.name}
+                        </Link>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+              {/* Desktop: vertical nav */}
+              <div className="hidden lg:block bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 {settingsNav.map((section) => (
                   <div key={section.title} className="mb-6 last:mb-0">
                     <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-3">

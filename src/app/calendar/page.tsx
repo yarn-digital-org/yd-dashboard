@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { Sidebar } from '@/components/Sidebar';
 import { useCalendarEvents, CalendarEvent } from '@/hooks/useCalendarEvents';
 import {
@@ -77,6 +78,7 @@ const HOURS = Array.from({ length: 13 }, (_, i) => i + 8); // 8am to 8pm
 export default function CalendarPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const isMobile = useIsMobile();
   const { events, loading, error, connectionStatus } = useCalendarEvents();
 
   const [currentView, setCurrentView] = useState<ViewType>('month');
@@ -165,15 +167,15 @@ export default function CalendarPage() {
     const today = new Date();
     
     const days = [];
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dayNames = isMobile ? ['S', 'M', 'T', 'W', 'T', 'F', 'S'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     
     // Day headers
-    const headers = dayNames.map(day => (
-      <div key={day} style={{
-        padding: '0.75rem 0.5rem',
+    const headers = dayNames.map((day, idx) => (
+      <div key={idx} style={{
+        padding: isMobile ? '0.5rem 0.25rem' : '0.75rem 0.5rem',
         textAlign: 'center',
         fontWeight: 600,
-        fontSize: '0.75rem',
+        fontSize: isMobile ? '0.7rem' : '0.75rem',
         color: '#6B7280',
         borderBottom: '1px solid #E5E7EB',
       }}>
@@ -185,7 +187,7 @@ export default function CalendarPage() {
     for (let i = 0; i < firstDay; i++) {
       days.push(
         <div key={`empty-${i}`} style={{
-          minHeight: '100px',
+          minHeight: isMobile ? '60px' : '100px',
           backgroundColor: '#F9FAFB',
           borderRight: '1px solid #E5E7EB',
           borderBottom: '1px solid #E5E7EB',
@@ -201,8 +203,8 @@ export default function CalendarPage() {
       
       days.push(
         <div key={day} style={{
-          minHeight: '100px',
-          padding: '0.5rem',
+          minHeight: isMobile ? '60px' : '100px',
+          padding: isMobile ? '0.25rem' : '0.5rem',
           backgroundColor: isToday ? '#FFF5F2' : '#FFFFFF',
           borderRight: '1px solid #E5E7EB',
           borderBottom: '1px solid #E5E7EB',
@@ -216,7 +218,7 @@ export default function CalendarPage() {
             {day}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            {dayEvents.slice(0, 3).map(event => (
+            {dayEvents.slice(0, isMobile ? 2 : 3).map(event => (
               <button
                 key={event.id}
                 onClick={() => handleSelectEvent(event)}
@@ -237,9 +239,9 @@ export default function CalendarPage() {
                 {event.title}
               </button>
             ))}
-            {dayEvents.length > 3 && (
+            {dayEvents.length > (isMobile ? 2 : 3) && (
               <span style={{ fontSize: '0.65rem', color: '#6B7280' }}>
-                +{dayEvents.length - 3} more
+                +{dayEvents.length - (isMobile ? 2 : 3)} more
               </span>
             )}
           </div>
@@ -304,9 +306,9 @@ export default function CalendarPage() {
     const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', overflowX: isMobile ? 'auto' : 'visible', WebkitOverflowScrolling: 'touch' }}>
         {/* Day headers */}
-        <div style={{ display: 'grid', gridTemplateColumns: '60px repeat(7, 1fr)', borderBottom: '1px solid #E5E7EB' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '40px repeat(7, 80px)' : '60px repeat(7, 1fr)', borderBottom: '1px solid #E5E7EB', minWidth: isMobile ? '600px' : 'auto' }}>
           <div style={{ padding: '0.5rem', borderRight: '1px solid #E5E7EB' }} />
           {weekDays.map((day, i) => {
             const isToday = isSameDay(day, today);
@@ -341,7 +343,7 @@ export default function CalendarPage() {
         </div>
 
         {/* Time grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '60px repeat(7, 1fr)', maxHeight: '600px', overflow: 'auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '40px repeat(7, 80px)' : '60px repeat(7, 1fr)', maxHeight: '600px', overflow: 'auto', minWidth: isMobile ? '600px' : 'auto' }}>
           {/* Time labels + grid rows */}
           {HOURS.map((hour) => (
             <div key={hour} style={{ display: 'contents' }}>
@@ -411,7 +413,7 @@ export default function CalendarPage() {
     const dayEvents = getEventsForDay(currentDate);
 
     return (
-      <div style={{ display: 'flex', gap: '1rem' }}>
+      <div style={{ display: 'flex', gap: isMobile ? '0' : '1rem' }}>
         {/* Time grid */}
         <div style={{ flex: 1 }}>
           <div style={{
@@ -491,11 +493,12 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        {/* Day event list sidebar */}
+        {/* Day event list sidebar - hidden on mobile */}
         <div style={{
           width: '260px',
           borderLeft: '1px solid #E5E7EB',
           padding: '1rem',
+          display: isMobile ? 'none' : 'block',
         }}>
           <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827', margin: '0 0 1rem' }}>
             Events for {formatDate(currentDate, 'MMM d')}
@@ -574,17 +577,17 @@ export default function CalendarPage() {
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Header */}
         <div style={{
-          padding: '1rem 1.5rem',
+          padding: isMobile ? '0.75rem' : '1rem 1.5rem',
           backgroundColor: '#FFFFFF',
           borderBottom: '1px solid #E5E7EB',
           display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
           justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1rem',
+          alignItems: isMobile ? 'stretch' : 'center',
+          gap: isMobile ? '0.75rem' : '1rem',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', margin: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <h1 style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: 700, color: '#111827', margin: 0 }}>
               Calendar
             </h1>
             
@@ -600,7 +603,7 @@ export default function CalendarPage() {
               </button>
             </div>
 
-            <span style={{ fontSize: '1rem', fontWeight: 500, color: '#374151' }}>
+            <span style={{ fontSize: isMobile ? '0.875rem' : '1rem', fontWeight: 500, color: '#374151' }}>
               {currentView === 'month' && formatDate(currentDate, 'MMMM yyyy')}
               {currentView === 'week' && (() => {
                 const weekStart = getStartOfWeek(currentDate);
@@ -610,23 +613,23 @@ export default function CalendarPage() {
                 }
                 return `${formatDate(weekStart, 'MMM d')} – ${formatDate(weekEnd, 'MMM d')}, ${weekEnd.getFullYear()}`;
               })()}
-              {currentView === 'day' && formatDate(currentDate, 'EEEE, MMMM d, yyyy')}
+              {currentView === 'day' && formatDate(currentDate, isMobile ? 'MMM d, yyyy' : 'EEEE, MMMM d, yyyy')}
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: isMobile ? 'space-between' : 'flex-end' }}>
             <div style={{ display: 'flex', border: '1px solid #E5E7EB', borderRadius: '0.5rem', overflow: 'hidden' }}>
               {(['month', 'week', 'day'] as ViewType[]).map((view) => (
                 <button
                   key={view}
                   onClick={() => setCurrentView(view)}
                   style={{
-                    padding: '0.5rem 0.875rem',
+                    padding: isMobile ? '0.5rem 0.625rem' : '0.5rem 0.875rem',
                     border: 'none',
                     backgroundColor: currentView === view ? '#FF3300' : '#FFFFFF',
                     color: currentView === view ? '#FFFFFF' : '#6B7280',
                     cursor: 'pointer',
-                    fontSize: '0.875rem',
+                    fontSize: isMobile ? '0.8125rem' : '0.875rem',
                     fontWeight: 500,
                     textTransform: 'capitalize',
                   }}
@@ -650,7 +653,7 @@ export default function CalendarPage() {
               fontSize: '0.875rem',
             }}>
               <Plus size={16} />
-              Add Event
+              {isMobile ? '' : 'Add Event'}
             </button>
           </div>
         </div>
@@ -703,13 +706,14 @@ export default function CalendarPage() {
             )}
           </div>
 
-          {/* Sidebar */}
+          {/* Sidebar - hidden on mobile */}
           <aside style={{
             width: '320px',
             backgroundColor: '#FFFFFF',
             borderLeft: '1px solid #E5E7EB',
             overflow: 'auto',
             padding: '1.25rem',
+            display: isMobile ? 'none' : 'block',
           }}>
             <h2 style={{ fontSize: '1rem', fontWeight: 600, color: '#111827', margin: '0 0 1rem' }}>
               Upcoming Events
@@ -811,9 +815,9 @@ export default function CalendarPage() {
           <div
             style={{
               backgroundColor: '#FFFFFF',
-              borderRadius: '0.75rem',
-              width: '100%',
-              maxWidth: '450px',
+              borderRadius: isMobile ? '0.5rem' : '0.75rem',
+              width: isMobile ? '95vw' : '100%',
+              maxWidth: isMobile ? '95vw' : '450px',
               overflow: 'hidden',
             }}
             onClick={(e) => e.stopPropagation()}

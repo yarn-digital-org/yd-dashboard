@@ -291,11 +291,11 @@ export default function FormsPage() {
   return (
     <div className="flex min-h-screen bg-white">
       <Sidebar />
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-4 sm:p-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Forms</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Forms</h1>
             <p className="text-gray-500 text-sm mt-1">
               Create and manage intake forms for leads and clients
             </p>
@@ -306,7 +306,7 @@ export default function FormsPage() {
               resetForm();
               setShowModal(true);
             }}
-            className="flex items-center gap-2 bg-[#FF3300] hover:bg-[#E62E00] text-white px-4 py-2 rounded-lg font-medium transition"
+            className="flex items-center justify-center gap-2 bg-[#FF3300] hover:bg-[#E62E00] text-white px-4 py-2 min-h-[44px] rounded-lg font-medium transition w-full sm:w-auto"
           >
             <Plus size={18} />
             Create Form
@@ -386,7 +386,7 @@ export default function FormsPage() {
                 <div className="absolute top-4 right-4">
                   <button
                     onClick={() => setActiveMenu(activeMenu === form.id ? null : form.id)}
-                    className="p-1 rounded hover:bg-gray-100 transition opacity-0 group-hover:opacity-100"
+                    className="p-1 rounded hover:bg-gray-100 transition sm:opacity-0 sm:group-hover:opacity-100"
                   >
                     <MoreVertical size={18} className="text-gray-400" />
                   </button>
@@ -490,10 +490,10 @@ export default function FormsPage() {
             onClick={() => setShowModal(false)}
           >
             <div 
-              className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-none sm:rounded-xl w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+              <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
                 <h2 className="text-xl font-bold text-gray-900">
                   {editingForm ? 'Edit Form' : 'Create Form'}
                 </h2>
@@ -597,7 +597,7 @@ export default function FormsPage() {
                               </div>
 
                               <div className="flex-1 space-y-3">
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                   <div>
                                     <label className="block text-xs font-medium text-gray-600 mb-1">Label</label>
                                     <input
@@ -623,7 +623,7 @@ export default function FormsPage() {
                                   </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                   <div>
                                     <label className="block text-xs font-medium text-gray-600 mb-1">Placeholder</label>
                                     <input
@@ -703,7 +703,7 @@ export default function FormsPage() {
             onClick={() => setShowSubmissions(null)}
           >
             <div 
-              className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+              className="bg-white rounded-none sm:rounded-xl w-full sm:max-w-4xl h-full sm:h-auto sm:max-h-[90vh] overflow-hidden flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center p-6 border-b border-gray-200">
@@ -744,7 +744,7 @@ export default function FormsPage() {
                             <Trash2 size={14} />
                           </button>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {showSubmissions.form.fields.map((field) => (
                             <div key={field.id} className="text-sm">
                               <span className="font-medium text-gray-700">{field.label}: </span>

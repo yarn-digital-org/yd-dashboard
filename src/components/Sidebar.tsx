@@ -21,6 +21,8 @@ import {
   FormInput,
   Menu,
   X,
+  Bot,
+  CheckSquare,
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -60,6 +62,8 @@ export function Sidebar() {
 
   const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
+    { name: 'Agents', icon: Bot, href: '/agents' },
+    { name: 'Tasks', icon: CheckSquare, href: '/tasks' },
     { name: 'Leads', icon: Users, href: '/leads' },
     { name: 'Projects', icon: FolderKanban, href: '/projects' },
     { name: 'Contacts', icon: Contact, href: '/contacts' },
@@ -101,18 +105,19 @@ export function Sidebar() {
     display: 'flex',
     alignItems: 'center',
     gap: '0.75rem',
-    padding: '0.75rem 1rem',
+    padding: isMobile ? '0.875rem 1rem' : '0.75rem 1rem',
     borderRadius: '0.5rem',
     backgroundColor: isActive ? '#FF3300' : 'transparent',
     color: isActive ? '#FFFFFF' : '#374151',
     textDecoration: 'none',
     fontWeight: isActive ? 600 : 500,
-    fontSize: '0.875rem',
+    fontSize: isMobile ? '1rem' : '0.875rem',
     cursor: 'pointer',
     border: 'none',
     width: '100%',
     textAlign: 'left',
     transition: 'all 0.15s ease',
+    minHeight: '44px',
   });
 
   const sidebarContent = (

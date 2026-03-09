@@ -1119,6 +1119,69 @@ export interface Subscription {
 }
 
 // ============================================
+// MODULE: Agents (AI Team)
+// ============================================
+
+export type AgentStatus = 'active' | 'idle' | 'offline';
+
+export interface Agent {
+  id: string;
+  name: string;
+  role: string;
+  avatar: string;
+  status: AgentStatus;
+  description: string;
+  skills: string[];
+  slackChannel?: string;
+  personality: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  orgId: string;
+  stats: {
+    tasksCompleted: number;
+    tasksInProgress: number;
+    learnings: number;
+  };
+}
+
+// ============================================
+// MODULE: Tasks
+// ============================================
+
+export type TaskStatus = 'backlog' | 'in-progress' | 'review' | 'done' | 'archived';
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type TaskRecurringFrequency = 'daily' | 'weekly' | 'monthly';
+
+export interface TaskRecurringConfig {
+  frequency: TaskRecurringFrequency;
+  dayOfWeek?: number;
+  dayOfMonth?: number;
+  nextDue?: Timestamp;
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  assignedTo: string;
+  assignedToName: string;
+  projectId?: string;
+  clientId?: string;
+  labels: string[];
+  dueDate?: Timestamp;
+  isRecurring: boolean;
+  recurringConfig?: TaskRecurringConfig;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  completedAt?: Timestamp;
+  orgId: string;
+  notes: string;
+  feedbackNotes?: string;
+}
+
+// ============================================
 // Collection Names (for consistency)
 // ============================================
 
@@ -1194,6 +1257,10 @@ export const COLLECTIONS = {
   NOTIFICATION_SETTINGS: 'notificationSettings',
   INTEGRATIONS: 'integrations',
   SUBSCRIPTIONS: 'subscriptions',
+  
+  // Agents & Tasks
+  AGENTS: 'agents',
+  TASKS: 'tasks',
 } as const;
 
 export type CollectionName = typeof COLLECTIONS[keyof typeof COLLECTIONS];

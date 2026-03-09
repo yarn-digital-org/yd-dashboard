@@ -1,0 +1,608 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import { Sidebar } from '@/components/Sidebar';
+import {
+  Search, Plus, Bot, X, Edit3, Trash2, MoreHorizontal,
+  Zap, BookOpen, MessageSquare, Activity,
+} from 'lucide-react';
+
+// Types
+interface AgentStats {
+  tasksCompleted: number;
+  tasksInProgress: number;
+  learnings: number;
+}
+
+interface Agent {
+  id: string;
+  name: string;
+  role: string;
+  avatar: string;
+  status: 'active' | 'idle' | 'offline';
+  description: string;
+  skills: string[];
+  slackChannel?: string;
+  personality: string;
+  createdAt: string;
+  updatedAt: string;
+  orgId: string;
+  stats: AgentStats;
+}
+
+// Constants
+const STATUS_CONFIG: Record<string, { label: string; color: string; bgColor: string }> = {
+  active: { label: 'Active', color: '#10B981', bgColor: '#ECFDF5' },
+  idle: { label: 'Idle', color: '#F59E0B', bgColor: '#FFFBEB' },
+  offline: { label: 'Offline', color: '#6B7280', bgColor: '#F3F4F6' },
+};
+
+const DEFAULT_AGENTS: Omit<Agent, 'id' | 'createdAt' | 'updatedAt' | 'orgId'>[] = [
+  {
+    name: 'Aria',
+    role: 'Content Strategist',
+    avatar: '✍️',
+    status: 'active',
+    description: 'Creates engaging social media content, manages content calendars, and writes compelling copy across all platforms.',
+    skills: ['Social Media Strategy', 'Copywriting', 'Content Calendars', 'Brand Voice'],
+    personality: 'Creative, trend-aware, and always on-brand. Thinks in hooks and stories.',
+    stats: { tasksCompleted: 0, tasksInProgress: 0, learnings: 0 },
+  },
+  {
+    name: 'Scout',
+    role: 'SEO Specialist',
+    avatar: '🔍',
+    status: 'active',
+    description: 'Handles technical SEO audits, keyword research, on-page optimisation, and search ranking strategies.',
+    skills: ['Technical SEO', 'Keyword Research', 'On-Page SEO', 'Link Building', 'Analytics'],
+    personality: 'Data-driven, methodical, obsessed with rankings and organic growth.',
+    stats: { tasksCompleted: 0, tasksInProgress: 0, learnings: 0 },
+  },
+  {
+    name: 'Bolt',
+    role: 'Developer',
+    avatar: '⚡',
+    status: 'active',
+    description: 'Builds web apps, implements technical solutions, manages deployments, and handles all coding tasks.',
+    skills: ['React/Next.js', 'Node.js', 'Firebase', 'API Development', 'Shopify', 'WordPress'],
+    personality: 'Ship fast, iterate faster. Clean code, practical solutions.',
+    stats: { tasksCompleted: 0, tasksInProgress: 0, learnings: 0 },
+  },
+  {
+    name: 'Radar',
+    role: 'Marketing Analyst',
+    avatar: '📊',
+    status: 'active',
+    description: 'Tracks campaign performance, analyses data, optimises for ROAS, and generates actionable reports.',
+    skills: ['Google Analytics', 'Campaign Tracking', 'ROAS Optimisation', 'Reporting', 'A/B Testing'],
+    personality: 'Numbers don\'t lie. Finds the signal in the noise.',
+    stats: { tasksCompleted: 0, tasksInProgress: 0, learnings: 0 },
+  },
+];
+
+export default function AgentsPage() {
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
+  const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const isMobile = useIsMobile();
+  const { user } = useAuth();
+  const router = useRouter();
+
+  // Form state
+  const [formData, setFormData] = useState({
+    name: '',
+    role: '',
+    avatar: '🤖',
+    status: 'active' as 'active' | 'idle' | 'offline',
+    description: '',
+    skills: '' as string,
+    personality: '',
+    slackChannel: '',
+  });
+
+  const fetchAgents = useCallback(async () => {
+    try {
+      const res = await fetch('/api/agents');
+      if (!res.ok) throw new Error('Failed to fetch agents');
+      const data = await res.json();
+      setAgents(data.data?.agents || []);
+    } catch (err) {
+      console.error('Error fetching agents:', err);
+      setError('Failed to load agents');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user) fetchAgents();
+  }, [user, fetchAgents]);
+
+  const handleSeedAgents = async () => {
+    setLoading(true);
+    try {
+      for (const agent of DEFAULT_AGENTS) {
+        await fetch('/api/agents', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(agent),
+        });
+      }
+      await fetchAgents();
+    } catch (err) {
+      console.error('Error seeding agents:', err);
+      setError('Failed to create default agents');
+    }
+    setLoading(false);
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.name || !formData.role) return;
+
+    const payload = {
+      ...formData,
+      skills: formData.skills.split(',').map(s => s.trim()).filter(Boolean),
+    };
+
+    try {
+      if (editingAgent) {
+        const res = await fetch(`/api/agents/${editingAgent.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error('Failed to update agent');
+      } else {
+        const res = await fetch('/api/agents', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error('Failed to create agent');
+      }
+      setShowModal(false);
+      setEditingAgent(null);
+      resetForm();
+      await fetchAgents();
+    } catch (err) {
+      console.error('Error saving agent:', err);
+      setError('Failed to save agent');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this agent?')) return;
+    try {
+      await fetch(`/api/agents/${id}`, { method: 'DELETE' });
+      await fetchAgents();
+    } catch (err) {
+      console.error('Error deleting agent:', err);
+    }
+    setMenuOpen(null);
+  };
+
+  const handleEdit = (agent: Agent) => {
+    setEditingAgent(agent);
+    setFormData({
+      name: agent.name,
+      role: agent.role,
+      avatar: agent.avatar,
+      status: agent.status,
+      description: agent.description,
+      skills: agent.skills.join(', '),
+      personality: agent.personality,
+      slackChannel: agent.slackChannel || '',
+    });
+    setShowModal(true);
+    setMenuOpen(null);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      role: '',
+      avatar: '🤖',
+      status: 'active',
+      description: '',
+      skills: '',
+      personality: '',
+      slackChannel: '',
+    });
+  };
+
+  const filteredAgents = agents.filter(a =>
+    !search ||
+    a.name.toLowerCase().includes(search.toLowerCase()) ||
+    a.role.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // Styles
+  const pageStyle: React.CSSProperties = {
+    display: 'flex',
+    minHeight: '100vh',
+    backgroundColor: '#F9FAFB',
+  };
+
+  const mainStyle: React.CSSProperties = {
+    flex: 1,
+    padding: isMobile ? '1rem' : '2rem',
+    paddingTop: isMobile ? '4rem' : '2rem',
+    overflowY: 'auto',
+  };
+
+  const headerStyle: React.CSSProperties = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '1.5rem',
+    flexWrap: 'wrap',
+    gap: '1rem',
+  };
+
+  const gridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))',
+    gap: '1.5rem',
+  };
+
+  const cardStyle: React.CSSProperties = {
+    backgroundColor: '#FFFFFF',
+    borderRadius: '0.75rem',
+    border: '1px solid #E5E7EB',
+    padding: '1.5rem',
+    position: 'relative',
+    transition: 'box-shadow 0.2s ease',
+  };
+
+  const buttonStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.625rem 1.25rem',
+    backgroundColor: '#FF3300',
+    color: '#FFFFFF',
+    border: 'none',
+    borderRadius: '0.5rem',
+    fontWeight: 600,
+    fontSize: '0.875rem',
+    cursor: 'pointer',
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '0.625rem 0.75rem',
+    border: '1px solid #D1D5DB',
+    borderRadius: '0.5rem',
+    fontSize: '0.875rem',
+    outline: 'none',
+    boxSizing: 'border-box',
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: '0.8125rem',
+    fontWeight: 500,
+    color: '#374151',
+    marginBottom: '0.375rem',
+  };
+
+  if (!user) {
+    router.push('/login');
+    return null;
+  }
+
+  return (
+    <div style={pageStyle}>
+      <Sidebar />
+      <main style={mainStyle}>
+        {/* Header */}
+        <div style={headerStyle}>
+          <div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', margin: 0 }}>
+              Agent Team
+            </h1>
+            <p style={{ fontSize: '0.875rem', color: '#6B7280', margin: '0.25rem 0 0' }}>
+              Manage your AI agent team and their roles
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <div style={{ position: 'relative' }}>
+              <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
+              <input
+                type="text"
+                placeholder="Search agents..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{ ...inputStyle, paddingLeft: '2.25rem', width: '220px' }}
+              />
+            </div>
+            <button onClick={() => { resetForm(); setEditingAgent(null); setShowModal(true); }} style={buttonStyle}>
+              <Plus size={16} />
+              Add Agent
+            </button>
+          </div>
+        </div>
+
+        {error && (
+          <div style={{ padding: '0.75rem 1rem', backgroundColor: '#FEF2F2', color: '#DC2626', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.875rem' }}>
+            {error}
+          </div>
+        )}
+
+        {/* Empty state with seed button */}
+        {!loading && agents.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+            <Bot size={48} style={{ color: '#D1D5DB', marginBottom: '1rem' }} />
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#374151', margin: '0 0 0.5rem' }}>
+              No agents yet
+            </h2>
+            <p style={{ color: '#6B7280', marginBottom: '1.5rem' }}>
+              Set up your AI team with our recommended starter agents.
+            </p>
+            <button onClick={handleSeedAgents} style={buttonStyle}>
+              <Zap size={16} />
+              Create Default Team
+            </button>
+          </div>
+        )}
+
+        {/* Loading */}
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '4rem', color: '#6B7280' }}>Loading agents...</div>
+        )}
+
+        {/* Agent Grid */}
+        {!loading && filteredAgents.length > 0 && (
+          <div style={gridStyle}>
+            {filteredAgents.map((agent) => {
+              const statusConfig = STATUS_CONFIG[agent.status] || STATUS_CONFIG.offline;
+              return (
+                <div key={agent.id} style={cardStyle}>
+                  {/* Menu button */}
+                  <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
+                    <button
+                      onClick={() => setMenuOpen(menuOpen === agent.id ? null : agent.id)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: '#9CA3AF' }}
+                    >
+                      <MoreHorizontal size={18} />
+                    </button>
+                    {menuOpen === agent.id && (
+                      <div style={{
+                        position: 'absolute', right: 0, top: '100%', backgroundColor: '#FFFFFF',
+                        border: '1px solid #E5E7EB', borderRadius: '0.5rem', boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                        zIndex: 10, minWidth: '140px', overflow: 'hidden',
+                      }}>
+                        <button
+                          onClick={() => handleEdit(agent)}
+                          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.625rem 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: '#374151', textAlign: 'left' }}
+                        >
+                          <Edit3 size={14} /> Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(agent.id)}
+                          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.625rem 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: '#DC2626', textAlign: 'left' }}
+                        >
+                          <Trash2 size={14} /> Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Agent header */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                    <div style={{
+                      width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#F3F4F6',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem',
+                    }}>
+                      {agent.avatar}
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#111827', margin: 0 }}>
+                        {agent.name}
+                      </h3>
+                      <p style={{ fontSize: '0.8125rem', color: '#6B7280', margin: '0.125rem 0 0' }}>
+                        {agent.role}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Status badge */}
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
+                      padding: '0.25rem 0.625rem', borderRadius: '9999px',
+                      backgroundColor: statusConfig.bgColor, color: statusConfig.color,
+                      fontSize: '0.75rem', fontWeight: 500,
+                    }}>
+                      <span style={{
+                        width: '6px', height: '6px', borderRadius: '50%',
+                        backgroundColor: statusConfig.color,
+                      }} />
+                      {statusConfig.label}
+                    </span>
+                  </div>
+
+                  {/* Description */}
+                  <p style={{
+                    fontSize: '0.8125rem', color: '#6B7280', margin: '0 0 1rem',
+                    lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                  }}>
+                    {agent.description}
+                  </p>
+
+                  {/* Skills */}
+                  {agent.skills.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginBottom: '1rem' }}>
+                      {agent.skills.slice(0, 4).map((skill, i) => (
+                        <span key={i} style={{
+                          padding: '0.125rem 0.5rem', backgroundColor: '#F3F4F6',
+                          borderRadius: '0.25rem', fontSize: '0.6875rem', color: '#4B5563',
+                        }}>
+                          {skill}
+                        </span>
+                      ))}
+                      {agent.skills.length > 4 && (
+                        <span style={{
+                          padding: '0.125rem 0.5rem', backgroundColor: '#F3F4F6',
+                          borderRadius: '0.25rem', fontSize: '0.6875rem', color: '#9CA3AF',
+                        }}>
+                          +{agent.skills.length - 4} more
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Stats */}
+                  <div style={{
+                    display: 'flex', gap: '1rem', paddingTop: '0.75rem',
+                    borderTop: '1px solid #F3F4F6', fontSize: '0.75rem', color: '#6B7280',
+                  }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <Activity size={12} /> {agent.stats?.tasksInProgress || 0} active
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <BookOpen size={12} /> {agent.stats?.tasksCompleted || 0} done
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <MessageSquare size={12} /> {agent.stats?.learnings || 0} learnings
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Modal */}
+        {showModal && (
+          <div style={{
+            position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100,
+            padding: '1rem',
+          }}>
+            <div style={{
+              backgroundColor: '#FFFFFF', borderRadius: '0.75rem', width: '100%',
+              maxWidth: '560px', maxHeight: '90vh', overflow: 'auto', padding: '1.5rem',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827', margin: 0 }}>
+                  {editingAgent ? 'Edit Agent' : 'Add New Agent'}
+                </h2>
+                <button onClick={() => { setShowModal(false); setEditingAgent(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280' }}>
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={labelStyle}>Avatar</label>
+                    <input
+                      value={formData.avatar}
+                      onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
+                      style={{ ...inputStyle, textAlign: 'center', fontSize: '1.5rem', padding: '0.375rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Name *</label>
+                    <input
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="e.g. Aria"
+                      style={inputStyle}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Role *</label>
+                  <input
+                    value={formData.role}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                    placeholder="e.g. Content Strategist"
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'idle' | 'offline' })}
+                    style={{ ...inputStyle, cursor: 'pointer' }}
+                  >
+                    <option value="active">Active</option>
+                    <option value="idle">Idle</option>
+                    <option value="offline">Offline</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Description</label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="What does this agent do?"
+                    rows={3}
+                    style={{ ...inputStyle, resize: 'vertical' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Skills (comma-separated)</label>
+                  <input
+                    value={formData.skills}
+                    onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+                    placeholder="e.g. Social Media, Copywriting, Brand Voice"
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Personality</label>
+                  <textarea
+                    value={formData.personality}
+                    onChange={(e) => setFormData({ ...formData, personality: e.target.value })}
+                    placeholder="How does this agent approach work?"
+                    rows={2}
+                    style={{ ...inputStyle, resize: 'vertical' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Slack Channel (optional)</label>
+                  <input
+                    value={formData.slackChannel}
+                    onChange={(e) => setFormData({ ...formData, slackChannel: e.target.value })}
+                    placeholder="#agent-content"
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
+                <button
+                  onClick={() => { setShowModal(false); setEditingAgent(null); }}
+                  style={{ ...buttonStyle, backgroundColor: '#FFFFFF', color: '#374151', border: '1px solid #D1D5DB' }}
+                >
+                  Cancel
+                </button>
+                <button onClick={handleSubmit} style={buttonStyle}>
+                  {editingAgent ? 'Save Changes' : 'Create Agent'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}

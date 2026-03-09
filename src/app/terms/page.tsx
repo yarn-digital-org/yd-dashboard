@@ -84,7 +84,7 @@ export default function TermsPage() {
 
           <section style={{ marginBottom: '2rem' }}>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#0A0A0A', marginBottom: '0.75rem' }}>12. Contact</h2>
-            <p>If you have any questions about these Terms, please contact us at support@yarndigital.co.uk.</p>
+            <p>If you have any questions about these Terms, please contact us through the dashboard.</p>
           </section>
         </div>
 

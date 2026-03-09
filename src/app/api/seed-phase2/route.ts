@@ -4,6 +4,7 @@ import {
   successResponse,
   requireDb,
   AuthUser,
+  resolveOrgId,
 } from '@/lib/api-middleware';
 import { COLLECTIONS } from '@/types';
 
@@ -15,16 +16,18 @@ async function handlePost(
   const { user } = context;
   const now = new Date().toISOString();
 
+  const orgId = await resolveOrgId(user);
+
   // Check if already seeded
   const existingSkills = await db
     .collection(COLLECTIONS.SKILLS)
-    .where('orgId', '==', user.userId)
+    .where('orgId', '==', orgId)
     .limit(1)
     .get();
 
   const existingClients = await db
     .collection(COLLECTIONS.CLIENT_DOCS)
-    .where('orgId', '==', user.userId)
+    .where('orgId', '==', orgId)
     .limit(1)
     .get();
 

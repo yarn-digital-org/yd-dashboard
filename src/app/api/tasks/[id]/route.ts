@@ -8,6 +8,7 @@ import {
   AuthUser,
   NotFoundError,
   ForbiddenError,
+  resolveOrgId,
 } from '@/lib/api-middleware';
 import { Task, COLLECTIONS } from '@/types';
 
@@ -49,6 +50,8 @@ async function handleGet(
   const { user } = context;
   const { id } = await context.params;
 
+  const orgId = await resolveOrgId(user);
+
   const doc = await db.collection(COLLECTIONS.TASKS).doc(id).get();
 
   if (!doc.exists) {
@@ -57,7 +60,7 @@ async function handleGet(
 
   const task = { id: doc.id, ...doc.data() } as Task;
 
-  if (task.orgId !== (user.userId)) {
+  if (task.orgId !== orgId) {
     throw new ForbiddenError('Access denied');
   }
 
@@ -77,6 +80,8 @@ async function handlePut(
   const { id } = await context.params;
   const data = await validateBody(request, updateTaskSchema);
 
+  const orgId = await resolveOrgId(user);
+
   const doc = await db.collection(COLLECTIONS.TASKS).doc(id).get();
 
   if (!doc.exists) {
@@ -85,7 +90,7 @@ async function handlePut(
 
   const existing = { id: doc.id, ...doc.data() } as Task;
 
-  if (existing.orgId !== (user.userId)) {
+  if (existing.orgId !== orgId) {
     throw new ForbiddenError('Access denied');
   }
 
@@ -145,6 +150,8 @@ async function handleDelete(
   const { user } = context;
   const { id } = await context.params;
 
+  const orgId = await resolveOrgId(user);
+
   const doc = await db.collection(COLLECTIONS.TASKS).doc(id).get();
 
   if (!doc.exists) {
@@ -153,7 +160,7 @@ async function handleDelete(
 
   const task = { id: doc.id, ...doc.data() } as Task;
 
-  if (task.orgId !== (user.userId)) {
+  if (task.orgId !== orgId) {
     throw new ForbiddenError('Access denied');
   }
 

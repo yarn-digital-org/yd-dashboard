@@ -371,6 +371,52 @@ export function requireDb() {
 }
 
 // ============================================
+// Organization Helpers
+// ============================================
+
+// In-memory cache for orgId lookups (per-request lifecycle)
+const orgIdCache = new Map<string, string>();
+
+/**
+ * Resolves the organization ID for a given user.
+ * - If the user has an orgId in their user doc, returns it
+ * - Otherwise falls back to user.userId (backwards compat)
+ * - Caches lookups in memory for the duration of the request
+ */
+export async function resolveOrgId(user: AuthUser): Promise<string> {
+  const cacheKey = user.userId;
+
+  // Check cache first
+  if (orgIdCache.has(cacheKey)) {
+    return orgIdCache.get(cacheKey)!;
+  }
+
+  const db = requireDb();
+
+  try {
+    const userDoc = await db.collection('users').doc(user.userId).get();
+
+    if (!userDoc.exists) {
+      // User doc doesn't exist, fall back to userId
+      orgIdCache.set(cacheKey, user.userId);
+      return user.userId;
+    }
+
+    const userData = userDoc.data();
+    const orgId = userData?.orgId || user.userId;
+
+    // Cache the result
+    orgIdCache.set(cacheKey, orgId);
+
+    return orgId;
+  } catch (error) {
+    console.error('Error resolving orgId:', error);
+    // On error, fall back to userId for backwards compatibility
+    return user.userId;
+  }
+}
+
+// ============================================
 // API Handler Wrapper
 // ============================================
 

@@ -1,12 +1,13 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { 
-  withAuth, 
-  successResponse, 
+import {
+  withAuth,
+  successResponse,
   handleApiError,
   validateBody,
   requireDb,
   AuthUser,
+  resolveOrgId,
 } from '@/lib/api-middleware';
 import { Agent, AgentStatus, COLLECTIONS } from '@/types';
 
@@ -40,9 +41,11 @@ async function handleGet(
   const status = searchParams.get('status') as AgentStatus | null;
   const search = searchParams.get('search')?.toLowerCase();
 
+  const orgId = await resolveOrgId(user);
+
   let query: FirebaseFirestore.Query = db
     .collection(COLLECTIONS.AGENTS)
-    .where('orgId', '==', user.userId);
+    .where('orgId', '==', orgId);
 
   if (status) {
     query = query.where('status', '==', status);
@@ -84,6 +87,7 @@ async function handlePost(
   const data = await validateBody(request, createAgentSchema);
 
   const now = new Date().toISOString();
+  const orgId = await resolveOrgId(user);
 
   const agent: Omit<Agent, 'id'> = {
     name: data.name.trim(),
@@ -96,7 +100,7 @@ async function handlePost(
     personality: data.personality?.trim() || '',
     createdAt: now,
     updatedAt: now,
-    orgId: user.userId,
+    orgId: orgId,
     stats: {
       tasksCompleted: 0,
       tasksInProgress: 0,

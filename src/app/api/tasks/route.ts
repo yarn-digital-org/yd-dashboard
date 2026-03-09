@@ -1,11 +1,12 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { 
-  withAuth, 
-  successResponse, 
+import {
+  withAuth,
+  successResponse,
   validateBody,
   requireDb,
   AuthUser,
+  resolveOrgId,
 } from '@/lib/api-middleware';
 import { Task, TaskStatus, TaskPriority, COLLECTIONS } from '@/types';
 
@@ -54,9 +55,11 @@ async function handleGet(
   const limit = parseInt(searchParams.get('limit') || '200');
   const offset = parseInt(searchParams.get('offset') || '0');
 
+  const orgId = await resolveOrgId(user);
+
   let query: FirebaseFirestore.Query = db
     .collection(COLLECTIONS.TASKS)
-    .where('orgId', '==', user.userId);
+    .where('orgId', '==', orgId);
 
   if (status) {
     query = query.where('status', '==', status);
@@ -140,6 +143,7 @@ async function handlePost(
   const data = await validateBody(request, createTaskSchema);
 
   const now = new Date().toISOString();
+  const orgId = await resolveOrgId(user);
 
   const task: Omit<Task, 'id'> = {
     title: data.title.trim(),
@@ -156,7 +160,7 @@ async function handlePost(
     recurringConfig: data.recurringConfig || undefined,
     createdAt: now,
     updatedAt: now,
-    orgId: user.userId,
+    orgId: orgId,
     notes: data.notes || '',
   };
 

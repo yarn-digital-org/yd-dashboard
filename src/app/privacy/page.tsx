@@ -26,7 +26,7 @@ export default function PrivacyPage() {
 
           <section style={{ marginBottom: '2rem' }}>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#0A0A0A', marginBottom: '0.75rem' }}>2. Data Controller</h2>
-            <p>Yarn Digital is the data controller for personal data processed through the Service. For any data protection queries, contact us at privacy@yarndigital.co.uk.</p>
+            <p>Yarn Digital is the data controller for personal data processed through the Service. For any data protection queries, contact us through the dashboard.</p>
           </section>
 
           <section style={{ marginBottom: '2rem' }}>
@@ -105,7 +105,7 @@ export default function PrivacyPage() {
               <li><strong>Objection:</strong> Object to processing based on legitimate interests</li>
               <li><strong>Withdraw consent:</strong> Where processing is based on consent, you may withdraw it at any time</li>
             </ul>
-            <p style={{ marginTop: '0.5rem' }}>To exercise any of these rights, contact us at privacy@yarndigital.co.uk. We will respond within 30 days.</p>
+            <p style={{ marginTop: '0.5rem' }}>To exercise any of these rights, contact us through the dashboard. We will respond within 30 days.</p>
           </section>
 
           <section style={{ marginBottom: '2rem' }}>
@@ -126,7 +126,7 @@ export default function PrivacyPage() {
           <section style={{ marginBottom: '2rem' }}>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#0A0A0A', marginBottom: '0.75rem' }}>13. Contact & Complaints</h2>
             <p>For any privacy-related questions or to exercise your rights, contact:</p>
-            <p style={{ marginTop: '0.5rem' }}>Email: privacy@yarndigital.co.uk</p>
+            <p style={{ marginTop: '0.5rem' }}>Contact us through the dashboard</p>
             <p style={{ marginTop: '0.5rem' }}>If you are not satisfied with our response, you have the right to lodge a complaint with the Information Commissioner&apos;s Office (ICO) at <a href="https://ico.org.uk" style={{ color: '#FF3300', textDecoration: 'none' }}>ico.org.uk</a>.</p>
           </section>
         </div>

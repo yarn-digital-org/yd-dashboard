@@ -4,6 +4,7 @@ import {
   successResponse,
   requireDb,
   AuthUser,
+  resolveOrgId,
 } from '@/lib/api-middleware';
 import { COLLECTIONS } from '@/types';
 
@@ -29,7 +30,7 @@ async function handleGet(
     return successResponse({ error: 'type and id required' }, 400);
   }
 
-  const orgId = user.userId;
+  const orgId = await resolveOrgId(user);
   const results: Record<string, unknown[]> = {};
 
   if (type === 'agent') {

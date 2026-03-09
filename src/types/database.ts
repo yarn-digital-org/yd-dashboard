@@ -1186,6 +1186,8 @@ export interface Agent {
   status: AgentStatus;
   description: string;
   skills: string[];
+  skillIds?: string[];
+  clientIds?: string[];
   slackChannel?: string;
   personality: string;
   createdAt: Timestamp;
@@ -1223,6 +1225,8 @@ export interface Task {
   assignedToName: string;
   projectId?: string;
   clientId?: string;
+  clientName?: string;
+  skillIds?: string[];
   labels: string[];
   dueDate?: Timestamp;
   isRecurring: boolean;

@@ -70,6 +70,7 @@ const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'F
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [clientDocs, setClientDocs] = useState<{id: string; clientName: string; status: string}[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<ViewMode>('board');
   const [search, setSearch] = useState('');
@@ -94,6 +95,8 @@ export default function TasksPage() {
     priority: 'medium' as TaskPriority,
     assignedTo: '',
     assignedToName: '',
+    clientId: '',
+    clientName: '',
     dueDate: '',
     isRecurring: false,
     recurringFrequency: 'weekly' as 'daily' | 'weekly' | 'monthly',
@@ -129,12 +132,24 @@ export default function TasksPage() {
     }
   }, []);
 
+  const fetchClientDocs = useCallback(async () => {
+    try {
+      const res = await fetch('/api/client-docs');
+      if (!res.ok) return;
+      const data = await res.json();
+      setClientDocs(data.data?.clients || []);
+    } catch (err) {
+      console.error('Error fetching client docs:', err);
+    }
+  }, []);
+
   useEffect(() => {
     if (user) {
       fetchTasks();
       fetchAgents();
+      fetchClientDocs();
     }
-  }, [user, fetchTasks, fetchAgents]);
+  }, [user, fetchTasks, fetchAgents, fetchClientDocs]);
 
   // Filter tasks
   const filteredTasks = tasks.filter(t => {
@@ -200,6 +215,8 @@ export default function TasksPage() {
       priority: formData.priority,
       assignedTo: formData.assignedTo,
       assignedToName: agent?.name || formData.assignedToName || 'Unassigned',
+      clientId: formData.clientId || undefined,
+      clientName: formData.clientId ? (clientDocs.find(c => c.id === formData.clientId)?.clientName || '') : undefined,
       dueDate: formData.dueDate || undefined,
       isRecurring: formData.isRecurring,
       notes: formData.notes,
@@ -259,6 +276,8 @@ export default function TasksPage() {
       priority: task.priority,
       assignedTo: task.assignedTo || '',
       assignedToName: task.assignedToName || '',
+      clientId: (task as any).clientId || '',
+      clientName: (task as any).clientName || '',
       dueDate: task.dueDate || '',
       isRecurring: task.isRecurring,
       recurringFrequency: task.recurringConfig?.frequency || 'weekly',
@@ -273,7 +292,7 @@ export default function TasksPage() {
   const resetForm = () => {
     setFormData({
       title: '', description: '', status: 'backlog', priority: 'medium',
-      assignedTo: '', assignedToName: '', dueDate: '', isRecurring: false,
+      assignedTo: '', assignedToName: '', clientId: '', clientName: '', dueDate: '', isRecurring: false,
       recurringFrequency: 'weekly', recurringDayOfWeek: 1, recurringDayOfMonth: 1,
       notes: '', labels: '',
     });
@@ -356,20 +375,30 @@ export default function TasksPage() {
           )}
         </div>
 
-        {/* Agent */}
-        {(agent || task.assignedToName) && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.5rem' }}>
+        {/* Agent & Client */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+          {(agent || task.assignedToName) && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+              <span style={{
+                width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#F3F4F6',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6875rem',
+              }}>
+                {agent?.avatar || '👤'}
+              </span>
+              <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                {agent?.name || task.assignedToName}
+              </span>
+            </div>
+          )}
+          {(task as any).clientName && (
             <span style={{
-              width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#F3F4F6',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6875rem',
+              fontSize: '0.6875rem', color: '#8B5CF6', backgroundColor: '#F5F3FF',
+              padding: '0.125rem 0.5rem', borderRadius: '0.25rem', fontWeight: 500,
             }}>
-              {agent?.avatar || '👤'}
+              {(task as any).clientName}
             </span>
-            <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-              {agent?.name || task.assignedToName}
-            </span>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     );
   };
@@ -758,6 +787,17 @@ export default function TasksPage() {
                       onChange={(e) => setFormData({ ...formData, dueDate: e.target.value ? new Date(e.target.value).toISOString() : '' })}
                       style={inputStyle} />
                   </div>
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Client</label>
+                  <select value={formData.clientId} onChange={(e) => {
+                    const client = clientDocs.find(c => c.id === e.target.value);
+                    setFormData({ ...formData, clientId: e.target.value, clientName: client?.clientName || '' });
+                  }} style={{ ...inputStyle, cursor: 'pointer' }}>
+                    <option value="">No client</option>
+                    {clientDocs.map(c => <option key={c.id} value={c.id}>{c.clientName}</option>)}
+                  </select>
                 </div>
 
                 <div>

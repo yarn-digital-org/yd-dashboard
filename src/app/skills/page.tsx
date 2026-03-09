@@ -53,6 +53,7 @@ export default function SkillsPage() {
   const isMobile = useIsMobile();
 
   const [skills, setSkills] = useState<Skill[]>([]);
+  const [agents, setAgents] = useState<{id: string; name: string; avatar: string; role: string}[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
@@ -92,7 +93,10 @@ export default function SkillsPage() {
   }, [activeCategory, searchQuery]);
 
   useEffect(() => {
-    if (user) fetchSkills();
+    if (user) {
+      fetchSkills();
+      fetch('/api/agents').then(r => r.json()).then(d => setAgents(d.data?.agents || [])).catch(() => {});
+    }
   }, [user, fetchSkills]);
 
   const openSkill = (skill: Skill) => {
@@ -490,6 +494,32 @@ export default function SkillsPage() {
                   >
                     {selectedSkill.content || 'No content yet.'}
                   </div>
+
+                  {/* Assigned Agents */}
+                  {selectedSkill.agentIds && selectedSkill.agentIds.length > 0 && (
+                    <div style={{ marginTop: 20 }}>
+                      <div style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                        Assigned Agents ({selectedSkill.agentIds.length})
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        {selectedSkill.agentIds.map(aid => {
+                          const agent = agents.find(a => a.id === aid);
+                          if (!agent) return null;
+                          return (
+                            <div key={aid} style={{
+                              display: 'flex', alignItems: 'center', gap: 6,
+                              padding: '6px 12px', borderRadius: 8,
+                              background: '#09090b', border: '1px solid #27272a',
+                            }}>
+                              <span style={{ fontSize: 14 }}>{agent.avatar}</span>
+                              <span style={{ color: '#e4e4e7', fontSize: 13, fontWeight: 500 }}>{agent.name}</span>
+                              <span style={{ color: '#71717a', fontSize: 11 }}>{agent.role}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>

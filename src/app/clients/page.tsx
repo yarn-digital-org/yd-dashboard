@@ -43,7 +43,7 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }
   past: { bg: 'rgba(161,161,170,0.15)', text: '#a1a1aa', border: 'rgba(161,161,170,0.3)' },
 };
 
-type TabKey = 'overview' | 'contacts' | 'projects' | 'notes';
+type TabKey = 'overview' | 'contacts' | 'projects' | 'notes' | 'team';
 
 export default function ClientsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -51,6 +51,8 @@ export default function ClientsPage() {
   const isMobile = useIsMobile();
 
   const [clients, setClients] = useState<ClientDoc[]>([]);
+  const [relatedTasks, setRelatedTasks] = useState<any[]>([]);
+  const [relatedAgents, setRelatedAgents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -99,6 +101,16 @@ export default function ClientsPage() {
     loadEditState(client);
     setActiveTab('overview');
     setIsEditing(false);
+    // Fetch related tasks and agents
+    fetch(`/api/relationships?type=client&id=${client.id}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          setRelatedTasks(d.data.tasks || []);
+          setRelatedAgents(d.data.agents || []);
+        }
+      })
+      .catch(() => {});
   };
 
   const loadEditState = (client: ClientDoc) => {
@@ -224,6 +236,7 @@ export default function ClientsPage() {
     { key: 'contacts', label: 'Contacts', icon: <Users size={14} /> },
     { key: 'projects', label: 'Projects', icon: <FolderOpen size={14} /> },
     { key: 'notes', label: 'Meeting Notes', icon: <FileText size={14} /> },
+    { key: 'team', label: 'Team & Tasks', icon: <Briefcase size={14} /> },
   ];
 
   const inputStyle: React.CSSProperties = {
@@ -606,6 +619,78 @@ export default function ClientsPage() {
                     {selectedClient.meetingNotes || 'No meeting notes yet.'}
                   </div>
                 )
+              )}
+
+              {activeTab === 'team' && (
+                <div>
+                  {/* Assigned Agents */}
+                  <div style={{ marginBottom: 24 }}>
+                    <h3 style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>
+                      Agents Working on This Client ({relatedAgents.length})
+                    </h3>
+                    {relatedAgents.length === 0 ? (
+                      <p style={{ color: '#71717a', fontSize: 14 }}>No agents assigned yet. Assign tasks to this client to link agents.</p>
+                    ) : (
+                      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                        {relatedAgents.map((agent: any) => (
+                          <div key={agent.id} style={{
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            padding: '10px 16px', borderRadius: 10,
+                            background: '#09090b', border: '1px solid #27272a',
+                          }}>
+                            <span style={{ fontSize: 20 }}>{agent.avatar}</span>
+                            <div>
+                              <div style={{ color: '#fafafa', fontSize: 14, fontWeight: 600 }}>{agent.name}</div>
+                              <div style={{ color: '#71717a', fontSize: 12 }}>{agent.role}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Related Tasks */}
+                  <div>
+                    <h3 style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>
+                      Tasks ({relatedTasks.length})
+                    </h3>
+                    {relatedTasks.length === 0 ? (
+                      <p style={{ color: '#71717a', fontSize: 14 }}>No tasks linked to this client yet.</p>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {relatedTasks.map((task: any) => (
+                          <div key={task.id} style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            padding: '10px 14px', borderRadius: 8,
+                            background: '#09090b', border: '1px solid #27272a',
+                          }}>
+                            <div>
+                              <div style={{ color: '#fafafa', fontSize: 14, fontWeight: 500 }}>{task.title}</div>
+                              <div style={{ color: '#71717a', fontSize: 12 }}>{task.assignedToName || 'Unassigned'}</div>
+                            </div>
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                              <span style={{
+                                padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                                textTransform: 'capitalize',
+                                color: task.status === 'done' ? '#4ade80' : task.status === 'in-progress' ? '#60a5fa' : task.status === 'review' ? '#c084fc' : '#a1a1aa',
+                                background: task.status === 'done' ? 'rgba(34,197,94,0.15)' : task.status === 'in-progress' ? 'rgba(59,130,246,0.15)' : task.status === 'review' ? 'rgba(168,85,247,0.15)' : 'rgba(161,161,170,0.1)',
+                              }}>
+                                {task.status}
+                              </span>
+                              <span style={{
+                                padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                                textTransform: 'capitalize',
+                                color: task.priority === 'urgent' ? '#ef4444' : task.priority === 'high' ? '#f97316' : task.priority === 'medium' ? '#eab308' : '#71717a',
+                              }}>
+                                {task.priority}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           </div>

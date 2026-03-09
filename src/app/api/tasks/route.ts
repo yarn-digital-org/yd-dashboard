@@ -56,15 +56,10 @@ async function handleGet(
 
   let query: FirebaseFirestore.Query = db
     .collection(COLLECTIONS.TASKS)
-    .where('orgId', '==', user.userId)
-    .orderBy('createdAt', 'desc');
+    .where('orgId', '==', user.userId);
 
   if (status) {
-    query = db
-      .collection(COLLECTIONS.TASKS)
-      .where('orgId', '==', user.userId)
-      .where('status', '==', status)
-      .orderBy('createdAt', 'desc');
+    query = query.where('status', '==', status);
   }
 
   const snapshot = await query.get();
@@ -72,6 +67,9 @@ async function handleGet(
     id: doc.id,
     ...doc.data(),
   })) as Task[];
+
+  // Sort client-side to avoid composite index requirement
+  tasks.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
 
   // Post-query filters
   if (priority) {

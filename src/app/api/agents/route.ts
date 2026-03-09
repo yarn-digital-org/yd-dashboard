@@ -42,15 +42,10 @@ async function handleGet(
 
   let query: FirebaseFirestore.Query = db
     .collection(COLLECTIONS.AGENTS)
-    .where('orgId', '==', user.userId)
-    .orderBy('name', 'asc');
+    .where('orgId', '==', user.userId);
 
   if (status) {
-    query = db
-      .collection(COLLECTIONS.AGENTS)
-      .where('orgId', '==', user.userId)
-      .where('status', '==', status)
-      .orderBy('name', 'asc');
+    query = query.where('status', '==', status);
   }
 
   const snapshot = await query.get();
@@ -58,6 +53,9 @@ async function handleGet(
     id: doc.id,
     ...doc.data(),
   })) as Agent[];
+
+  // Sort client-side to avoid composite index requirement
+  agents.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
   if (search) {
     agents = agents.filter(a =>

@@ -33,15 +33,10 @@ async function handleGet(
 
   let query: FirebaseFirestore.Query = db
     .collection(COLLECTIONS.SKILLS)
-    .where('orgId', '==', user.userId)
-    .orderBy('name', 'asc');
+    .where('orgId', '==', user.userId);
 
   if (category) {
-    query = db
-      .collection(COLLECTIONS.SKILLS)
-      .where('orgId', '==', user.userId)
-      .where('category', '==', category)
-      .orderBy('name', 'asc');
+    query = query.where('category', '==', category);
   }
 
   const snapshot = await query.get();
@@ -49,6 +44,8 @@ async function handleGet(
     id: doc.id,
     ...doc.data(),
   })) as Skill[];
+
+  skills.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
   if (search) {
     skills = skills.filter(

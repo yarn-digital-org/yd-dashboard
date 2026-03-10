@@ -52,7 +52,7 @@ interface ClientDetailResponse {
 // Handler Functions
 // ============================================
 
-async function handleGetClients(request: NextRequest): Promise<NextResponse> {
+async function handleGetClients(request: NextRequest): Promise<NextResponse<any>> {
   try {
     const { searchParams } = new URL(request.url);
     
@@ -129,7 +129,7 @@ async function handleGetClients(request: NextRequest): Promise<NextResponse> {
   }
 }
 
-async function handleGetClientDetail(clientName: string): Promise<NextResponse> {
+async function handleGetClientDetail(clientName: string): Promise<NextResponse<any>> {
   try {
     const docs = await getClientDocs(clientName);
 
@@ -173,7 +173,7 @@ async function handleGetClientDetail(clientName: string): Promise<NextResponse> 
   }
 }
 
-async function handleCreateClientDoc(request: NextRequest): Promise<NextResponse> {
+async function handleCreateClientDoc(request: NextRequest): Promise<NextResponse<any>> {
   try {
     const body = await request.json();
     const { clientName, filename, content, message } = body;

@@ -49,7 +49,7 @@ interface SkillContentResponse {
 // Handler Functions
 // ============================================
 
-async function handleGetSkills(request: NextRequest): Promise<NextResponse> {
+async function handleGetSkills(request: NextRequest): Promise<NextResponse<any>> {
   try {
     const { searchParams } = new URL(request.url);
     
@@ -108,7 +108,7 @@ async function handleGetSkills(request: NextRequest): Promise<NextResponse> {
   }
 }
 
-async function handleGetSkillContent(skillPath: string): Promise<NextResponse> {
+async function handleGetSkillContent(skillPath: string): Promise<NextResponse<any>> {
   try {
     const content = await getSkillContent(skillPath);
     
@@ -145,7 +145,7 @@ async function handleGetSkillContent(skillPath: string): Promise<NextResponse> {
   }
 }
 
-async function handleCreateSkill(request: NextRequest): Promise<NextResponse> {
+async function handleCreateSkill(request: NextRequest): Promise<NextResponse<any>> {
   try {
     const body = await request.json();
     const { category, filename, content, message } = body;
@@ -179,7 +179,7 @@ async function handleCreateSkill(request: NextRequest): Promise<NextResponse> {
   }
 }
 
-async function handleUpdateSkill(request: NextRequest): Promise<NextResponse> {
+async function handleUpdateSkill(request: NextRequest): Promise<NextResponse<any>> {
   try {
     const body = await request.json();
     const { path, content, sha, message } = body;
@@ -210,7 +210,7 @@ async function handleUpdateSkill(request: NextRequest): Promise<NextResponse> {
   }
 }
 
-async function handleDeleteSkill(request: NextRequest): Promise<NextResponse> {
+async function handleDeleteSkill(request: NextRequest): Promise<NextResponse<any>> {
   try {
     const body = await request.json();
     const { path, sha, message } = body;

@@ -26,6 +26,7 @@ import {
   BookOpen,
   Building2,
   FolderOpen,
+  Lightbulb,
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -68,6 +69,7 @@ export function Sidebar() {
     { name: 'Agents', icon: Bot, href: '/agents' },
     { name: 'Tasks', icon: CheckSquare, href: '/tasks' },
     { name: 'Skills', icon: BookOpen, href: '/skills' },
+    { name: 'Learnings', icon: Lightbulb, href: '/learnings' },
     { name: 'Clients', icon: Building2, href: '/clients' },
     { name: 'Leads', icon: Users, href: '/leads' },
     { name: 'Projects', icon: FolderKanban, href: '/projects' },

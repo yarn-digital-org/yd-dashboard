@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readFileSync, statSync, readdirSync } from 'fs';
-import { join, basename, extname } from 'path';
 import { 
   withAuth, 
   successResponse, 
   handleApiError,
   AuthUser
 } from '@/lib/api-middleware';
+import { adminDb } from '@/lib/firebase-admin';
 
 // ============================================
 // Types
@@ -26,227 +25,262 @@ interface Document {
   filePath: string;
   contentPreview?: string;
   content?: string;
+  tags?: string[];
+  version?: string;
+  type?: string;
+}
+
+interface DocumentsResponse {
+  documents: Document[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+  filters: {
+    agents: string[];
+    categories: string[];
+    statuses: string[];
+  };
 }
 
 // ============================================
-// File System Reading Functions
+// Firestore Helper Functions
 // ============================================
 
-function scanDeliverablesDirectory(): Document[] {
-  const deliverablesPath = join(process.cwd(), 'deliverables');
-  const documents: Document[] = [];
-  
+async function getDocumentsFromFirestore(): Promise<Document[]> {
+  if (!adminDb) {
+    throw new Error('Firebase Admin not initialized');
+  }
+
   try {
-    // Get agent directories (scout, bolt, aria, radar)
-    const agentDirs = readdirSync(deliverablesPath, { withFileTypes: true })
-      .filter(dirent => dirent.isDirectory())
-      .map(dirent => dirent.name);
+    const documentsRef = adminDb.collection('documents');
+    const snapshot = await documentsRef.get();
     
-    let docId = 1;
+    const documents: Document[] = [];
     
-    for (const agentDir of agentDirs) {
-      const agentPath = join(deliverablesPath, agentDir);
-      const agent = agentDir.charAt(0).toUpperCase() + agentDir.slice(1) as 'Scout' | 'Bolt' | 'Aria' | 'Radar';
-      
-      try {
-        // Get markdown files in agent directory
-        const files = readdirSync(agentPath)
-          .filter(file => extname(file).toLowerCase() === '.md');
-        
-        for (const file of files) {
-          const filePath = join(agentPath, file);
-          const stats = statSync(filePath);
-          
-          try {
-            const content = readFileSync(filePath, 'utf-8');
-            const title = extractTitle(content, file);
-            const description = extractDescription(content);
-            const category = inferCategory(file, content);
-            
-            documents.push({
-              id: String(docId++),
-              title,
-              filename: file,
-              agent,
-              category,
-              description,
-              size: `${(stats.size / 1024).toFixed(1)} KB`,
-              status: 'completed',
-              created: stats.birthtime.toISOString(),
-              updated: stats.mtime.toISOString(),
-              filePath: `/documents/${agent.toLowerCase()}/${file}`,
-              contentPreview: content.substring(0, 500) + (content.length > 500 ? '...' : ''),
-              content
-            });
-          } catch (fileError) {
-            console.error(`Error reading file ${filePath}:`, fileError);
-          }
-        }
-      } catch (agentDirError) {
-        console.error(`Error reading agent directory ${agentPath}:`, agentDirError);
-      }
-    }
-    
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      documents.push({
+        id: doc.id,
+        title: data.title || 'Untitled Document',
+        filename: data.filename || 'document.md',
+        agent: data.agent || 'Scout',
+        category: data.category || 'General',
+        description: data.description || '',
+        size: data.size || '0 B',
+        status: data.status || 'completed',
+        created: data.created || new Date().toISOString(),
+        updated: data.updated || data.created || new Date().toISOString(),
+        filePath: data.filePath || data.filename || 'document.md',
+        contentPreview: data.contentPreview || '',
+        content: data.content || '',
+        tags: data.tags || [],
+        version: data.version || '1.0',
+        type: data.type || 'markdown'
+      });
+    });
+
     return documents;
   } catch (error) {
-    console.error('Error scanning deliverables directory:', error);
-    return [];
+    console.error('Error fetching documents from Firestore:', error);
+    throw error;
   }
 }
 
-function extractTitle(content: string, filename: string): string {
-  // Try to extract title from first H1 heading
-  const h1Match = content.match(/^#\s+(.+)$/m);
-  if (h1Match) {
-    return h1Match[1].trim();
+function filterDocuments(documents: Document[], filters: any): Document[] {
+  let filtered = [...documents];
+
+  // Filter by agent
+  if (filters.agent && filters.agent !== 'all') {
+    filtered = filtered.filter(doc => doc.agent === filters.agent);
   }
-  
-  // Fallback to filename without extension
-  return basename(filename, '.md')
-    .replace(/[-_]/g, ' ')
-    .replace(/\b\w/g, l => l.toUpperCase());
+
+  // Filter by category
+  if (filters.category && filters.category !== 'all') {
+    filtered = filtered.filter(doc => doc.category === filters.category);
+  }
+
+  // Filter by status
+  if (filters.status && filters.status !== 'all') {
+    filtered = filtered.filter(doc => doc.status === filters.status);
+  }
+
+  // Search filter
+  if (filters.search) {
+    const query = filters.search.toLowerCase();
+    filtered = filtered.filter(doc =>
+      doc.title.toLowerCase().includes(query) ||
+      doc.description.toLowerCase().includes(query) ||
+      doc.filename.toLowerCase().includes(query) ||
+      doc.category.toLowerCase().includes(query) ||
+      (doc.content && doc.content.toLowerCase().includes(query)) ||
+      (doc.tags && doc.tags.some(tag => tag.toLowerCase().includes(query)))
+    );
+  }
+
+  return filtered;
 }
 
-function extractDescription(content: string): string {
-  const lines = content.split('\n');
-  
-  // Look for first paragraph after title
-  let foundHeading = false;
-  for (const line of lines) {
-    const trimmed = line.trim();
-    
-    if (trimmed.startsWith('#')) {
-      foundHeading = true;
-      continue;
-    }
-    
-    if (foundHeading && trimmed.length > 20) {
-      return trimmed.length > 200 ? trimmed.substring(0, 200) + '...' : trimmed;
-    }
+function sortDocuments(documents: Document[], sortBy: string): Document[] {
+  const sorted = [...documents];
+
+  switch (sortBy) {
+    case 'newest':
+      return sorted.sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
+    case 'oldest':
+      return sorted.sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime());
+    case 'updated':
+      return sorted.sort((a, b) => {
+        const aUpdated = a.updated || a.created;
+        const bUpdated = b.updated || b.created;
+        return new Date(bUpdated).getTime() - new Date(aUpdated).getTime();
+      });
+    case 'title':
+      return sorted.sort((a, b) => a.title.localeCompare(b.title));
+    case 'agent':
+      return sorted.sort((a, b) => a.agent.localeCompare(b.agent));
+    case 'category':
+      return sorted.sort((a, b) => a.category.localeCompare(b.category));
+    default:
+      return sorted.sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
   }
-  
-  // Fallback to first non-empty line
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (trimmed && !trimmed.startsWith('#') && trimmed.length > 20) {
-      return trimmed.length > 200 ? trimmed.substring(0, 200) + '...' : trimmed;
-    }
-  }
-  
-  return 'No description available';
 }
 
-function inferCategory(filename: string, content: string): string {
-  const file = filename.toLowerCase();
-  const contentLower = content.toLowerCase();
-  
-  if (file.includes('seo') || contentLower.includes('search engine')) return 'SEO';
-  if (file.includes('competitor') || contentLower.includes('competitor')) return 'Market Research';
-  if (file.includes('social') || contentLower.includes('social media')) return 'Marketing';
-  if (file.includes('analytics') || contentLower.includes('analytics')) return 'Analytics';
-  if (file.includes('brand') || contentLower.includes('brand voice')) return 'Content';
-  if (file.includes('calendar') || contentLower.includes('content calendar')) return 'Marketing';
-  if (file.includes('template')) return 'Templates';
-  if (file.includes('baseline') || file.includes('audit')) return 'Analysis';
-  if (file.includes('plan') || file.includes('strategy')) return 'Strategy';
-  
-  return 'General';
+function paginateResults(documents: Document[], page: number, limit: number) {
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  return documents.slice(startIndex, endIndex);
 }
 
 // ============================================
-// GET - List documents with filtering
+// API Handlers
 // ============================================
 
 async function handleGet(
   request: NextRequest,
-  context: { params: Promise<Record<string, string>>; user: AuthUser }
-) {
+  context: { user: AuthUser }
+): Promise<NextResponse<any>> {
   try {
     const { searchParams } = new URL(request.url);
     
-    // Get real documents from file system
-    let filteredDocs = scanDeliverablesDirectory();
+    // Get filter parameters
+    const agent = searchParams.get('agent');
+    const category = searchParams.get('category');
+    const status = searchParams.get('status');
+    const search = searchParams.get('search');
+    const sortBy = searchParams.get('sort') || 'newest';
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '20', 10);
+    
+    // Fetch all documents from Firestore
+    const allDocuments = await getDocumentsFromFirestore();
     
     // Apply filters
-    const agent = searchParams.get('agent');
-    if (agent && agent !== 'all' && ['Scout', 'Bolt', 'Aria', 'Radar'].includes(agent)) {
-      filteredDocs = filteredDocs.filter(doc => doc.agent === agent);
-    }
-    
-    const category = searchParams.get('category');
-    if (category && category !== 'all') {
-      filteredDocs = filteredDocs.filter(doc => 
-        doc.category.toLowerCase() === category.toLowerCase()
-      );
-    }
-    
-    const status = searchParams.get('status');
-    if (status && status !== 'all' && ['draft', 'in-progress', 'completed', 'archived'].includes(status)) {
-      filteredDocs = filteredDocs.filter(doc => doc.status === status);
-    }
-    
-    const search = searchParams.get('search');
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filteredDocs = filteredDocs.filter(doc =>
-        doc.title.toLowerCase().includes(searchLower) ||
-        doc.description.toLowerCase().includes(searchLower) ||
-        doc.filename.toLowerCase().includes(searchLower) ||
-        doc.category.toLowerCase().includes(searchLower) ||
-        doc.agent.toLowerCase().includes(searchLower)
-      );
-    }
-    
-    // Sort
-    const sort = searchParams.get('sort') || 'newest';
-    switch (sort) {
-      case 'newest':
-        filteredDocs.sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
-        break;
-      case 'oldest':
-        filteredDocs.sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime());
-        break;
-      case 'title-asc':
-        filteredDocs.sort((a, b) => a.title.localeCompare(b.title));
-        break;
-      case 'title-desc':
-        filteredDocs.sort((a, b) => b.title.localeCompare(a.title));
-        break;
-      case 'agent':
-        filteredDocs.sort((a, b) => a.agent.localeCompare(b.agent));
-        break;
-      case 'category':
-        filteredDocs.sort((a, b) => a.category.localeCompare(b.category));
-        break;
-      case 'status':
-        filteredDocs.sort((a, b) => a.status.localeCompare(b.status));
-        break;
-    }
-
-    return successResponse({
-      documents: filteredDocs,
-      total: filteredDocs.length
+    const filteredDocuments = filterDocuments(allDocuments, {
+      agent,
+      category,
+      status,
+      search
     });
+    
+    // Sort documents
+    const sortedDocuments = sortDocuments(filteredDocuments, sortBy);
+    
+    // Paginate results
+    const paginatedDocuments = paginateResults(sortedDocuments, page, limit);
+    
+    // Generate filter options from all documents
+    const agents = [...new Set(allDocuments.map(doc => doc.agent))].sort();
+    const categories = [...new Set(allDocuments.map(doc => doc.category))].sort();
+    const statuses = [...new Set(allDocuments.map(doc => doc.status))].sort();
+    
+    const response: DocumentsResponse = {
+      documents: paginatedDocuments,
+      pagination: {
+        total: filteredDocuments.length,
+        page,
+        limit,
+        totalPages: Math.ceil(filteredDocuments.length / limit)
+      },
+      filters: {
+        agents,
+        categories,
+        statuses
+      }
+    };
+    
+    return successResponse(response);
+    
   } catch (error) {
+    console.error('Documents API error:', error);
     return handleApiError(error);
   }
 }
 
 // ============================================
-// Route Handler with Auth
+// Document Detail API (for individual document fetch)
 // ============================================
 
-export const GET = withAuth(handleGet);
+async function handleGetDocument(
+  documentId: string,
+  context: { user: AuthUser }
+): Promise<NextResponse<any>> {
+  try {
+    if (!adminDb) {
+      throw new Error('Firebase Admin not initialized');
+    }
 
-// Export for other methods if needed in the future
-export const POST = withAuth(async (request: NextRequest, context: any) => {
-  return NextResponse.json({ success: false, error: 'Method not implemented yet' }, { status: 501 });
-});
+    const docRef = adminDb.collection('documents').doc(documentId);
+    const doc = await docRef.get();
+    
+    if (!doc.exists) {
+      return NextResponse.json(
+        { success: false, error: 'Document not found' },
+        { status: 404 }
+      );
+    }
 
-export const PUT = withAuth(async (request: NextRequest, context: any) => {
-  return NextResponse.json({ success: false, error: 'Method not implemented yet' }, { status: 501 });
-});
+    const data = doc.data();
+    const document: Document = {
+      id: doc.id,
+      title: data?.title || 'Untitled Document',
+      filename: data?.filename || 'document.md',
+      agent: data?.agent || 'Scout',
+      category: data?.category || 'General',
+      description: data?.description || '',
+      size: data?.size || '0 B',
+      status: data?.status || 'completed',
+      created: data?.created || new Date().toISOString(),
+      updated: data?.updated || data?.created || new Date().toISOString(),
+      filePath: data?.filePath || data?.filename || 'document.md',
+      contentPreview: data?.contentPreview || '',
+      content: data?.content || '',
+      tags: data?.tags || [],
+      version: data?.version || '1.0',
+      type: data?.type || 'markdown'
+    };
+    
+    return successResponse({ document });
+    
+  } catch (error) {
+    console.error('Document fetch error:', error);
+    return handleApiError(error);
+  }
+}
 
-export const DELETE = withAuth(async (request: NextRequest, context: any) => {
-  return NextResponse.json({ success: false, error: 'Method not implemented yet' }, { status: 501 });
+// ============================================
+// Route Exports
+// ============================================
+
+export const GET = withAuth(async (request: NextRequest, context: { params: Promise<Record<string, string>>; user: AuthUser }) => {
+  const { searchParams } = new URL(request.url);
+  const documentId = searchParams.get('id');
+  
+  if (documentId) {
+    return await handleGetDocument(documentId, context);
+  }
+  
+  return await handleGet(request, context);
 });

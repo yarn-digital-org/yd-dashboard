@@ -1240,6 +1240,32 @@ export interface Task {
 }
 
 // ============================================
+// MODULE: Learnings
+// ============================================
+
+export type LearningCategory = 'seo' | 'development' | 'design' | 'marketing' | 'client-management';
+export type LearningImpact = 'high' | 'medium' | 'low';
+export type LearningStatus = 'draft' | 'published' | 'archived';
+
+export interface Learning {
+  id: string;
+  title: string;
+  description: string;
+  category: LearningCategory;
+  tags: string[];
+  client?: string;
+  project?: string;
+  impact: LearningImpact;
+  actionable: boolean;
+  dateCreated: Timestamp;
+  createdBy: string;
+  lastUpdated: Timestamp;
+  updatedBy: string;
+  status: LearningStatus;
+  orgId: string;
+}
+
+// ============================================
 // Collection Names (for consistency)
 // ============================================
 
@@ -1323,6 +1349,9 @@ export const COLLECTIONS = {
   // Skills & Client Docs
   SKILLS: 'skills',
   CLIENT_DOCS: 'clientDocs',
+  
+  // Learnings
+  LEARNINGS: 'learnings',
 } as const;
 
 export type CollectionName = typeof COLLECTIONS[keyof typeof COLLECTIONS];

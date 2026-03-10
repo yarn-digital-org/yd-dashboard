@@ -1206,7 +1206,7 @@ export interface Agent {
 
 export type TaskStatus = 'backlog' | 'in-progress' | 'review' | 'done' | 'archived';
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
-export type TaskRecurringFrequency = 'daily' | 'weekly' | 'monthly';
+export type TaskRecurringFrequency = 'hourly' | 'daily' | 'weekly' | 'monthly';
 
 export interface TaskRecurringConfig {
   frequency: TaskRecurringFrequency;
@@ -1221,8 +1221,8 @@ export interface Task {
   description: string;
   status: TaskStatus;
   priority: TaskPriority;
-  assignedTo: string;
-  assignedToName: string;
+  assignedTo: string | string[];
+  assignedToName: string | string[];
   projectId?: string;
   clientId?: string;
   clientName?: string;

@@ -25,6 +25,7 @@ import {
   CheckSquare,
   BookOpen,
   Building2,
+  FolderOpen,
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -76,6 +77,7 @@ export function Sidebar() {
     { name: 'Contracts', icon: FileSignature, href: '/contracts' },
     { name: 'Messages', icon: MessageSquare, href: '/messages' },
     { name: 'Calendar', icon: Calendar, href: '/calendar' },
+    { name: 'Documents', icon: FolderOpen, href: '/documents' },
     { name: 'Automations', icon: Zap, href: '/automations' },
   ];
 

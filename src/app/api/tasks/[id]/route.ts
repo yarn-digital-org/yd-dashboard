@@ -21,15 +21,15 @@ const updateTaskSchema = z.object({
   description: z.string().optional(),
   status: z.enum(['backlog', 'in-progress', 'review', 'done', 'archived']).optional(),
   priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
-  assignedTo: z.string().optional(),
-  assignedToName: z.string().optional(),
+  assignedTo: z.union([z.string(), z.array(z.string())]).optional(),
+  assignedToName: z.union([z.string(), z.array(z.string())]).optional(),
   projectId: z.string().optional().nullable(),
   clientId: z.string().optional().nullable(),
   labels: z.array(z.string()).optional(),
   dueDate: z.string().optional().nullable(),
   isRecurring: z.boolean().optional(),
   recurringConfig: z.object({
-    frequency: z.enum(['daily', 'weekly', 'monthly']),
+    frequency: z.enum(['hourly', 'daily', 'weekly', 'monthly']),
     dayOfWeek: z.number().min(0).max(6).optional(),
     dayOfMonth: z.number().min(1).max(31).optional(),
     nextDue: z.string().optional(),
@@ -103,14 +103,24 @@ async function handlePut(
   if (data.title) updates.title = data.title.trim();
   if (data.description !== undefined) updates.description = data.description.trim();
 
+  // Normalize assignedTo/assignedToName to arrays if provided
+  if (data.assignedTo !== undefined) {
+    updates.assignedTo = Array.isArray(data.assignedTo) ? data.assignedTo : (data.assignedTo ? [data.assignedTo] : []);
+  }
+  if (data.assignedToName !== undefined) {
+    updates.assignedToName = Array.isArray(data.assignedToName) ? data.assignedToName : (data.assignedToName ? [data.assignedToName] : []);
+  }
+
   // Track completion
   if (data.status === 'done' && existing.status !== 'done') {
     updates.completedAt = now;
 
-    // Update agent stats
-    if (existing.assignedTo) {
+    // Update agent stats for all assigned agents
+    const assignedIds = Array.isArray(existing.assignedTo) ? existing.assignedTo : (existing.assignedTo ? [existing.assignedTo] : []);
+    for (const agentId of assignedIds) {
+      if (!agentId) continue;
       try {
-        const agentRef = db.collection(COLLECTIONS.AGENTS).doc(existing.assignedTo);
+        const agentRef = db.collection(COLLECTIONS.AGENTS).doc(agentId);
         const agentDoc = await agentRef.get();
         if (agentDoc.exists) {
           const agentData = agentDoc.data();

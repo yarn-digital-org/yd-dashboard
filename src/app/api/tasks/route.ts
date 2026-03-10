@@ -19,15 +19,15 @@ const createTaskSchema = z.object({
   description: z.string().optional(),
   status: z.enum(['backlog', 'in-progress', 'review', 'done', 'archived']).optional(),
   priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
-  assignedTo: z.string().optional(),
-  assignedToName: z.string().optional(),
+  assignedTo: z.union([z.string(), z.array(z.string())]).optional(),
+  assignedToName: z.union([z.string(), z.array(z.string())]).optional(),
   projectId: z.string().optional(),
   clientId: z.string().optional(),
   labels: z.array(z.string()).optional(),
   dueDate: z.string().optional(),
   isRecurring: z.boolean().optional(),
   recurringConfig: z.object({
-    frequency: z.enum(['daily', 'weekly', 'monthly']),
+    frequency: z.enum(['hourly', 'daily', 'weekly', 'monthly']),
     dayOfWeek: z.number().min(0).max(6).optional(),
     dayOfMonth: z.number().min(1).max(31).optional(),
     nextDue: z.string().optional(),
@@ -80,7 +80,10 @@ async function handleGet(
   }
 
   if (assignedTo) {
-    tasks = tasks.filter(t => t.assignedTo === assignedTo);
+    tasks = tasks.filter(t => {
+      const assigned = Array.isArray(t.assignedTo) ? t.assignedTo : [t.assignedTo];
+      return assigned.includes(assignedTo);
+    });
   }
 
   if (isRecurring !== null && isRecurring !== undefined) {
@@ -92,7 +95,7 @@ async function handleGet(
     tasks = tasks.filter(t =>
       t.title?.toLowerCase().includes(search) ||
       t.description?.toLowerCase().includes(search) ||
-      t.assignedToName?.toLowerCase().includes(search)
+      (Array.isArray(t.assignedToName) ? t.assignedToName.some(n => n?.toLowerCase().includes(search)) : t.assignedToName?.toLowerCase().includes(search))
     );
   }
 
@@ -150,8 +153,8 @@ async function handlePost(
     description: data.description?.trim() || '',
     status: data.status || 'backlog',
     priority: data.priority || 'medium',
-    assignedTo: data.assignedTo || '',
-    assignedToName: data.assignedToName || 'Unassigned',
+    assignedTo: Array.isArray(data.assignedTo) ? data.assignedTo : (data.assignedTo ? [data.assignedTo] : []),
+    assignedToName: Array.isArray(data.assignedToName) ? data.assignedToName : (data.assignedToName ? [data.assignedToName] : ['Unassigned']),
     projectId: data.projectId || undefined,
     clientId: data.clientId || undefined,
     labels: data.labels || [],
@@ -167,9 +170,11 @@ async function handlePost(
   const docRef = await db.collection(COLLECTIONS.TASKS).add(task);
 
   // Update agent stats if assigned
-  if (task.assignedTo) {
+  const assignedIds = Array.isArray(task.assignedTo) ? task.assignedTo : (task.assignedTo ? [task.assignedTo] : []);
+  for (const agentId of assignedIds) {
+    if (!agentId) continue;
     try {
-      const agentRef = db.collection(COLLECTIONS.AGENTS).doc(task.assignedTo);
+      const agentRef = db.collection(COLLECTIONS.AGENTS).doc(agentId);
       const agentDoc = await agentRef.get();
       if (agentDoc.exists) {
         const agentData = agentDoc.data();

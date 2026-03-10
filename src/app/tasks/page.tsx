@@ -9,7 +9,7 @@ import {
   Search, Plus, X, Filter, ChevronDown,
   Calendar, Clock, AlertCircle, CheckCircle2, Circle,
   LayoutGrid, List, Repeat, GripVertical,
-  Edit3, Trash2,
+  Edit3, Trash2, Power, PowerOff, Timer,
 } from 'lucide-react';
 
 // Types
@@ -21,10 +21,39 @@ interface Agent {
 }
 
 interface RecurringConfig {
-  frequency: 'daily' | 'weekly' | 'monthly';
+  frequency: 'hourly' | 'daily' | 'weekly' | 'monthly';
   dayOfWeek?: number;
   dayOfMonth?: number;
   nextDue?: string;
+}
+
+interface CronJob {
+  id: string;
+  name: string;
+  description?: string;
+  enabled: boolean;
+  schedule: {
+    kind: 'every' | 'at';
+    everyMs?: number;
+    at?: string;
+    anchorMs?: number;
+  };
+  payload?: {
+    kind?: string;
+    message?: string;
+    text?: string;
+  };
+  state?: {
+    lastRunAtMs?: number;
+    lastStatus?: string;
+    lastDurationMs?: number;
+    consecutiveErrors?: number;
+    lastError?: string;
+  };
+  agentId?: string;
+  sessionTarget?: string;
+  createdAtMs?: number;
+  updatedAtMs?: number;
 }
 
 interface Task {
@@ -33,8 +62,8 @@ interface Task {
   description: string;
   status: TaskStatus;
   priority: TaskPriority;
-  assignedTo: string;
-  assignedToName: string;
+  assignedTo: string | string[];
+  assignedToName: string | string[];
   labels: string[];
   dueDate?: string;
   isRecurring: boolean;
@@ -45,6 +74,13 @@ interface Task {
   notes: string;
   feedbackNotes?: string;
 }
+
+// Helper to normalize assignedTo to array
+const toArray = (val: string | string[] | undefined): string[] => {
+  if (!val) return [];
+  if (Array.isArray(val)) return val.filter(Boolean);
+  return val ? [val] : [];
+};
 
 type TaskStatus = 'backlog' | 'in-progress' | 'review' | 'done' | 'archived';
 type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
@@ -69,6 +105,7 @@ const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'F
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [cronJobs, setCronJobs] = useState<CronJob[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [clientDocs, setClientDocs] = useState<{id: string; clientName: string; status: string}[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,6 +120,13 @@ export default function TasksPage() {
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [stats, setStats] = useState<Record<string, number>>({});
+  const [showCronModal, setShowCronModal] = useState(false);
+  const [cronForm, setCronForm] = useState({
+    name: '',
+    description: '',
+    frequency: 'hourly' as 'hourly' | 'daily' | 'weekly' | 'monthly',
+    message: '',
+  });
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const router = useRouter();
@@ -93,15 +137,17 @@ export default function TasksPage() {
     description: '',
     status: 'backlog' as TaskStatus,
     priority: 'medium' as TaskPriority,
-    assignedTo: '',
-    assignedToName: '',
+    assignedTo: [] as string[],
+    assignedToNames: [] as string[],
     clientId: '',
     clientName: '',
     dueDate: '',
     isRecurring: false,
-    recurringFrequency: 'weekly' as 'daily' | 'weekly' | 'monthly',
+    recurringFrequency: 'weekly' as 'hourly' | 'daily' | 'weekly' | 'monthly',
     recurringDayOfWeek: 1,
     recurringDayOfMonth: 1,
+    createAsCron: false,
+    cronMessage: '',
     notes: '',
     labels: '',
   });
@@ -118,6 +164,17 @@ export default function TasksPage() {
       setError('Failed to load tasks');
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const fetchCronJobs = useCallback(async () => {
+    try {
+      const res = await fetch('/api/cron-jobs');
+      if (!res.ok) return;
+      const data = await res.json();
+      setCronJobs(data.data?.jobs || []);
+    } catch (err) {
+      console.error('Error fetching cron jobs:', err);
     }
   }, []);
 
@@ -146,15 +203,16 @@ export default function TasksPage() {
   useEffect(() => {
     if (user) {
       fetchTasks();
+      fetchCronJobs();
       fetchAgents();
       fetchClientDocs();
     }
-  }, [user, fetchTasks, fetchAgents, fetchClientDocs]);
+  }, [user, fetchTasks, fetchCronJobs, fetchAgents, fetchClientDocs]);
 
   // Filter tasks
   const filteredTasks = tasks.filter(t => {
     if (search && !t.title.toLowerCase().includes(search.toLowerCase()) && !t.description?.toLowerCase().includes(search.toLowerCase())) return false;
-    if (filterAgent && t.assignedTo !== filterAgent) return false;
+    if (filterAgent && !toArray(t.assignedTo).includes(filterAgent)) return false;
     if (filterPriority && t.priority !== filterPriority) return false;
     return true;
   });
@@ -207,14 +265,17 @@ export default function TasksPage() {
   const handleSubmit = async () => {
     if (!formData.title) return;
 
-    const agent = agents.find(a => a.id === formData.assignedTo);
+    const assignedNames = formData.assignedTo.map(id => {
+      const a = agents.find(ag => ag.id === id);
+      return a?.name || 'Unknown';
+    });
     const payload: Record<string, unknown> = {
       title: formData.title,
       description: formData.description,
       status: formData.status,
       priority: formData.priority,
       assignedTo: formData.assignedTo,
-      assignedToName: agent?.name || formData.assignedToName || 'Unassigned',
+      assignedToName: assignedNames.length > 0 ? assignedNames : ['Unassigned'],
       clientId: formData.clientId || undefined,
       clientName: formData.clientId ? (clientDocs.find(c => c.id === formData.clientId)?.clientName || '') : undefined,
       dueDate: formData.dueDate || undefined,
@@ -247,6 +308,26 @@ export default function TasksPage() {
         });
         if (!res.ok) throw new Error('Failed to create task');
       }
+      // Create cron job if requested
+      if (formData.isRecurring && formData.createAsCron && formData.cronMessage) {
+        try {
+          await fetch('/api/cron-jobs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: formData.title,
+              description: formData.description || `Recurring task: ${formData.title}`,
+              frequency: formData.recurringFrequency,
+              message: formData.cronMessage,
+            }),
+          });
+          await fetchCronJobs();
+        } catch (cronErr) {
+          console.error('Error creating cron job:', cronErr);
+          // Don't fail the whole save — task was created, cron failed
+        }
+      }
+
       setShowModal(false);
       setEditingTask(null);
       resetForm();
@@ -274,8 +355,8 @@ export default function TasksPage() {
       description: task.description || '',
       status: task.status,
       priority: task.priority,
-      assignedTo: task.assignedTo || '',
-      assignedToName: task.assignedToName || '',
+      assignedTo: toArray(task.assignedTo),
+      assignedToNames: toArray(task.assignedToName),
       clientId: (task as any).clientId || '',
       clientName: (task as any).clientName || '',
       dueDate: task.dueDate || '',
@@ -283,6 +364,8 @@ export default function TasksPage() {
       recurringFrequency: task.recurringConfig?.frequency || 'weekly',
       recurringDayOfWeek: task.recurringConfig?.dayOfWeek ?? 1,
       recurringDayOfMonth: task.recurringConfig?.dayOfMonth ?? 1,
+      createAsCron: false,
+      cronMessage: '',
       notes: task.notes || '',
       labels: task.labels?.join(', ') || '',
     });
@@ -292,10 +375,62 @@ export default function TasksPage() {
   const resetForm = () => {
     setFormData({
       title: '', description: '', status: 'backlog', priority: 'medium',
-      assignedTo: '', assignedToName: '', clientId: '', clientName: '', dueDate: '', isRecurring: false,
+      assignedTo: [], assignedToNames: [], clientId: '', clientName: '', dueDate: '', isRecurring: false,
       recurringFrequency: 'weekly', recurringDayOfWeek: 1, recurringDayOfMonth: 1,
+      createAsCron: false, cronMessage: '',
       notes: '', labels: '',
     });
+  };
+
+  // Cron job helpers
+  const toggleCronJob = async (id: string, enabled: boolean) => {
+    // Optimistic update
+    setCronJobs(prev => prev.map(j => j.id === id ? { ...j, enabled } : j));
+    try {
+      const res = await fetch('/api/cron-jobs', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, enabled }),
+      });
+      if (!res.ok) throw new Error('Failed to update cron job');
+    } catch (err) {
+      console.error('Error toggling cron job:', err);
+      await fetchCronJobs(); // Revert
+    }
+  };
+
+  const handleCreateCronJob = async () => {
+    if (!cronForm.name || !cronForm.message) return;
+    try {
+      const res = await fetch('/api/cron-jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cronForm),
+      });
+      if (!res.ok) throw new Error('Failed to create cron job');
+      setShowCronModal(false);
+      setCronForm({ name: '', description: '', frequency: 'hourly', message: '' });
+      await fetchCronJobs();
+    } catch (err) {
+      console.error('Error creating cron job:', err);
+      setError('Failed to create cron job');
+    }
+  };
+
+  const formatCronSchedule = (schedule: CronJob['schedule']): string => {
+    if (schedule.kind === 'at' && schedule.at) {
+      return `One-time: ${new Date(schedule.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`;
+    }
+    if (schedule.kind === 'every' && schedule.everyMs) {
+      const ms = schedule.everyMs;
+      if (ms < 60000) return `Every ${Math.round(ms / 1000)}s`;
+      if (ms < 3600000) return `Every ${Math.round(ms / 60000)} min`;
+      if (ms === 3600000) return 'Every hour';
+      if (ms < 86400000) return `Every ${(ms / 3600000).toFixed(1).replace('.0', '')} hours`;
+      if (ms === 86400000) return 'Every day';
+      return `Every ${(ms / 86400000).toFixed(1).replace('.0', '')} days`;
+    }
+    return 'Unknown schedule';
   };
 
   // Styles
@@ -324,7 +459,12 @@ export default function TasksPage() {
   // =========================================
   const TaskCard = ({ task, isDraggable = true }: { task: Task; isDraggable?: boolean }) => {
     const prioConfig = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.medium;
-    const agent = agents.find(a => a.id === task.assignedTo);
+    const assignedIds = toArray(task.assignedTo);
+    const assignedNames = toArray(task.assignedToName);
+    const taskAgents = assignedIds.map((id, i) => {
+      const a = agents.find(ag => ag.id === id);
+      return { id, name: a?.name || assignedNames[i] || 'Unknown', avatar: a?.avatar || '👤' };
+    });
 
     return (
       <div
@@ -377,18 +517,20 @@ export default function TasksPage() {
 
         {/* Agent & Client */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-          {(agent || task.assignedToName) && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+          {taskAgents.length > 0 ? taskAgents.map((ta, i) => (
+            <div key={ta.id || i} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
               <span style={{
                 width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#F3F4F6',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6875rem',
               }}>
-                {agent?.avatar || '👤'}
+                {ta.avatar}
               </span>
               <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
-                {agent?.name || task.assignedToName}
+                {ta.name}
               </span>
             </div>
+          )) : (
+            <span style={{ fontSize: '0.75rem', color: '#9CA3AF' }}>Unassigned</span>
           )}
           {(task as any).clientName && (
             <span style={{
@@ -597,7 +739,12 @@ export default function TasksPage() {
             {filteredTasks.filter(t => t.status !== 'archived').map(task => {
               const prioConfig = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.medium;
               const statusCol = STATUS_COLUMNS.find(c => c.key === task.status);
-              const agent = agents.find(a => a.id === task.assignedTo);
+              const listAssignedIds = toArray(task.assignedTo);
+              const listAssignedNames = toArray(task.assignedToName);
+              const listAgents = listAssignedIds.map((id, i) => {
+                const a = agents.find(ag => ag.id === id);
+                return { name: a?.name || listAssignedNames[i] || 'Unknown', avatar: a?.avatar || '👤' };
+              });
 
               return (
                 <div key={task.id} style={{
@@ -615,9 +762,14 @@ export default function TasksPage() {
                     )}
                   </div>
                   {!isMobile && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                      <span style={{ fontSize: '0.75rem' }}>{agent?.avatar || '👤'}</span>
-                      <span style={{ color: '#6B7280', fontSize: '0.8125rem' }}>{agent?.name || task.assignedToName || 'Unassigned'}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap' }}>
+                      {listAgents.length > 0 ? listAgents.map((la, i) => (
+                        <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.125rem', fontSize: '0.8125rem', color: '#6B7280' }}>
+                          <span style={{ fontSize: '0.75rem' }}>{la.avatar}</span> {la.name}{i < listAgents.length - 1 ? ',' : ''}
+                        </span>
+                      )) : (
+                        <span style={{ color: '#9CA3AF', fontSize: '0.8125rem' }}>Unassigned</span>
+                      )}
                     </div>
                   )}
                   {!isMobile && (
@@ -662,56 +814,187 @@ export default function TasksPage() {
 
         {/* ======================== RECURRING VIEW ======================== */}
         {!loading && view === 'recurring' && (
-          <div>
-            {recurringTasks.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '4rem', color: '#9CA3AF' }}>
-                <Repeat size={40} style={{ marginBottom: '1rem', color: '#D1D5DB' }} />
-                <p style={{ fontSize: '0.875rem' }}>No recurring tasks set up yet</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {/* Recurring Tasks Section */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                <Repeat size={16} style={{ color: '#8B5CF6' }} />
+                <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#111827', margin: 0 }}>
+                  Recurring Tasks
+                </h3>
+                <span style={{
+                  fontSize: '0.75rem', fontWeight: 500, color: '#6B7280',
+                  backgroundColor: '#F3F4F6', padding: '0.125rem 0.5rem', borderRadius: '9999px',
+                }}>
+                  {recurringTasks.length}
+                </span>
               </div>
-            ) : (
-              <div style={{
-                backgroundColor: '#FFFFFF', borderRadius: '0.75rem', border: '1px solid #E5E7EB', overflow: 'hidden',
-              }}>
-                {recurringTasks.map(task => {
-                  const agent = agents.find(a => a.id === task.assignedTo);
-                  const freq = task.recurringConfig?.frequency || 'weekly';
-                  let scheduleText = '';
-                  if (freq === 'daily') scheduleText = 'Every day';
-                  else if (freq === 'weekly') scheduleText = `Every ${DAYS_OF_WEEK[task.recurringConfig?.dayOfWeek ?? 1]}`;
-                  else if (freq === 'monthly') scheduleText = `Monthly on the ${task.recurringConfig?.dayOfMonth || 1}${getOrdinalSuffix(task.recurringConfig?.dayOfMonth || 1)}`;
+              {recurringTasks.length === 0 ? (
+                <div style={{
+                  textAlign: 'center', padding: '2.5rem', color: '#9CA3AF',
+                  backgroundColor: '#FFFFFF', borderRadius: '0.75rem', border: '1px solid #E5E7EB',
+                }}>
+                  <Repeat size={32} style={{ marginBottom: '0.5rem', color: '#D1D5DB' }} />
+                  <p style={{ fontSize: '0.875rem', margin: 0 }}>No recurring tasks set up yet</p>
+                </div>
+              ) : (
+                <div style={{
+                  backgroundColor: '#FFFFFF', borderRadius: '0.75rem', border: '1px solid #E5E7EB', overflow: 'hidden',
+                }}>
+                  {recurringTasks.map(task => {
+                    const freq = task.recurringConfig?.frequency || 'weekly';
+                    let scheduleText = '';
+                    if (freq === 'hourly') scheduleText = 'Every hour';
+                    else if (freq === 'daily') scheduleText = 'Every day';
+                    else if (freq === 'weekly') scheduleText = `Every ${DAYS_OF_WEEK[task.recurringConfig?.dayOfWeek ?? 1]}`;
+                    else if (freq === 'monthly') scheduleText = `Monthly on the ${task.recurringConfig?.dayOfMonth || 1}${getOrdinalSuffix(task.recurringConfig?.dayOfMonth || 1)}`;
 
-                  return (
-                    <div key={task.id} style={{
+                    return (
+                      <div key={task.id} style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '1rem 1.25rem', borderBottom: '1px solid #F3F4F6',
+                        gap: '1rem', flexWrap: 'wrap',
+                      }}>
+                        <div style={{ flex: 1, minWidth: '200px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Repeat size={14} style={{ color: '#8B5CF6' }} />
+                            <span style={{ fontWeight: 500, color: '#111827', fontSize: '0.875rem' }}>{task.title}</span>
+                          </div>
+                          <span style={{ fontSize: '0.8125rem', color: '#6B7280', marginTop: '0.25rem', display: 'block' }}>
+                            {scheduleText}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap' }}>
+                          {(() => {
+                            const rIds = toArray(task.assignedTo);
+                            const rNames = toArray(task.assignedToName);
+                            const rAgents = rIds.map((id, i) => {
+                              const a = agents.find(ag => ag.id === id);
+                              return { avatar: a?.avatar || '👤', name: a?.name || rNames[i] || 'Unknown' };
+                            });
+                            return rAgents.length > 0 ? rAgents.map((ra, i) => (
+                              <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.125rem', fontSize: '0.8125rem', color: '#6B7280' }}>
+                                <span style={{ fontSize: '0.75rem' }}>{ra.avatar}</span> {ra.name}
+                              </span>
+                            )) : <span style={{ fontSize: '0.8125rem', color: '#9CA3AF' }}>Unassigned</span>;
+                          })()}
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.25rem' }}>
+                          <button onClick={() => handleEdit(task)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: '#9CA3AF' }}>
+                            <Edit3 size={14} />
+                          </button>
+                          <button onClick={() => handleDelete(task.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: '#9CA3AF' }}>
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Cron Jobs Section */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Timer size={16} style={{ color: '#F59E0B' }} />
+                  <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#111827', margin: 0 }}>
+                    Cron Jobs
+                  </h3>
+                  <span style={{
+                    fontSize: '0.75rem', fontWeight: 500, color: '#6B7280',
+                    backgroundColor: '#F3F4F6', padding: '0.125rem 0.5rem', borderRadius: '9999px',
+                  }}>
+                    {cronJobs.length}
+                  </span>
+                </div>
+                <button onClick={() => setShowCronModal(true)} style={{
+                  display: 'flex', alignItems: 'center', gap: '0.375rem',
+                  padding: '0.375rem 0.75rem', backgroundColor: '#F59E0B', color: '#FFFFFF',
+                  border: 'none', borderRadius: '0.375rem', fontWeight: 500, fontSize: '0.8125rem', cursor: 'pointer',
+                }}>
+                  <Plus size={14} /> Add Cron Job
+                </button>
+              </div>
+              {cronJobs.length === 0 ? (
+                <div style={{
+                  textAlign: 'center', padding: '2.5rem', color: '#9CA3AF',
+                  backgroundColor: '#FFFFFF', borderRadius: '0.75rem', border: '1px solid #E5E7EB',
+                }}>
+                  <Timer size={32} style={{ marginBottom: '0.5rem', color: '#D1D5DB' }} />
+                  <p style={{ fontSize: '0.875rem', margin: 0 }}>No cron jobs synced yet</p>
+                  <p style={{ fontSize: '0.75rem', margin: '0.25rem 0 0', color: '#D1D5DB' }}>
+                    Run the sync script to pull in OpenClaw cron jobs
+                  </p>
+                </div>
+              ) : (
+                <div style={{
+                  backgroundColor: '#FFFFFF', borderRadius: '0.75rem', border: '1px solid #E5E7EB', overflow: 'hidden',
+                }}>
+                  {cronJobs.map(job => (
+                    <div key={job.id} style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                       padding: '1rem 1.25rem', borderBottom: '1px solid #F3F4F6',
                       gap: '1rem', flexWrap: 'wrap',
+                      opacity: job.enabled ? 1 : 0.6,
                     }}>
                       <div style={{ flex: 1, minWidth: '200px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <Repeat size={14} style={{ color: '#8B5CF6' }} />
-                          <span style={{ fontWeight: 500, color: '#111827', fontSize: '0.875rem' }}>{task.title}</span>
+                          <Timer size={14} style={{ color: job.enabled ? '#F59E0B' : '#9CA3AF' }} />
+                          <span style={{ fontWeight: 500, color: '#111827', fontSize: '0.875rem' }}>{job.name}</span>
+                          <span style={{
+                            fontSize: '0.6875rem', fontWeight: 500,
+                            padding: '0.0625rem 0.375rem', borderRadius: '0.25rem',
+                            backgroundColor: job.enabled ? '#ECFDF5' : '#FEF2F2',
+                            color: job.enabled ? '#059669' : '#DC2626',
+                          }}>
+                            {job.enabled ? 'Active' : 'Disabled'}
+                          </span>
                         </div>
                         <span style={{ fontSize: '0.8125rem', color: '#6B7280', marginTop: '0.25rem', display: 'block' }}>
-                          {scheduleText}
+                          {formatCronSchedule(job.schedule)}
                         </span>
+                        {job.description && (
+                          <span style={{ fontSize: '0.75rem', color: '#9CA3AF', marginTop: '0.125rem', display: 'block' }}>
+                            {job.description}
+                          </span>
+                        )}
+                        {job.state?.lastRunAtMs && (
+                          <span style={{ fontSize: '0.6875rem', color: '#9CA3AF', marginTop: '0.25rem', display: 'block' }}>
+                            Last run: {new Date(job.state.lastRunAtMs).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            {job.state.lastStatus && ` · ${job.state.lastStatus}`}
+                            {job.state.lastError && (
+                              <span style={{ color: '#DC2626' }}> · {job.state.lastError}</span>
+                            )}
+                          </span>
+                        )}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                        <span style={{ fontSize: '0.75rem' }}>{agent?.avatar || '👤'}</span>
-                        <span style={{ fontSize: '0.8125rem', color: '#6B7280' }}>{agent?.name || task.assignedToName || 'Unassigned'}</span>
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.25rem' }}>
-                        <button onClick={() => handleEdit(task)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: '#9CA3AF' }}>
-                          <Edit3 size={14} />
-                        </button>
-                        <button onClick={() => handleDelete(task.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: '#9CA3AF' }}>
-                          <Trash2 size={14} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {job.agentId && (
+                          <span style={{ fontSize: '0.75rem', color: '#6B7280', backgroundColor: '#F3F4F6', padding: '0.125rem 0.5rem', borderRadius: '0.25rem' }}>
+                            {job.agentId}
+                          </span>
+                        )}
+                        <button
+                          onClick={() => toggleCronJob(job.id, !job.enabled)}
+                          title={job.enabled ? 'Disable' : 'Enable'}
+                          style={{
+                            background: 'none', border: '1px solid #E5E7EB', borderRadius: '0.375rem',
+                            cursor: 'pointer', padding: '0.375rem 0.625rem',
+                            display: 'flex', alignItems: 'center', gap: '0.25rem',
+                            color: job.enabled ? '#DC2626' : '#059669',
+                            fontSize: '0.75rem', fontWeight: 500,
+                          }}
+                        >
+                          {job.enabled ? <><PowerOff size={12} /> Disable</> : <><Power size={12} /> Enable</>}
                         </button>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -770,23 +1053,56 @@ export default function TasksPage() {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                  <div>
-                    <label style={labelStyle}>Assign to Agent</label>
-                    <select value={formData.assignedTo} onChange={(e) => {
-                      const agent = agents.find(a => a.id === e.target.value);
-                      setFormData({ ...formData, assignedTo: e.target.value, assignedToName: agent?.name || '' });
-                    }} style={{ ...inputStyle, cursor: 'pointer' }}>
-                      <option value="">Unassigned</option>
-                      {agents.map(a => <option key={a.id} value={a.id}>{a.avatar} {a.name} — {a.role}</option>)}
-                    </select>
+                <div>
+                  <label style={labelStyle}>Assign to Agents</label>
+                  <div style={{
+                    border: '1px solid #D1D5DB', borderRadius: '0.5rem', padding: '0.5rem',
+                    maxHeight: '160px', overflowY: 'auto', backgroundColor: '#FAFAFA',
+                  }}>
+                    {agents.map(a => {
+                      const isChecked = formData.assignedTo.includes(a.id);
+                      return (
+                        <label key={a.id} style={{
+                          display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.375rem 0.25rem',
+                          cursor: 'pointer', borderRadius: '0.25rem', fontSize: '0.875rem',
+                          backgroundColor: isChecked ? '#EFF6FF' : 'transparent',
+                        }}>
+                          <input type="checkbox" checked={isChecked}
+                            onChange={() => {
+                              const newAssigned = isChecked
+                                ? formData.assignedTo.filter(id => id !== a.id)
+                                : [...formData.assignedTo, a.id];
+                              const newNames = newAssigned.map(id => {
+                                const ag = agents.find(x => x.id === id);
+                                return ag?.name || 'Unknown';
+                              });
+                              setFormData({ ...formData, assignedTo: newAssigned, assignedToNames: newNames });
+                            }}
+                            style={{ width: '16px', height: '16px', accentColor: '#FF3300' }} />
+                          <span style={{ fontSize: '1rem' }}>{a.avatar}</span>
+                          <span style={{ color: '#111827', fontWeight: isChecked ? 600 : 400 }}>
+                            {a.name}
+                          </span>
+                          <span style={{ color: '#9CA3AF', fontSize: '0.75rem' }}>— {a.role}</span>
+                        </label>
+                      );
+                    })}
+                    {agents.length === 0 && (
+                      <span style={{ color: '#9CA3AF', fontSize: '0.8125rem', padding: '0.25rem' }}>No agents available</span>
+                    )}
                   </div>
-                  <div>
-                    <label style={labelStyle}>Due Date</label>
-                    <input type="date" value={formData.dueDate ? formData.dueDate.split('T')[0] : ''}
-                      onChange={(e) => setFormData({ ...formData, dueDate: e.target.value ? new Date(e.target.value).toISOString() : '' })}
-                      style={inputStyle} />
-                  </div>
+                  {formData.assignedTo.length > 0 && (
+                    <div style={{ marginTop: '0.375rem', fontSize: '0.75rem', color: '#6B7280' }}>
+                      {formData.assignedTo.length} agent{formData.assignedTo.length !== 1 ? 's' : ''} selected
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Due Date</label>
+                  <input type="date" value={formData.dueDate ? formData.dueDate.split('T')[0] : ''}
+                    onChange={(e) => setFormData({ ...formData, dueDate: e.target.value ? new Date(e.target.value).toISOString() : '' })}
+                    style={inputStyle} />
                 </div>
 
                 <div>
@@ -820,8 +1136,9 @@ export default function TasksPage() {
                       <div>
                         <label style={{ ...labelStyle, fontSize: '0.75rem' }}>Frequency</label>
                         <select value={formData.recurringFrequency}
-                          onChange={(e) => setFormData({ ...formData, recurringFrequency: e.target.value as 'daily' | 'weekly' | 'monthly' })}
+                          onChange={(e) => setFormData({ ...formData, recurringFrequency: e.target.value as 'hourly' | 'daily' | 'weekly' | 'monthly' })}
                           style={{ ...inputStyle, width: 'auto' }}>
+                          <option value="hourly">Hourly</option>
                           <option value="daily">Daily</option>
                           <option value="weekly">Weekly</option>
                           <option value="monthly">Monthly</option>
@@ -847,6 +1164,30 @@ export default function TasksPage() {
                       )}
                     </div>
                   )}
+
+                  {formData.isRecurring && (
+                    <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: '#FFFBEB', borderRadius: '0.375rem', border: '1px solid #FDE68A' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.8125rem', fontWeight: 500, color: '#92400E' }}>
+                        <input type="checkbox" checked={formData.createAsCron}
+                          onChange={(e) => setFormData({ ...formData, createAsCron: e.target.checked })}
+                          style={{ width: '16px', height: '16px', accentColor: '#F59E0B' }} />
+                        <Timer size={14} /> Also create as Cron Job
+                      </label>
+                      <p style={{ fontSize: '0.75rem', color: '#B45309', margin: '0.25rem 0 0 1.75rem' }}>
+                        Creates a scheduled cron job that actually runs this task automatically
+                      </p>
+
+                      {formData.createAsCron && (
+                        <div style={{ marginTop: '0.5rem' }}>
+                          <label style={{ ...labelStyle, fontSize: '0.75rem' }}>Agent Instructions *</label>
+                          <textarea value={formData.cronMessage}
+                            onChange={(e) => setFormData({ ...formData, cronMessage: e.target.value })}
+                            placeholder="What should the agent do each time? e.g. Check the lead inbox and post a summary to Slack"
+                            rows={3} style={{ ...inputStyle, resize: 'vertical', fontSize: '0.8125rem' }} />
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -863,6 +1204,79 @@ export default function TasksPage() {
                 </button>
                 <button onClick={handleSubmit} style={buttonStyle}>
                   {editingTask ? 'Save Changes' : 'Create Task'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ======================== CREATE CRON JOB MODAL ======================== */}
+        {showCronModal && (
+          <div style={{
+            position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem',
+          }}>
+            <div style={{
+              backgroundColor: '#FFFFFF', borderRadius: '0.75rem', width: '100%',
+              maxWidth: '520px', maxHeight: '90vh', overflow: 'auto', padding: '1.5rem',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Timer size={20} style={{ color: '#F59E0B' }} />
+                  <h2 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827', margin: 0 }}>
+                    Create Cron Job
+                  </h2>
+                </div>
+                <button onClick={() => setShowCronModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280' }}>
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={labelStyle}>Name *</label>
+                  <input value={cronForm.name} onChange={(e) => setCronForm({ ...cronForm, name: e.target.value })}
+                    placeholder="e.g. Hourly Lead Check" style={inputStyle} />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Description</label>
+                  <input value={cronForm.description} onChange={(e) => setCronForm({ ...cronForm, description: e.target.value })}
+                    placeholder="Brief description of what this does" style={inputStyle} />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Frequency</label>
+                  <select value={cronForm.frequency}
+                    onChange={(e) => setCronForm({ ...cronForm, frequency: e.target.value as 'hourly' | 'daily' | 'weekly' | 'monthly' })}
+                    style={{ ...inputStyle, cursor: 'pointer' }}>
+                    <option value="hourly">Hourly</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Instructions *</label>
+                  <textarea value={cronForm.message}
+                    onChange={(e) => setCronForm({ ...cronForm, message: e.target.value })}
+                    placeholder="What should the agent do when this runs? e.g. Check the lead inbox and send a summary to Slack"
+                    rows={4} style={{ ...inputStyle, resize: 'vertical' }} />
+                  <p style={{ fontSize: '0.75rem', color: '#9CA3AF', margin: '0.25rem 0 0' }}>
+                    This is the prompt that gets sent to the agent each time the cron fires.
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
+                <button onClick={() => setShowCronModal(false)}
+                  style={{ ...buttonStyle, backgroundColor: '#FFFFFF', color: '#374151', border: '1px solid #D1D5DB' }}>
+                  Cancel
+                </button>
+                <button onClick={handleCreateCronJob}
+                  style={{ ...buttonStyle, backgroundColor: '#F59E0B' }}>
+                  <Timer size={14} /> Create Cron Job
                 </button>
               </div>
             </div>

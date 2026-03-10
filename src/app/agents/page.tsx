@@ -7,8 +7,10 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 import { Sidebar } from '@/components/Sidebar';
 import {
   Search, Plus, Bot, X, Edit3, Trash2, MoreHorizontal,
-  Zap, BookOpen, MessageSquare, Activity,
+  Zap, BookOpen, MessageSquare, Activity, Check,
+  LayoutGrid, GitBranch,
 } from 'lucide-react';
+import { OrgChart } from '@/components/OrgChart';
 
 // Types
 interface AgentStats {
@@ -87,6 +89,7 @@ export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'orgchart'>('grid');
   const [showModal, setShowModal] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
@@ -94,6 +97,16 @@ export default function AgentsPage() {
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const router = useRouter();
+
+  // Available skills from GitHub
+  interface AvailableSkill {
+    name: string;
+    category: string;
+    path: string;
+  }
+  const [availableSkills, setAvailableSkills] = useState<AvailableSkill[]>([]);
+  const [skillSearch, setSkillSearch] = useState('');
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -121,9 +134,32 @@ export default function AgentsPage() {
     }
   }, []);
 
+  const fetchAvailableSkills = useCallback(async () => {
+    try {
+      const res = await fetch('/api/github?type=skills&action=tree');
+      if (!res.ok) return;
+      const data = await res.json();
+      const tree = data.data?.tree || [];
+      const skills: AvailableSkill[] = tree
+        .filter((f: { path: string; type: string }) => f.type === 'file' && f.path.endsWith('.md') && f.path !== 'README.md' && f.path.includes('/'))
+        .map((f: { path: string }) => {
+          const parts = f.path.split('/');
+          const category = parts[0];
+          const name = parts[parts.length - 1].replace('.md', '');
+          return { name, category, path: f.path };
+        });
+      setAvailableSkills(skills);
+    } catch (err) {
+      console.error('Error fetching skills:', err);
+    }
+  }, []);
+
   useEffect(() => {
-    if (user) fetchAgents();
-  }, [user, fetchAgents]);
+    if (user) {
+      fetchAgents();
+      fetchAvailableSkills();
+    }
+  }, [user, fetchAgents, fetchAvailableSkills]);
 
   const handleSeedAgents = async () => {
     setLoading(true);
@@ -148,7 +184,7 @@ export default function AgentsPage() {
 
     const payload = {
       ...formData,
-      skills: formData.skills.split(',').map(s => s.trim()).filter(Boolean),
+      skills: selectedSkills,
     };
 
     try {
@@ -200,6 +236,8 @@ export default function AgentsPage() {
       personality: agent.personality,
       slackChannel: agent.slackChannel || '',
     });
+    setSelectedSkills(agent.skills || []);
+    setSkillSearch('');
     setShowModal(true);
     setMenuOpen(null);
   };
@@ -215,7 +253,32 @@ export default function AgentsPage() {
       personality: '',
       slackChannel: '',
     });
+    setSelectedSkills([]);
+    setSkillSearch('');
   };
+
+  const toggleSkill = (skillName: string) => {
+    setSelectedSkills(prev =>
+      prev.includes(skillName)
+        ? prev.filter(s => s !== skillName)
+        : [...prev, skillName]
+    );
+  };
+
+  const skillsByCategory = availableSkills.reduce((acc, skill) => {
+    if (!acc[skill.category]) acc[skill.category] = [];
+    acc[skill.category].push(skill);
+    return acc;
+  }, {} as Record<string, AvailableSkill[]>);
+
+  const filteredSkillCategories = Object.entries(skillsByCategory)
+    .map(([cat, skills]) => ({
+      category: cat,
+      skills: skills.filter(s =>
+        !skillSearch || s.name.toLowerCase().includes(skillSearch.toLowerCase()) || s.category.toLowerCase().includes(skillSearch.toLowerCase())
+      ),
+    }))
+    .filter(({ skills }) => skills.length > 0);
 
   const filteredAgents = agents.filter(a =>
     !search ||
@@ -313,6 +376,41 @@ export default function AgentsPage() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            {/* View toggle */}
+            <div style={{
+              display: 'inline-flex', borderRadius: '0.5rem', border: '1px solid #E5E7EB',
+              overflow: 'hidden', backgroundColor: '#F9FAFB',
+            }}>
+              <button
+                onClick={() => setViewMode('grid')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.375rem',
+                  padding: '0.5rem 0.75rem', border: 'none', cursor: 'pointer',
+                  fontSize: '0.8125rem', fontWeight: 500, transition: 'all 0.15s',
+                  backgroundColor: viewMode === 'grid' ? '#FFFFFF' : 'transparent',
+                  color: viewMode === 'grid' ? '#111827' : '#9CA3AF',
+                  boxShadow: viewMode === 'grid' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                }}
+              >
+                <LayoutGrid size={14} />
+                Grid
+              </button>
+              <button
+                onClick={() => setViewMode('orgchart')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.375rem',
+                  padding: '0.5rem 0.75rem', border: 'none', cursor: 'pointer',
+                  fontSize: '0.8125rem', fontWeight: 500, transition: 'all 0.15s',
+                  backgroundColor: viewMode === 'orgchart' ? '#FFFFFF' : 'transparent',
+                  color: viewMode === 'orgchart' ? '#111827' : '#9CA3AF',
+                  boxShadow: viewMode === 'orgchart' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                }}
+              >
+                <GitBranch size={14} />
+                Org Chart
+              </button>
+            </div>
+
             <div style={{ position: 'relative' }}>
               <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
               <input
@@ -358,13 +456,41 @@ export default function AgentsPage() {
           <div style={{ textAlign: 'center', padding: '4rem', color: '#6B7280' }}>Loading agents...</div>
         )}
 
+        {/* Org Chart View */}
+        {!loading && viewMode === 'orgchart' && (
+          <div style={{
+            backgroundColor: '#0f0f0f',
+            borderRadius: '0.75rem',
+            border: '1px solid #2d2d2d',
+            padding: isMobile ? '0.5rem' : '1.5rem',
+            minHeight: '400px',
+          }}>
+            <OrgChart
+              onNodeClick={(id) => {
+                const agent = agents.find(a => a.name.toLowerCase() === id.toLowerCase());
+                if (agent) {
+                  setViewMode('grid');
+                  setTimeout(() => {
+                    const el = document.getElementById(`agent-card-${agent.id}`);
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      el.style.boxShadow = '0 0 0 2px #FF3300';
+                      setTimeout(() => { el.style.boxShadow = ''; }, 2000);
+                    }
+                  }, 100);
+                }
+              }}
+            />
+          </div>
+        )}
+
         {/* Agent Grid */}
-        {!loading && filteredAgents.length > 0 && (
+        {!loading && viewMode === 'grid' && filteredAgents.length > 0 && (
           <div style={gridStyle}>
             {filteredAgents.map((agent) => {
               const statusConfig = STATUS_CONFIG[agent.status] || STATUS_CONFIG.offline;
               return (
-                <div key={agent.id} style={cardStyle}>
+                <div key={agent.id} id={`agent-card-${agent.id}`} style={cardStyle}>
                   {/* Menu button */}
                   <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
                     <button
@@ -557,13 +683,86 @@ export default function AgentsPage() {
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Skills (comma-separated)</label>
-                  <input
-                    value={formData.skills}
-                    onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
-                    placeholder="e.g. Social Media, Copywriting, Brand Voice"
-                    style={inputStyle}
-                  />
+                  <label style={labelStyle}>Skills from Library ({selectedSkills.length} selected)</label>
+                  {/* Selected skills tags */}
+                  {selectedSkills.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginBottom: '0.5rem' }}>
+                      {selectedSkills.map(skill => (
+                        <span key={skill} style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                          padding: '0.25rem 0.5rem', backgroundColor: '#EFF6FF', color: '#1D4ED8',
+                          borderRadius: '0.25rem', fontSize: '0.75rem', fontWeight: 500,
+                        }}>
+                          {skill}
+                          <button onClick={() => toggleSkill(skill)} style={{
+                            background: 'none', border: 'none', cursor: 'pointer', color: '#1D4ED8',
+                            padding: '0', lineHeight: 1, fontSize: '0.875rem',
+                          }}>×</button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {/* Search */}
+                  <div style={{ position: 'relative', marginBottom: '0.375rem' }}>
+                    <Search size={14} style={{ position: 'absolute', left: '0.625rem', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
+                    <input
+                      value={skillSearch}
+                      onChange={(e) => setSkillSearch(e.target.value)}
+                      placeholder="Search skills..."
+                      style={{ ...inputStyle, paddingLeft: '2rem', fontSize: '0.8125rem' }}
+                    />
+                  </div>
+                  {/* Skills list by category */}
+                  <div style={{
+                    maxHeight: '200px', overflowY: 'auto', border: '1px solid #E5E7EB',
+                    borderRadius: '0.5rem', backgroundColor: '#FAFAFA',
+                  }}>
+                    {filteredSkillCategories.length === 0 ? (
+                      <div style={{ padding: '1rem', textAlign: 'center', color: '#9CA3AF', fontSize: '0.8125rem' }}>
+                        {availableSkills.length === 0 ? 'Loading skills from GitHub...' : 'No matching skills'}
+                      </div>
+                    ) : (
+                      filteredSkillCategories.map(({ category, skills }) => (
+                        <div key={category}>
+                          <div style={{
+                            padding: '0.375rem 0.75rem', backgroundColor: '#F3F4F6',
+                            fontSize: '0.6875rem', fontWeight: 600, color: '#6B7280',
+                            textTransform: 'uppercase', letterSpacing: '0.05em',
+                            position: 'sticky', top: 0,
+                          }}>
+                            {category}
+                          </div>
+                          {skills.map(skill => {
+                            const isSelected = selectedSkills.includes(skill.name);
+                            return (
+                              <div
+                                key={skill.path}
+                                onClick={() => toggleSkill(skill.name)}
+                                style={{
+                                  display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                  padding: '0.375rem 0.75rem', cursor: 'pointer',
+                                  backgroundColor: isSelected ? '#EFF6FF' : 'transparent',
+                                  fontSize: '0.8125rem', color: isSelected ? '#1D4ED8' : '#374151',
+                                  borderBottom: '1px solid #F3F4F6',
+                                }}
+                              >
+                                <div style={{
+                                  width: '16px', height: '16px', borderRadius: '0.25rem',
+                                  border: isSelected ? 'none' : '1.5px solid #D1D5DB',
+                                  backgroundColor: isSelected ? '#3B82F6' : 'transparent',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  flexShrink: 0,
+                                }}>
+                                  {isSelected && <Check size={10} style={{ color: '#FFFFFF' }} />}
+                                </div>
+                                {skill.name}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
 
                 <div>

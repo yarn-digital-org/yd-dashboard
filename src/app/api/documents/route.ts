@@ -51,7 +51,12 @@ interface DocumentsResponse {
 
 async function getDocumentsFromFirestore(): Promise<Document[]> {
   if (!adminDb) {
-    throw new Error('Firebase Admin not initialized');
+    console.error('Firebase Admin DB is null. Environment variables:', {
+      hasServiceAccount: !!process.env.FIREBASE_SERVICE_ACCOUNT,
+      hasCredentialsBase64: !!process.env.FIREBASE_CREDENTIALS_BASE64,
+      serviceAccountLength: process.env.FIREBASE_SERVICE_ACCOUNT?.length || 0
+    });
+    throw new Error('Firebase Admin not initialized - check environment variables');
   }
 
   try {

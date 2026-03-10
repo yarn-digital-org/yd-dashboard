@@ -5,6 +5,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { Sidebar } from '@/components/Sidebar';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { 
   FileText, 
   Search, 
@@ -19,7 +21,8 @@ import {
   Clock,
   FileEdit,
   Archive,
-  FolderOpen
+  FolderOpen,
+  ArrowLeft
 } from 'lucide-react';
 
 // Types
@@ -36,14 +39,13 @@ interface Document {
   updated?: string;
   filePath: string;
   contentPreview?: string;
+  content?: string;
 }
 
 interface DocumentsResponse {
   success: boolean;
-  data?: {
-    documents: Document[];
-    total: number;
-  };
+  documents?: Document[];
+  total?: number;
   error?: string;
 }
 
@@ -87,6 +89,9 @@ export default function DocumentsPage() {
   const [sortBy, setSortBy] = useState<DocumentSortOption>('newest');
   const [showFilters, setShowFilters] = useState(false);
 
+  // Viewer state
+  const [viewingDocument, setViewingDocument] = useState<Document | null>(null);
+
   // Auth check
   useEffect(() => {
     if (!authLoading && !user) {
@@ -112,8 +117,8 @@ export default function DocumentsPage() {
       const res = await fetch(`/api/documents?${params.toString()}`);
       const data: DocumentsResponse = await res.json();
 
-      if (data.success && data.data) {
-        setDocuments(data.data.documents || []);
+      if (data.success) {
+        setDocuments(data.documents || []);
       } else {
         setError(data.error || 'Failed to load documents');
       }
@@ -139,42 +144,7 @@ export default function DocumentsPage() {
   };
 
   const handlePreview = (doc: Document) => {
-    const previewWindow = window.open('', '_blank', 'width=800,height=600');
-    if (previewWindow) {
-      previewWindow.document.write(`
-        <html>
-          <head>
-            <title>${doc.title} - Preview</title>
-            <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 40px; line-height: 1.6; }
-              .header { border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; margin-bottom: 30px; }
-              .title { font-size: 24px; font-weight: bold; margin: 0; color: #111827; }
-              .meta { color: #6b7280; margin: 10px 0; }
-              .content { white-space: pre-wrap; }
-            </style>
-          </head>
-          <body>
-            <div class="header">
-              <h1 class="title">${doc.title}</h1>
-              <div class="meta">
-                <strong>Agent:</strong> ${doc.agent} | 
-                <strong>Category:</strong> ${doc.category} | 
-                <strong>Status:</strong> ${doc.status} | 
-                <strong>Size:</strong> ${doc.size} | 
-                <strong>Created:</strong> ${new Date(doc.created).toLocaleString()}
-              </div>
-              <div class="meta">
-                <strong>Description:</strong> ${doc.description}
-              </div>
-            </div>
-            <div class="content">
-              ${doc.contentPreview || 'No preview content available. Download the file to view the full content.'}
-            </div>
-          </body>
-        </html>
-      `);
-      previewWindow.document.close();
-    }
+    setViewingDocument(doc);
   };
 
   const getStatusIcon = (status: DocumentStatus) => {
@@ -238,6 +208,85 @@ export default function DocumentsPage() {
     backgroundColor: '#FFFFFF',
     cursor: 'pointer',
   };
+
+  // If viewing a document, show the inline viewer
+  if (viewingDocument) {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F9FAFB' }}>
+        <Sidebar />
+        <main style={{ flex: 1, padding: isMobile ? '1rem' : '1.5rem 2rem' }}>
+          {/* Back Button */}
+          <div style={{ marginBottom: '1rem' }}>
+            <button
+              onClick={() => setViewingDocument(null)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.5rem 1rem',
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #E5E7EB',
+                borderRadius: '0.5rem',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                color: '#374151'
+              }}
+            >
+              <ArrowLeft size={16} />
+              ← Back to Documents
+            </button>
+          </div>
+          
+          {/* Document Header */}
+          <div style={{ marginBottom: '1.5rem', backgroundColor: '#FFFFFF', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #E5E7EB' }}>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#111827', margin: '0 0 0.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <FileText size={24} style={{ color: '#FF3300' }} />
+              {viewingDocument.title}
+            </h1>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', fontSize: '0.875rem', color: '#6B7280' }}>
+              <span><strong>Agent:</strong> {viewingDocument.agent}</span>
+              <span><strong>Category:</strong> {viewingDocument.category}</span>
+              <span><strong>Size:</strong> {viewingDocument.size}</span>
+              <span><strong>Created:</strong> {formatDate(viewingDocument.created)}</span>
+            </div>
+            <p style={{ margin: '0.75rem 0 0', color: '#4B5563' }}>{viewingDocument.description}</p>
+          </div>
+
+          {/* Document Content */}
+          <div style={{ backgroundColor: '#FFFFFF', padding: '2rem', borderRadius: '0.75rem', border: '1px solid #E5E7EB' }}>
+            {viewingDocument.content ? (
+              <div style={{ maxWidth: 'none', lineHeight: '1.6' }}>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    h1: ({children}) => <h1 style={{ color: '#111827', borderBottom: '2px solid #E5E7EB', paddingBottom: '0.5rem', marginBottom: '1rem' }}>{children}</h1>,
+                    h2: ({children}) => <h2 style={{ color: '#111827', marginTop: '2rem', marginBottom: '1rem' }}>{children}</h2>,
+                    h3: ({children}) => <h3 style={{ color: '#111827', marginTop: '1.5rem', marginBottom: '0.75rem' }}>{children}</h3>,
+                    p: ({children}) => <p style={{ marginBottom: '1rem', color: '#374151' }}>{children}</p>,
+                    ul: ({children}) => <ul style={{ marginBottom: '1rem', paddingLeft: '1.5rem', color: '#374151' }}>{children}</ul>,
+                    ol: ({children}) => <ol style={{ marginBottom: '1rem', paddingLeft: '1.5rem', color: '#374151' }}>{children}</ol>,
+                    li: ({children}) => <li style={{ marginBottom: '0.25rem' }}>{children}</li>,
+                    blockquote: ({children}) => <blockquote style={{ borderLeft: '4px solid #E5E7EB', paddingLeft: '1rem', margin: '1rem 0', fontStyle: 'italic', color: '#6B7280' }}>{children}</blockquote>,
+                    code: ({children}) => <code style={{ backgroundColor: '#F3F4F6', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.875em', fontFamily: 'monospace' }}>{children}</code>,
+                    pre: ({children}) => <pre style={{ backgroundColor: '#F3F4F6', padding: '1rem', borderRadius: '0.5rem', overflow: 'auto', fontSize: '0.875rem', fontFamily: 'monospace', marginBottom: '1rem' }}>{children}</pre>,
+                    table: ({children}) => <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1rem' }}>{children}</table>,
+                    th: ({children}) => <th style={{ border: '1px solid #E5E7EB', padding: '0.75rem', backgroundColor: '#F9FAFB', textAlign: 'left', fontWeight: 600 }}>{children}</th>,
+                    td: ({children}) => <td style={{ border: '1px solid #E5E7EB', padding: '0.75rem' }}>{children}</td>,
+                    strong: ({children}) => <strong style={{ color: '#111827' }}>{children}</strong>,
+                    em: ({children}) => <em style={{ color: '#6B7280' }}>{children}</em>
+                  }}
+                >
+                  {viewingDocument.content}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              <p style={{ color: '#6B7280', fontStyle: 'italic' }}>No content available for this document.</p>
+            )}
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F9FAFB' }}>

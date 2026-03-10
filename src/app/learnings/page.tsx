@@ -151,11 +151,7 @@ export default function LearningsPage() {
       if (tagFilter.trim()) params.append('tags', tagFilter.trim());
       params.append('limit', '100'); // Get more results for client-side filtering
 
-      const response = await fetch(`/api/learnings?${params.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${user.token}`,
-        },
-      });
+      const response = await fetch(`/api/learnings?${params.toString()}`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch learnings: ${response.statusText}`);
@@ -241,7 +237,6 @@ export default function LearningsPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.token}`,
         },
         body: JSON.stringify(formData),
       });
@@ -278,7 +273,6 @@ export default function LearningsPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.token}`,
         },
         body: JSON.stringify(formData),
       });
@@ -302,9 +296,6 @@ export default function LearningsPage() {
     try {
       const response = await fetch(`/api/learnings/${learning.id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${user.token}`,
-        },
       });
 
       if (!response.ok) {

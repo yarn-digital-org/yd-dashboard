@@ -451,13 +451,13 @@ export const GET = withAuth(handleGet);
 
 // Export for other methods if needed in the future
 export const POST = withAuth(async (request: NextRequest, context: any) => {
-  return NextResponse.json({ error: 'Method not implemented yet' }, { status: 501 });
+  return NextResponse.json({ success: false, error: 'Method not implemented yet' }, { status: 501 });
 });
 
 export const PUT = withAuth(async (request: NextRequest, context: any) => {
-  return NextResponse.json({ error: 'Method not implemented yet' }, { status: 501 });
+  return NextResponse.json({ success: false, error: 'Method not implemented yet' }, { status: 501 });
 });
 
 export const DELETE = withAuth(async (request: NextRequest, context: any) => {
-  return NextResponse.json({ error: 'Method not implemented yet' }, { status: 501 });
+  return NextResponse.json({ success: false, error: 'Method not implemented yet' }, { status: 501 });
 });

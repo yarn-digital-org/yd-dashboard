@@ -33,7 +33,7 @@ interface Document {
 // ============================================
 
 function scanDeliverablesDirectory(): Document[] {
-  const deliverablesPath = '/root/.openclaw/workspace/deliverables';
+  const deliverablesPath = join(process.cwd(), 'deliverables');
   const documents: Document[] = [];
   
   try {

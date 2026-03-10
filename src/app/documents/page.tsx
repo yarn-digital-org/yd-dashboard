@@ -40,8 +40,10 @@ interface Document {
 
 interface DocumentsResponse {
   success: boolean;
-  documents: Document[];
-  total: number;
+  data?: {
+    documents: Document[];
+    total: number;
+  };
   error?: string;
 }
 
@@ -110,8 +112,8 @@ export default function DocumentsPage() {
       const res = await fetch(`/api/documents?${params.toString()}`);
       const data: DocumentsResponse = await res.json();
 
-      if (data.success) {
-        setDocuments(data.documents);
+      if (data.success && data.data) {
+        setDocuments(data.data.documents || []);
       } else {
         setError(data.error || 'Failed to load documents');
       }

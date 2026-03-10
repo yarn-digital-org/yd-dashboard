@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const platform = searchParams.get('platform');
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    let query: any = adminDb.collection('scheduled_content').orderBy('scheduledAt', 'asc').limit(limit);
+    const query: any = adminDb.collection('scheduled_content').orderBy('scheduledAt', 'asc').limit(limit);
 
     const snapshot = await query.get();
     let content = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));

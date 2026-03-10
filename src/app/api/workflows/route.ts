@@ -63,7 +63,7 @@ async function handleGet(
   const sortOrder = searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc';
 
   // Base query - scoped to user
-  let query: FirebaseFirestore.Query = db
+  const query: FirebaseFirestore.Query = db
     .collection(COLLECTIONS.WORKFLOW_TEMPLATES)
     .where('userId', '==', user.userId)
     .orderBy(sortBy, sortOrder);

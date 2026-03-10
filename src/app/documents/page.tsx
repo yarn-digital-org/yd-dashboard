@@ -115,10 +115,11 @@ export default function DocumentsPage() {
       if (sortBy) params.set('sort', sortBy);
 
       const res = await fetch(`/api/documents?${params.toString()}`);
-      const data: DocumentsResponse = await res.json();
+      const data = await res.json();
 
       if (data.success) {
-        setDocuments(data.documents || []);
+        const docs = data.data?.documents || data.documents || [];
+        setDocuments(docs);
       } else {
         setError(data.error || 'Failed to load documents');
       }

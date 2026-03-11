@@ -89,7 +89,7 @@ export async function getSkillsInCategory(category: string): Promise<SkillFile[]
           size: item.size,
           downloadUrl: item.download_url || '',
           htmlUrl: item.html_url || '',
-          type: item.type,
+          type: item.type as "file" | "dir",
           category,
           title: formatSkillTitle(item.name),
         };
@@ -268,7 +268,7 @@ export async function getClientDocs(clientName: string): Promise<GitHubFile[]> {
         size: item.size,
         downloadUrl: item.download_url || '',
         htmlUrl: item.html_url || '',
-        type: item.type,
+        type: item.type as "file" | "dir",
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
   } catch (error) {

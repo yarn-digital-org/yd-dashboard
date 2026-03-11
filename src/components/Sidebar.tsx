@@ -80,6 +80,7 @@ export function Sidebar() {
     { name: 'Messages', icon: MessageSquare, href: '/messages' },
     { name: 'Calendar', icon: Calendar, href: '/calendar' },
     { name: 'Documents', icon: FolderOpen, href: '/documents' },
+    { name: 'Library', icon: BookOpen, href: '/library' },
     { name: 'Automations', icon: Zap, href: '/automations' },
   ];
 

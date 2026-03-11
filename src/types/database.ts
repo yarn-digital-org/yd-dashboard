@@ -1352,6 +1352,11 @@ export const COLLECTIONS = {
   
   // Learnings
   LEARNINGS: 'learnings',
+  
+  // Learning-Skill Feedback Loop
+  SKILL_SUGGESTIONS: 'skillSuggestions',
+  LEARNING_SKILL_RELATIONSHIPS: 'learningSkillRelationships',
+  FEEDBACK_LOOP_METRICS: 'feedbackLoopMetrics',
 } as const;
 
 export type CollectionName = typeof COLLECTIONS[keyof typeof COLLECTIONS];

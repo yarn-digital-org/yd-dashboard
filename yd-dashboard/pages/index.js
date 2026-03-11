@@ -12,11 +12,19 @@ export default function Dashboard() {
 
   const quickActions = [
     {
+      title: 'Agent Team',
+      description: 'View AI team members and org chart',
+      icon: Users,
+      href: '/team',
+      color: 'bg-blue-500 hover:bg-blue-600',
+      priority: true
+    },
+    {
       title: 'GitHub Documents',
       description: 'Review and manage client documents in GitHub',
       icon: FileText,
       href: '/documents-github',
-      color: 'bg-blue-500 hover:bg-blue-600',
+      color: 'bg-green-500 hover:bg-green-600',
       priority: true
     },
     {
@@ -30,17 +38,16 @@ export default function Dashboard() {
     {
       title: 'Skill Import',
       description: 'Import skills from external repositories',
-      icon: Users,
+      icon: Settings,
       href: '/skill-import',
-      color: 'bg-indigo-500 hover:bg-indigo-600',
-      priority: true
+      color: 'bg-indigo-500 hover:bg-indigo-600'
     },
     {
       title: 'Version History',
       description: 'Track changes across all documents',
       icon: BarChart,
       href: '/version-history',
-      color: 'bg-green-500 hover:bg-green-600'
+      color: 'bg-orange-500 hover:bg-orange-600'
     },
     {
       title: 'Legacy Documents',

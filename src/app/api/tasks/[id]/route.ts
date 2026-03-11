@@ -185,4 +185,5 @@ async function handleDelete(
 
 export const GET = withAuth(handleGet);
 export const PUT = withAuth(handlePut);
+export const PATCH = withAuth(handlePut);
 export const DELETE = withAuth(handleDelete);

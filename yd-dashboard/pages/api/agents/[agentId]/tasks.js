@@ -60,7 +60,7 @@ export default async function handler(req, res) {
 
     try {
       const patchRes = await fetch(`https://kanban-project-ten-alpha.vercel.app/api/tasks/${taskId}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, assignee: agentName }),
       });

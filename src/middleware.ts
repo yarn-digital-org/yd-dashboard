@@ -21,6 +21,9 @@ const publicApiRoutes = [
   '/api/auth/verify-email',
   '/api/auth/me', // Used to check session
   '/api/forms/', // Form submissions are public
+  '/api/agents/', // Agent heartbeat, status, messaging endpoints
+  '/api/tasks/', // Task CRUD for agents (auth handled in route)
+  '/api/slack/', // Slack message feed for agents
 ];
 
 // Static file patterns to skip

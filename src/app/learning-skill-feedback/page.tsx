@@ -1,740 +1,726 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useIsMobile } from '@/hooks/useIsMobile';
-import { Sidebar } from '@/components/Sidebar';
+import React, { useState, useEffect } from 'react';
 import { 
-  Lightbulb, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  ArrowRight, 
+  AlertTriangle, 
   TrendingUp, 
   Target, 
-  Zap,
+  Clock, 
+  CheckCircle, 
+  Brain, 
+  BarChart3, 
+  Settings,
+  Search,
+  Filter,
   Plus,
-  Eye,
   RefreshCw,
-  BarChart3,
-  X
+  Download,
+  Upload,
+  Eye,
+  Edit,
+  Trash2,
+  ArrowRight,
+  ArrowUp,
+  ArrowDown,
+  Calendar,
+  User,
+  Star,
+  Activity
 } from 'lucide-react';
-
-// ============================================
-// Types
-// ============================================
 
 interface Learning {
   id: string;
-  title: string;
-  description: string;
-  category: string;
-  tags: string[];
-  impact: string;
-  actionable: boolean;
-  status: string;
-}
-
-interface SkillSuggestion {
-  id: string;
-  learningId: string;
-  learningTitle: string;
-  learningDescription: string;
-  learningTags: string[];
-  learningImpact: string;
-  suggestedSkillName: string;
-  suggestedSkillDescription: string;
-  suggestedSkillCategory: string;
-  suggestedSkillContent: string;
-  suggestedTags: string[];
-  priority: 'high' | 'medium' | 'low';
-  confidence: number;
-  status: 'pending' | 'approved' | 'rejected' | 'implemented';
-  generatedBy: string;
-  generationReason: string;
-  createdAt: string;
-  reviewNotes?: string;
-  resultingSkillId?: string;
-}
-
-interface FeedbackLoopStats {
-  metrics: {
-    totalLearnings: number;
-    actionableLearnings: number;
-    suggestionsGenerated: number;
-    suggestionsImplemented: number;
-    learningsToSkillsRatio: number;
-    averageConfidenceScore: number;
-    averageImplementationTime: number;
+  timestamp: string;
+  type: 'task_completion' | 'error_resolution' | 'workflow_optimization' | 'knowledge_gap' | 'tool_usage';
+  action: string;
+  context: {
+    tools?: string[];
+    domain?: string;
+    knowledge_gaps?: string[];
   };
-  recentSuggestions: SkillSuggestion[];
-  topPerformingCategories: Array<{
-    category: string;
-    conversionRate: number;
-    averageConfidence: number;
-  }>;
-  recommendations: string[];
+  outcome: {
+    success_factors?: string[];
+    failure_points?: string[];
+  };
+  patterns: {
+    tools_used: string[];
+    domain: string;
+    complexity: number;
+    success_factors: string[];
+    failure_points: string[];
+  };
+  confidence: number;
 }
 
-// ============================================
-// Modal Component (replaces shadcn Dialog)
-// ============================================
-
-function Modal({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative z-50 w-full max-w-2xl max-h-[80vh] overflow-y-auto bg-white rounded-xl shadow-xl mx-4 p-6">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-          <X className="h-5 w-5" />
-        </button>
-        {children}
-      </div>
-    </div>
-  );
+interface SkillRecommendation {
+  id: string;
+  skill: string;
+  domain: string;
+  priority: 'high' | 'medium' | 'low';
+  learning_path: {
+    step: number;
+    title: string;
+    duration: string;
+    completed?: boolean;
+  }[];
+  estimated_time: number;
+  success_metrics: string[];
+  progress: number;
+  status: 'not_started' | 'in_progress' | 'completed';
 }
 
-// ============================================
-// Main Page Component
-// ============================================
+interface FeedbackAnalysis {
+  effectiveness: {
+    overall_score: number;
+    individual_metrics: {
+      skill_acquisition_rate: number;
+      performance_improvement: number;
+      knowledge_retention: number;
+      application_success: number;
+    };
+    trends: {
+      direction: 'up' | 'down' | 'stable';
+      percentage: number;
+    };
+  };
+  areas_for_improvement: string[];
+  success_patterns: string[];
+  optimization_opportunities: {
+    description: string;
+    recommended_action: string;
+    expected_impact: string;
+    estimated_effort: string;
+  }[];
+}
 
-export default function LearningSkillFeedbackPage() {
-  const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
-  const isMobile = useIsMobile();
-
-  const [suggestions, setSuggestions] = useState<SkillSuggestion[]>([]);
+export default function LearningSkillFeedbackDashboard() {
   const [learnings, setLearnings] = useState<Learning[]>([]);
-  const [stats, setStats] = useState<FeedbackLoopStats | null>(null);
+  const [recommendations, setRecommendations] = useState<SkillRecommendation[]>([]);
+  const [feedback, setFeedback] = useState<FeedbackAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Tab state
-  const [activeTab, setActiveTab] = useState<'suggestions' | 'analytics'>('suggestions');
-  
-  // Modal states
-  const [selectedSuggestion, setSelectedSuggestion] = useState<SkillSuggestion | null>(null);
-  const [showGenerateModal, setShowGenerateModal] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
-  const [showImplementModal, setShowImplementModal] = useState(false);
-  
-  // Form states
-  const [selectedLearning, setSelectedLearning] = useState<string>('');
-  const [generateLoading, setGenerateLoading] = useState(false);
-  const [implementLoading, setImplementLoading] = useState(false);
-  
-  // Filters
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [priorityFilter, setPriorityFilter] = useState<string>('all');
-  
-  // Implementation form
-  const [implementForm, setImplementForm] = useState({
-    name: '',
-    description: '',
-    category: '',
-    content: '',
-    tags: '',
-  });
+  const [activeTab, setActiveTab] = useState('overview');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('all');
+  const [filterDomain, setFilterDomain] = useState('all');
+  const [sortBy, setSortBy] = useState('timestamp');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [showAddLearning, setShowAddLearning] = useState(false);
 
-  // Auth redirect
+  // Load data on component mount
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, authLoading, router]);
+    loadDashboardData();
+  }, []);
 
-  // Load data
-  useEffect(() => {
-    if (user) loadData();
-  }, [user]);
-
-  const loadData = async () => {
+  const loadDashboardData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      
-      const suggestionsRes = await fetch('/api/learning-skill-feedback');
-      if (!suggestionsRes.ok) throw new Error('Failed to load suggestions');
-      const suggestionsData = await suggestionsRes.json();
-      setSuggestions(suggestionsData.data?.suggestions || []);
-      
-      const learningsRes = await fetch('/api/learnings?limit=100');
-      if (!learningsRes.ok) throw new Error('Failed to load learnings');
-      const learningsData = await learningsRes.json();
-      setLearnings(learningsData.data?.learnings || []);
-      
-      const statsRes = await fetch('/api/learning-skill-feedback/stats');
-      if (!statsRes.ok) throw new Error('Failed to load stats');
-      const statsData = await statsRes.json();
-      setStats(statsData.data);
-      
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load data');
+      const [learningsResponse, recommendationsResponse, feedbackResponse] = await Promise.all([
+        fetch('/api/learning-skill-feedback/learnings'),
+        fetch('/api/learning-skill-feedback/recommendations'), 
+        fetch('/api/learning-skill-feedback/feedback')
+      ]);
+
+      if (learningsResponse.ok) {
+        const learningsData = await learningsResponse.json();
+        setLearnings(learningsData);
+      }
+
+      if (recommendationsResponse.ok) {
+        const recommendationsData = await recommendationsResponse.json();
+        setRecommendations(recommendationsData);
+      }
+
+      if (feedbackResponse.ok) {
+        const feedbackData = await feedbackResponse.json();
+        setFeedback(feedbackData);
+      }
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+      // Toast notification would go here
     } finally {
       setLoading(false);
     }
   };
 
-  const generateSuggestion = async () => {
-    if (!selectedLearning) return;
-    try {
-      setGenerateLoading(true);
-      const res = await fetch('/api/learning-skill-feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ learningId: selectedLearning }),
-      });
-      if (!res.ok) throw new Error('Failed to generate suggestion');
-      const data = await res.json();
-      if (data.data?.suggestions?.length > 0) {
-        setSuggestions(prev => [...data.data.suggestions, ...prev]);
-        setShowGenerateModal(false);
-        setSelectedLearning('');
-      } else {
-        alert('No suggestions generated. The learning may not meet criteria.');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate suggestion');
-    } finally {
-      setGenerateLoading(false);
-    }
+  const handleRefresh = () => {
+    loadDashboardData();
   };
 
-  const updateSuggestionStatus = async (suggestionId: string, status: string, notes?: string) => {
-    try {
-      const res = await fetch(`/api/learning-skill-feedback/${suggestionId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, reviewNotes: notes }),
-      });
-      if (!res.ok) throw new Error('Failed to update suggestion');
-      const data = await res.json();
-      setSuggestions(prev => prev.map(s => s.id === suggestionId ? { ...s, ...data.data } : s));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update suggestion');
-    }
-  };
-
-  const implementSuggestion = async () => {
-    if (!selectedSuggestion) return;
-    try {
-      setImplementLoading(true);
-      const customizations = {
-        name: implementForm.name || undefined,
-        description: implementForm.description || undefined,
-        category: implementForm.category || undefined,
-        content: implementForm.content || undefined,
-        tags: implementForm.tags ? implementForm.tags.split(',').map(t => t.trim()) : undefined,
-      };
-      const res = await fetch(`/api/learning-skill-feedback/${selectedSuggestion.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customizations }),
-      });
-      if (!res.ok) throw new Error('Failed to implement suggestion');
-      const data = await res.json();
-      setSuggestions(prev =>
-        prev.map(s => s.id === selectedSuggestion.id ? 
-          { ...s, status: 'implemented', resultingSkillId: data.data?.skillId } : s)
-      );
-      setShowImplementModal(false);
-      setSelectedSuggestion(null);
-      setImplementForm({ name: '', description: '', category: '', content: '', tags: '' });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to implement suggestion');
-    } finally {
-      setImplementLoading(false);
-    }
-  };
-
-  const openImplementModal = (suggestion: SkillSuggestion) => {
-    setSelectedSuggestion(suggestion);
-    setImplementForm({
-      name: suggestion.suggestedSkillName,
-      description: suggestion.suggestedSkillDescription,
-      category: suggestion.suggestedSkillCategory,
-      content: suggestion.suggestedSkillContent,
-      tags: suggestion.suggestedTags.join(', '),
-    });
-    setShowImplementModal(true);
-  };
-
-  const filteredSuggestions = suggestions.filter(s => {
-    if (statusFilter !== 'all' && s.status !== statusFilter) return false;
-    if (priorityFilter !== 'all' && s.priority !== priorityFilter) return false;
-    return true;
+  const filteredLearnings = learnings.filter(learning => {
+    const matchesSearch = learning.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         learning.patterns.domain.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = filterType === 'all' || learning.type === filterType;
+    const matchesDomain = filterDomain === 'all' || learning.patterns.domain === filterDomain;
+    
+    return matchesSearch && matchesType && matchesDomain;
+  }).sort((a, b) => {
+    const aValue = sortBy === 'timestamp' ? new Date(a.timestamp).getTime() : 
+                   sortBy === 'confidence' ? a.confidence : 
+                   sortBy === 'complexity' ? a.patterns.complexity : 0;
+    const bValue = sortBy === 'timestamp' ? new Date(b.timestamp).getTime() : 
+                   sortBy === 'confidence' ? b.confidence : 
+                   sortBy === 'complexity' ? b.patterns.complexity : 0;
+    
+    return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
   });
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending': return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'approved': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'rejected': return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'implemented': return <Zap className="h-4 w-4 text-blue-500" />;
-      default: return null;
-    }
-  };
-
-  const getPriorityClasses = (priority: string) => {
-    const colors: Record<string, string> = {
-      high: 'bg-red-100 text-red-800',
-      medium: 'bg-yellow-100 text-yellow-800',
-      low: 'bg-green-100 text-green-800',
+  const getTypeColor = (type: string) => {
+    const colors = {
+      task_completion: 'bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs',
+      error_resolution: 'bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs', 
+      workflow_optimization: 'bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs',
+      knowledge_gap: 'bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs',
+      tool_usage: 'bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs'
     };
-    return colors[priority] || 'bg-gray-100 text-gray-800';
+    return colors[type as keyof typeof colors] || 'bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs';
   };
 
-  if (authLoading || !user) {
+  const getPriorityColor = (priority: string) => {
+    const colors = {
+      high: 'bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs',
+      medium: 'bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs',
+      low: 'bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs'
+    };
+    return colors[priority as keyof typeof colors] || 'bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs';
+  };
+
+  const getStatusColor = (status: string) => {
+    const colors = {
+      not_started: 'bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs',
+      in_progress: 'bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs',
+      completed: 'bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs'
+    };
+    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs';
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const calculateOverallProgress = () => {
+    if (recommendations.length === 0) return 0;
+    const totalProgress = recommendations.reduce((sum, rec) => sum + rec.progress, 0);
+    return Math.round(totalProgress / recommendations.length);
+  };
+
+  const getHighPriorityRecommendations = () => {
+    return recommendations.filter(rec => rec.priority === 'high').length;
+  };
+
+  const getCompletedRecommendations = () => {
+    return recommendations.filter(rec => rec.status === 'completed').length;
+  };
+
+  const getAverageConfidence = () => {
+    if (learnings.length === 0) return 0;
+    const totalConfidence = learnings.reduce((sum, learning) => sum + learning.confidence, 0);
+    return Math.round(totalConfidence / learnings.length);
+  };
+
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <RefreshCw className="h-6 w-6 animate-spin text-gray-500" />
+      <div className="flex items-center justify-center h-96">
+        <RefreshCw className="h-8 w-8 animate-spin" />
+        <span className="ml-2 text-lg">Loading dashboard data...</span>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      <main className={`flex-1 overflow-y-auto ${isMobile ? 'pb-20' : ''}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Learning-to-Skill Feedback Loop</h1>
+          <p className="text-gray-600">
+            Track learning patterns, skill recommendations, and feedback analysis
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button 
+            onClick={handleRefresh}
+            className="flex items-center px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </button>
+          <button
+            onClick={() => setShowAddLearning(true)}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Learning
+          </button>
+        </div>
+      </div>
 
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Learning-to-Skill Feedback Loop</h1>
-                <p className="text-gray-600 mt-1">Transform learnings into actionable skills automatically</p>
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-6 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Learnings</p>
+              <p className="text-2xl font-bold text-gray-900">{learnings.length}</p>
+              <p className="text-xs text-gray-500">Captured learning events</p>
+            </div>
+            <Brain className="h-8 w-8 text-blue-600" />
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Skill Recommendations</p>
+              <p className="text-2xl font-bold text-gray-900">{recommendations.length}</p>
+              <p className="text-xs text-gray-500">{getHighPriorityRecommendations()} high priority</p>
+            </div>
+            <Target className="h-8 w-8 text-green-600" />
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Overall Progress</p>
+              <p className="text-2xl font-bold text-gray-900">{calculateOverallProgress()}%</p>
+              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full" 
+                  style={{ width: `${calculateOverallProgress()}%` }}
+                ></div>
               </div>
-              <button
-                onClick={() => setShowGenerateModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Plus className="h-4 w-4" />
-                Generate Suggestion
-              </button>
+            </div>
+            <TrendingUp className="h-8 w-8 text-purple-600" />
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Avg Confidence</p>
+              <p className="text-2xl font-bold text-gray-900">{getAverageConfidence()}%</p>
+              <p className="text-xs text-gray-500">Learning confidence score</p>
+            </div>
+            <BarChart3 className="h-8 w-8 text-orange-600" />
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs Navigation */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          {['overview', 'learnings', 'recommendations', 'feedback'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`py-2 px-1 border-b-2 font-medium text-sm capitalize ${
+                activeTab === tab
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'overview' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent Learnings */}
+            <div className="bg-white p-6 rounded-lg shadow border">
+              <h3 className="text-lg font-semibold mb-4">Recent Learnings</h3>
+              <div className="space-y-3">
+                {learnings.slice(0, 5).map(learning => (
+                  <div key={learning.id} className="flex items-start space-x-3 p-3 rounded-lg border">
+                    <span className={getTypeColor(learning.type)}>
+                      {learning.type.replace('_', ' ')}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{learning.action}</p>
+                      <p className="text-xs text-gray-500">
+                        {learning.patterns.domain} • {formatDate(learning.timestamp)}
+                      </p>
+                    </div>
+                    <span className="text-xs border px-2 py-1 rounded">{learning.confidence}%</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Error */}
-            {error && (
-              <div className="border border-red-200 bg-red-50 rounded-lg p-4">
-                <p className="text-red-800">{error}</p>
-                <button onClick={() => setError(null)} className="text-red-600 text-sm underline mt-1">Dismiss</button>
+            {/* Active Recommendations */}
+            <div className="bg-white p-6 rounded-lg shadow border">
+              <h3 className="text-lg font-semibold mb-4">Active Recommendations</h3>
+              <div className="space-y-3">
+                {recommendations
+                  .filter(rec => rec.status === 'in_progress')
+                  .slice(0, 5)
+                  .map(recommendation => (
+                    <div key={recommendation.id} className="p-3 rounded-lg border">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-medium">{recommendation.skill}</h4>
+                        <span className={getPriorityColor(recommendation.priority)}>
+                          {recommendation.priority}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-xs text-gray-500 mb-2">
+                        <span>{recommendation.domain}</span>
+                        <span>•</span>
+                        <span>{recommendation.estimated_time}h</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full" 
+                          style={{ width: `${recommendation.progress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
               </div>
-            )}
+            </div>
+          </div>
 
-            {/* Loading */}
-            {loading ? (
-              <div className="flex items-center justify-center min-h-[400px]">
-                <RefreshCw className="h-6 w-6 animate-spin text-gray-500" />
+          {/* Performance Summary */}
+          {feedback && (
+            <div className="bg-white p-6 rounded-lg shadow border">
+              <h3 className="text-lg font-semibold mb-4">Performance Summary</h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">{feedback.effectiveness.overall_score}%</div>
+                  <p className="text-xs text-gray-500">Overall Score</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {feedback.effectiveness.individual_metrics.skill_acquisition_rate}%
+                  </div>
+                  <p className="text-xs text-gray-500">Acquisition Rate</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {feedback.effectiveness.individual_metrics.performance_improvement}%
+                  </div>
+                  <p className="text-xs text-gray-500">Performance Improvement</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-orange-600">
+                    {feedback.effectiveness.individual_metrics.knowledge_retention}%
+                  </div>
+                  <p className="text-xs text-gray-500">Knowledge Retention</p>
+                </div>
               </div>
-            ) : (
-              <>
-                {/* Tabs */}
-                <div className="border-b border-gray-200">
-                  <nav className="flex space-x-8">
-                    <button
-                      onClick={() => setActiveTab('suggestions')}
-                      className={`py-3 px-1 border-b-2 font-medium text-sm ${
-                        activeTab === 'suggestions'
-                          ? 'border-blue-500 text-blue-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      Skill Suggestions
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('analytics')}
-                      className={`py-3 px-1 border-b-2 font-medium text-sm ${
-                        activeTab === 'analytics'
-                          ? 'border-blue-500 text-blue-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      Analytics
-                    </button>
-                  </nav>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'learnings' && (
+        <div className="space-y-4">
+          {/* Filters */}
+          <div className="bg-white p-4 rounded-lg shadow border">
+            <h3 className="text-lg font-semibold mb-4">Filters & Search</h3>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <input
+                    type="text"
+                    placeholder="Search learnings..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Types</option>
+                  <option value="task_completion">Task Completion</option>
+                  <option value="error_resolution">Error Resolution</option>
+                  <option value="workflow_optimization">Workflow Optimization</option>
+                  <option value="knowledge_gap">Knowledge Gap</option>
+                  <option value="tool_usage">Tool Usage</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Domain</label>
+                <select
+                  value={filterDomain}
+                  onChange={(e) => setFilterDomain(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Domains</option>
+                  <option value="analytics">Analytics</option>
+                  <option value="development">Development</option>
+                  <option value="research">Research</option>
+                  <option value="automation">Automation</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="timestamp">Date</option>
+                  <option value="confidence">Confidence</option>
+                  <option value="complexity">Complexity</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Learnings Table */}
+          <div className="bg-white rounded-lg shadow border overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold">Learning Events</h3>
+              <p className="text-sm text-gray-600">
+                {filteredLearnings.length} of {learnings.length} learnings
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Domain</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Confidence</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredLearnings.map((learning) => (
+                    <tr key={learning.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {learning.action}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={getTypeColor(learning.type)}>
+                          {learning.type.replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{learning.patterns.domain}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-xs border px-2 py-1 rounded">{learning.confidence}%</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(learning.timestamp)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div className="flex space-x-1">
+                          <button className="text-blue-600 hover:text-blue-800">
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button className="text-green-600 hover:text-green-800">
+                            <Edit className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'recommendations' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {recommendations.map((recommendation) => (
+            <div key={recommendation.id} className="bg-white p-6 rounded-lg shadow border">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold">{recommendation.skill}</h3>
+                  <p className="text-sm text-gray-600">{recommendation.domain}</p>
+                </div>
+                <span className={getPriorityColor(recommendation.priority)}>
+                  {recommendation.priority}
+                </span>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Progress</span>
+                    <span>{recommendation.progress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full" 
+                      style={{ width: `${recommendation.progress}%` }}
+                    ></div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between text-sm">
+                  <span>Estimated Time</span>
+                  <span>{recommendation.estimated_time}h</span>
+                </div>
+                
+                <span className={getStatusColor(recommendation.status)}>
+                  {recommendation.status.replace('_', ' ')}
+                </span>
+
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Learning Path</h4>
+                  {recommendation.learning_path.map((step) => (
+                    <div key={step.step} className="flex items-center space-x-2 text-sm mb-1">
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center text-xs ${
+                        step.completed ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
+                      }`}>
+                        {step.completed ? <CheckCircle className="h-3 w-3" /> : step.step}
+                      </div>
+                      <span className={step.completed ? 'line-through text-gray-500' : ''}>
+                        {step.title}
+                      </span>
+                      <span className="text-gray-400">({step.duration})</span>
+                    </div>
+                  ))}
                 </div>
 
-                {/* Suggestions Tab */}
-                {activeTab === 'suggestions' && (
-                  <div className="space-y-6">
-                    {/* Filters */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-4">
-                      <div className="flex gap-4">
-                        <div className="flex-1">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                          <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            <option value="all">All Statuses</option>
-                            <option value="pending">Pending</option>
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
-                            <option value="implemented">Implemented</option>
-                          </select>
-                        </div>
-                        <div className="flex-1">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-                          <select
-                            value={priorityFilter}
-                            onChange={(e) => setPriorityFilter(e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            <option value="all">All Priorities</option>
-                            <option value="high">High</option>
-                            <option value="medium">Medium</option>
-                            <option value="low">Low</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Suggestions List */}
-                    <div className="grid gap-4">
-                      {filteredSuggestions.map((suggestion) => (
-                        <div key={suggestion.id} className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
-                          <div className="p-4 pb-3">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  {getStatusIcon(suggestion.status)}
-                                  <h3 className="text-lg font-semibold text-gray-900">{suggestion.suggestedSkillName}</h3>
-                                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPriorityClasses(suggestion.priority)}`}>
-                                    {suggestion.priority}
-                                  </span>
-                                </div>
-                                <p className="text-sm text-gray-500">Generated from: {suggestion.learningTitle}</p>
-                              </div>
-                              <span className="text-sm text-gray-500">
-                                {Math.round(suggestion.confidence * 100)}% confidence
-                              </span>
-                            </div>
-                          </div>
-                          <div className="px-4 pb-4">
-                            <p className="text-sm text-gray-600 mb-3">{suggestion.suggestedSkillDescription}</p>
-                            
-                            <div className="flex flex-wrap gap-1 mb-3">
-                              {suggestion.suggestedTags.slice(0, 5).map((tag, idx) => (
-                                <span key={idx} className="px-2 py-0.5 rounded-full text-xs border border-gray-200 text-gray-600">
-                                  {tag}
-                                </span>
-                              ))}
-                              {suggestion.suggestedTags.length > 5 && (
-                                <span className="px-2 py-0.5 rounded-full text-xs border border-gray-200 text-gray-600">
-                                  +{suggestion.suggestedTags.length - 5} more
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                              <div className="flex items-center gap-2 text-sm text-gray-500">
-                                <span>{suggestion.suggestedSkillCategory}</span>
-                                <span>•</span>
-                                <span>{new Date(suggestion.createdAt).toLocaleDateString()}</span>
-                              </div>
-                              
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => { setSelectedSuggestion(suggestion); setShowViewModal(true); }}
-                                  className="p-1.5 rounded border border-gray-200 hover:bg-gray-50 transition-colors"
-                                  title="View details"
-                                >
-                                  <Eye className="h-4 w-4 text-gray-500" />
-                                </button>
-                                
-                                {suggestion.status === 'pending' && (
-                                  <>
-                                    <button
-                                      onClick={() => updateSuggestionStatus(suggestion.id, 'approved')}
-                                      className="p-1.5 rounded border border-gray-200 hover:bg-green-50 transition-colors"
-                                      title="Approve"
-                                    >
-                                      <CheckCircle className="h-4 w-4 text-green-600" />
-                                    </button>
-                                    <button
-                                      onClick={() => updateSuggestionStatus(suggestion.id, 'rejected')}
-                                      className="p-1.5 rounded border border-gray-200 hover:bg-red-50 transition-colors"
-                                      title="Reject"
-                                    >
-                                      <XCircle className="h-4 w-4 text-red-600" />
-                                    </button>
-                                  </>
-                                )}
-                                
-                                {suggestion.status === 'approved' && (
-                                  <button
-                                    onClick={() => openImplementModal(suggestion)}
-                                    className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-                                  >
-                                    <ArrowRight className="h-4 w-4" />
-                                    Implement
-                                  </button>
-                                )}
-                                
-                                {suggestion.status === 'implemented' && suggestion.resultingSkillId && (
-                                  <span className="px-2 py-1 rounded-full text-xs border border-green-200 text-green-700 bg-green-50">
-                                    Skill Created
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {filteredSuggestions.length === 0 && (
-                      <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-                        <Lightbulb className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500">No skill suggestions found</p>
-                        <p className="text-sm text-gray-400 mt-1">Generate suggestions from your learnings to get started</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Analytics Tab */}
-                {activeTab === 'analytics' && stats && (
-                  <div className="space-y-6">
-                    {/* Metrics Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <div className="bg-white rounded-lg border border-gray-200 p-4">
-                        <p className="text-sm text-gray-500 mb-1">Conversion Rate</p>
-                        <div className="flex items-center gap-2">
-                          <TrendingUp className="h-4 w-4 text-blue-500" />
-                          <span className="text-2xl font-bold">{Math.round(stats.metrics.learningsToSkillsRatio * 100)}%</span>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">Learnings to skills</p>
-                      </div>
-
-                      <div className="bg-white rounded-lg border border-gray-200 p-4">
-                        <p className="text-sm text-gray-500 mb-1">Avg Confidence</p>
-                        <div className="flex items-center gap-2">
-                          <Target className="h-4 w-4 text-green-500" />
-                          <span className="text-2xl font-bold">{Math.round(stats.metrics.averageConfidenceScore * 100)}%</span>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">Suggestion quality</p>
-                      </div>
-
-                      <div className="bg-white rounded-lg border border-gray-200 p-4">
-                        <p className="text-sm text-gray-500 mb-1">Avg Implementation</p>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-orange-500" />
-                          <span className="text-2xl font-bold">{Math.round(stats.metrics.averageImplementationTime)}d</span>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">Time to deploy</p>
-                      </div>
-
-                      <div className="bg-white rounded-lg border border-gray-200 p-4">
-                        <p className="text-sm text-gray-500 mb-1">Total Generated</p>
-                        <div className="flex items-center gap-2">
-                          <BarChart3 className="h-4 w-4 text-purple-500" />
-                          <span className="text-2xl font-bold">{stats.metrics.suggestionsGenerated}</span>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">Skill suggestions</p>
-                      </div>
-                    </div>
-
-                    {/* Recommendations */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">Recommendations</h3>
-                      <p className="text-sm text-gray-500 mb-4">AI-generated insights to improve your feedback loop</p>
-                      <ul className="space-y-2">
-                        {stats.recommendations.map((rec, idx) => (
-                          <li key={idx} className="flex items-start gap-2">
-                            <Lightbulb className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
-                            <span className="text-sm text-gray-700">{rec}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Top Categories */}
-                    <div className="bg-white rounded-lg border border-gray-200 p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">Top Performing Categories</h3>
-                      <p className="text-sm text-gray-500 mb-4">Categories with highest learning-to-skill conversion rates</p>
-                      <div className="space-y-3">
-                        {stats.topPerformingCategories.map((cat, idx) => (
-                          <div key={idx} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                            <span className="font-medium capitalize">{cat.category}</span>
-                            <div className="flex items-center gap-4 text-sm text-gray-600">
-                              <span>{Math.round(cat.conversionRate * 100)}% conversion</span>
-                              <span>{Math.round(cat.averageConfidence * 100)}% confidence</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      </main>
-
-      {/* Generate Suggestion Modal */}
-      <Modal open={showGenerateModal} onClose={() => setShowGenerateModal(false)}>
-        <h2 className="text-xl font-semibold text-gray-900 mb-1">Generate Skill Suggestion</h2>
-        <p className="text-sm text-gray-500 mb-4">Select a learning to generate skill suggestions from</p>
-        
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Learning</label>
-          <select
-            value={selectedLearning}
-            onChange={(e) => setSelectedLearning(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Select a learning</option>
-            {learnings
-              .filter(l => l.actionable && l.status === 'published')
-              .map((learning) => (
-                <option key={learning.id} value={learning.id}>
-                  {learning.title} ({learning.category} • {learning.impact} impact)
-                </option>
-              ))}
-          </select>
-        </div>
-
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={() => setShowGenerateModal(false)}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={generateSuggestion}
-            disabled={!selectedLearning || generateLoading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {generateLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : 'Generate'}
-          </button>
-        </div>
-      </Modal>
-
-      {/* View Suggestion Modal */}
-      <Modal open={showViewModal} onClose={() => setShowViewModal(false)}>
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Skill Suggestion Details</h2>
-        
-        {selectedSuggestion && (
-          <div className="space-y-4">
-            <div>
-              <h4 className="font-medium text-gray-900">Suggested Skill Name</h4>
-              <p className="text-sm text-gray-600">{selectedSuggestion.suggestedSkillName}</p>
-            </div>
-            <div>
-              <h4 className="font-medium text-gray-900">Description</h4>
-              <p className="text-sm text-gray-600">{selectedSuggestion.suggestedSkillDescription}</p>
-            </div>
-            <div>
-              <h4 className="font-medium text-gray-900">Content Preview</h4>
-              <div className="bg-gray-50 p-3 rounded-lg text-sm max-h-40 overflow-y-auto">
-                <pre className="whitespace-pre-wrap font-mono text-xs">{selectedSuggestion.suggestedSkillContent}</pre>
+                <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center justify-center">
+                  {recommendation.status === 'not_started' ? 'Start Learning' : 'Continue'}
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </button>
               </div>
             </div>
-            <div>
-              <h4 className="font-medium text-gray-900">Generation Reason</h4>
-              <p className="text-sm text-gray-600">{selectedSuggestion.generationReason}</p>
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'feedback' && feedback && (
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-lg shadow border">
+            <h3 className="text-lg font-semibold mb-4">Effectiveness Metrics</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="text-center p-4 border rounded-lg">
+                <div className="text-3xl font-bold text-blue-600">
+                  {feedback.effectiveness.overall_score}%
+                </div>
+                <p className="text-sm text-gray-600">Overall Score</p>
+                <div className="flex items-center justify-center mt-2">
+                  {feedback.effectiveness.trends.direction === 'up' ? (
+                    <ArrowUp className="h-4 w-4 text-green-500" />
+                  ) : feedback.effectiveness.trends.direction === 'down' ? (
+                    <ArrowDown className="h-4 w-4 text-red-500" />
+                  ) : null}
+                  <span className="text-sm ml-1">
+                    {feedback.effectiveness.trends.percentage}%
+                  </span>
+                </div>
+              </div>
+              
+              <div className="text-center p-4 border rounded-lg">
+                <div className="text-3xl font-bold text-green-600">
+                  {feedback.effectiveness.individual_metrics.skill_acquisition_rate}%
+                </div>
+                <p className="text-sm text-gray-600">Acquisition Rate</p>
+              </div>
+              
+              <div className="text-center p-4 border rounded-lg">
+                <div className="text-3xl font-bold text-purple-600">
+                  {feedback.effectiveness.individual_metrics.performance_improvement}%
+                </div>
+                <p className="text-sm text-gray-600">Performance Improvement</p>
+              </div>
+              
+              <div className="text-center p-4 border rounded-lg">
+                <div className="text-3xl font-bold text-orange-600">
+                  {feedback.effectiveness.individual_metrics.knowledge_retention}%
+                </div>
+                <p className="text-sm text-gray-600">Knowledge Retention</p>
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div><strong>Category:</strong> {selectedSuggestion.suggestedSkillCategory}</div>
-              <div><strong>Priority:</strong> {selectedSuggestion.priority}</div>
-              <div><strong>Confidence:</strong> {Math.round(selectedSuggestion.confidence * 100)}%</div>
-              <div><strong>Status:</strong> {selectedSuggestion.status}</div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow border">
+              <h3 className="text-lg font-semibold mb-4">Areas for Improvement</h3>
+              <div className="space-y-3">
+                {feedback.areas_for_improvement.map((area, index) => (
+                  <div key={index} className="flex items-center space-x-3 p-3 border rounded-lg">
+                    <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                    <span className="text-sm">{area}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow border">
+              <h3 className="text-lg font-semibold mb-4">Success Patterns</h3>
+              <div className="space-y-3">
+                {feedback.success_patterns.map((pattern, index) => (
+                  <div key={index} className="flex items-center space-x-3 p-3 border rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <span className="text-sm">{pattern}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        )}
 
-        <div className="flex justify-end mt-4">
-          <button
-            onClick={() => setShowViewModal(false)}
-            className="px-4 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200 transition-colors"
-          >
-            Close
-          </button>
-        </div>
-      </Modal>
-
-      {/* Implement Suggestion Modal */}
-      <Modal open={showImplementModal} onClose={() => setShowImplementModal(false)}>
-        <h2 className="text-xl font-semibold text-gray-900 mb-1">Implement Skill</h2>
-        <p className="text-sm text-gray-500 mb-4">Customize the skill before creating it (optional)</p>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Skill Name</label>
-            <input
-              type="text"
-              value={implementForm.name}
-              onChange={(e) => setImplementForm(prev => ({ ...prev, name: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea
-              value={implementForm.description}
-              onChange={(e) => setImplementForm(prev => ({ ...prev, description: e.target.value }))}
-              rows={3}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-            <select
-              value={implementForm.category}
-              onChange={(e) => setImplementForm(prev => ({ ...prev, category: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="Content">Content</option>
-              <option value="SEO">SEO</option>
-              <option value="Development">Development</option>
-              <option value="Marketing">Marketing</option>
-              <option value="Design">Design</option>
-              <option value="Analytics">Analytics</option>
-              <option value="Operations">Operations</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tags (comma-separated)</label>
-            <input
-              type="text"
-              value={implementForm.tags}
-              onChange={(e) => setImplementForm(prev => ({ ...prev, tags: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Content (Markdown)</label>
-            <textarea
-              value={implementForm.content}
-              onChange={(e) => setImplementForm(prev => ({ ...prev, content: e.target.value }))}
-              rows={8}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          <div className="bg-white p-6 rounded-lg shadow border">
+            <h3 className="text-lg font-semibold mb-4">Optimization Opportunities</h3>
+            <div className="space-y-4">
+              {feedback.optimization_opportunities.map((opportunity, index) => (
+                <div key={index} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-medium">{opportunity.description}</h4>
+                    <div className="flex space-x-2">
+                      <span className="text-xs border px-2 py-1 rounded">Impact: {opportunity.expected_impact}</span>
+                      <span className="text-xs border px-2 py-1 rounded">Effort: {opportunity.estimated_effort}</span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">
+                    {opportunity.recommended_action}
+                  </p>
+                  <button className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 flex items-center">
+                    <Activity className="h-4 w-4 mr-2" />
+                    Implement
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
+      )}
 
-        <div className="flex justify-end gap-3 mt-4">
-          <button
-            onClick={() => setShowImplementModal(false)}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={implementSuggestion}
-            disabled={implementLoading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {implementLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : 'Create Skill'}
-          </button>
+      {/* Add Learning Modal */}
+      {showAddLearning && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Add New Learning</h3>
+            <p className="text-sm text-gray-600 mb-4">Manually add a learning event to the system</p>
+            {/* Form would go here */}
+            <div className="flex justify-end space-x-2">
+              <button 
+                onClick={() => setShowAddLearning(false)}
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                Add Learning
+              </button>
+            </div>
+          </div>
         </div>
-      </Modal>
+      )}
     </div>
   );
 }

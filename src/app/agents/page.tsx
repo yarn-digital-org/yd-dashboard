@@ -12,6 +12,14 @@ import {
 } from 'lucide-react';
 import { OrgChart } from '@/components/OrgChart';
 
+// Live status from OpenClaw kanban
+interface LiveAgentStatus {
+  name: string;
+  status: 'working' | 'idle';
+  currentTask: { id: string; title: string; dueDate?: string } | null;
+  taskCounts: { inProgress: number; inReview: number; backlog: number; done: number; total: number };
+}
+
 // Types
 interface AgentStats {
   tasksCompleted: number;
@@ -87,6 +95,7 @@ const DEFAULT_AGENTS: Omit<Agent, 'id' | 'createdAt' | 'updatedAt' | 'orgId'>[] 
 
 export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [liveStatus, setLiveStatus] = useState<Record<string, LiveAgentStatus>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'orgchart'>('grid');
@@ -154,12 +163,33 @@ export default function AgentsPage() {
     }
   }, []);
 
+  const fetchLiveStatus = useCallback(async () => {
+    try {
+      const res = await fetch('/api/agents/status-live');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.success && data.agents) {
+        const map: Record<string, LiveAgentStatus> = {};
+        for (const a of data.agents) {
+          map[a.name] = a;
+        }
+        setLiveStatus(map);
+      }
+    } catch {
+      // Live status is best-effort — don't block the page
+    }
+  }, []);
+
   useEffect(() => {
     if (user) {
       fetchAgents();
       fetchAvailableSkills();
+      fetchLiveStatus();
+      // Refresh live status every 60s
+      const interval = setInterval(fetchLiveStatus, 60000);
+      return () => clearInterval(interval);
     }
-  }, [user, fetchAgents, fetchAvailableSkills]);
+  }, [user, fetchAgents, fetchAvailableSkills, fetchLiveStatus]);
 
   const handleSeedAgents = async () => {
     setLoading(true);
@@ -488,7 +518,12 @@ export default function AgentsPage() {
         {!loading && viewMode === 'grid' && filteredAgents.length > 0 && (
           <div style={gridStyle}>
             {filteredAgents.map((agent) => {
-              const statusConfig = STATUS_CONFIG[agent.status] || STATUS_CONFIG.offline;
+              const live = liveStatus[agent.name];
+              // Live status overrides Firestore status when available
+              const resolvedStatus = live
+                ? (live.status === 'working' ? 'active' : 'idle')
+                : agent.status;
+              const statusConfig = STATUS_CONFIG[resolvedStatus] || STATUS_CONFIG.offline;
               return (
                 <div key={agent.id} id={`agent-card-${agent.id}`} style={cardStyle}>
                   {/* Menu button */}
@@ -551,9 +586,29 @@ export default function AgentsPage() {
                         width: '6px', height: '6px', borderRadius: '50%',
                         backgroundColor: statusConfig.color,
                       }} />
-                      {statusConfig.label}
+                      {live ? (live.status === 'working' ? 'Working' : 'Idle') : statusConfig.label}
                     </span>
+                    {live && (
+                      <span style={{ marginLeft: '0.5rem', fontSize: '0.6875rem', color: '#9CA3AF' }}>
+                        live
+                      </span>
+                    )}
                   </div>
+                  {/* Current task (from live kanban) */}
+                  {live?.currentTask && (
+                    <div style={{
+                      marginBottom: '0.75rem', padding: '0.5rem 0.625rem',
+                      backgroundColor: '#F0FDF4', borderRadius: '0.375rem',
+                      borderLeft: '3px solid #10B981',
+                    }}>
+                      <p style={{ fontSize: '0.6875rem', color: '#059669', fontWeight: 600, margin: '0 0 0.125rem' }}>
+                        Current task
+                      </p>
+                      <p style={{ fontSize: '0.75rem', color: '#111827', margin: 0, lineHeight: '1.4' }}>
+                        {live.currentTask.title}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Description */}
                   <p style={{
@@ -592,10 +647,10 @@ export default function AgentsPage() {
                     borderTop: '1px solid #F3F4F6', fontSize: '0.75rem', color: '#6B7280',
                   }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <Activity size={12} /> {agent.stats?.tasksInProgress || 0} active
+                      <Activity size={12} /> {live?.taskCounts?.inProgress ?? agent.stats?.tasksInProgress ?? 0} active
                     </span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <BookOpen size={12} /> {agent.stats?.tasksCompleted || 0} done
+                      <BookOpen size={12} /> {live?.taskCounts?.done ?? agent.stats?.tasksCompleted ?? 0} done
                     </span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                       <MessageSquare size={12} /> {agent.stats?.learnings || 0} learnings

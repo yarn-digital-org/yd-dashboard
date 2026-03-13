@@ -535,16 +535,18 @@ export default function TasksPage() {
             onMouseDown={(e) => e.stopPropagation()}
             draggable={false}
             style={{
-              width: '18px', height: '18px', minWidth: '18px', borderRadius: '4px',
-              border: isSelected ? 'none' : '2px solid #D1D5DB',
-              backgroundColor: isSelected ? '#3B82F6' : 'transparent',
+              width: '20px', height: '20px', minWidth: '20px', borderRadius: '4px',
+              border: isSelected ? '2px solid #3B82F6' : '2px solid #9CA3AF',
+              backgroundColor: isSelected ? '#3B82F6' : '#FFFFFF',
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
               marginRight: '0.5rem', marginTop: '1px', flexShrink: 0, padding: 0,
+              boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
             }}
+            title="Select task"
           >
             {isSelected && (
-              <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg width="12" height="9" viewBox="0 0 10 8" fill="none">
+                <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             )}
           </button>
@@ -736,27 +738,29 @@ export default function TasksPage() {
                     marginBottom: '0.75rem', padding: '0 0.25rem',
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      {colTasks.length > 0 && (
-                        <button
-                          onClick={() => selectAllInColumn(col.key)}
-                          style={{
-                            width: '16px', height: '16px', borderRadius: '3px',
-                            border: colTasks.every(t => selectedTasks.has(t.id))
-                              ? 'none' : '2px solid #D1D5DB',
-                            backgroundColor: colTasks.every(t => selectedTasks.has(t.id))
-                              ? '#3B82F6' : 'transparent',
-                            cursor: 'pointer', display: 'flex', alignItems: 'center',
-                            justifyContent: 'center', padding: 0, flexShrink: 0,
-                          }}
-                          title={colTasks.every(t => selectedTasks.has(t.id)) ? 'Deselect all' : 'Select all'}
-                        >
-                          {colTasks.every(t => selectedTasks.has(t.id)) && (
-                            <svg width="8" height="6" viewBox="0 0 10 8" fill="none">
-                              <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          )}
-                        </button>
-                      )}
+                      {colTasks.length > 0 && (() => {
+                        const allSel = colTasks.every(t => selectedTasks.has(t.id));
+                        return (
+                          <button
+                            onClick={() => selectAllInColumn(col.key)}
+                            style={{
+                              width: '18px', height: '18px', borderRadius: '4px',
+                              border: allSel ? '2px solid #3B82F6' : '2px solid #9CA3AF',
+                              backgroundColor: allSel ? '#3B82F6' : '#FFFFFF',
+                              cursor: 'pointer', display: 'flex', alignItems: 'center',
+                              justifyContent: 'center', padding: 0, flexShrink: 0,
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
+                            }}
+                            title={allSel ? 'Deselect all' : 'Select all in column'}
+                          >
+                            {allSel && (
+                              <svg width="10" height="7" viewBox="0 0 10 8" fill="none">
+                                <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            )}
+                          </button>
+                        );
+                      })()}
                       <span style={{ color: col.color }}>{col.icon}</span>
                       <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#374151' }}>{col.label}</span>
                     </div>

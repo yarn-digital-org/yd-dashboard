@@ -30,7 +30,7 @@ interface Document {
   id: string;
   title: string;
   filename: string;
-  agent: 'Scout' | 'Bolt' | 'Aria' | 'Radar';
+  agent: 'Scout' | 'Bolt' | 'Aria' | 'Radar' | 'Blaze' | 'Jarvis';
   category: string;
   description: string;
   size: string;
@@ -50,11 +50,11 @@ interface DocumentsResponse {
 }
 
 type DocumentStatus = 'draft' | 'in-progress' | 'completed' | 'archived';
-type Agent = 'Scout' | 'Bolt' | 'Aria' | 'Radar';
+type Agent = 'Scout' | 'Bolt' | 'Aria' | 'Radar' | 'Blaze' | 'Jarvis';
 type DocumentSortOption = 'newest' | 'oldest' | 'title-asc' | 'title-desc' | 'agent' | 'category' | 'status';
 
 // Constants
-const AGENTS: Agent[] = ['Scout', 'Bolt', 'Aria', 'Radar'];
+const AGENTS: Agent[] = ['Scout', 'Bolt', 'Aria', 'Radar', 'Blaze', 'Jarvis'];
 const STATUS_OPTIONS: DocumentStatus[] = ['draft', 'in-progress', 'completed', 'archived'];
 
 const STATUS_CONFIG: Record<DocumentStatus, { label: string; color: string; bgColor: string }> = {
@@ -69,6 +69,8 @@ const AGENT_CONFIG: Record<Agent, { label: string; color: string; bgColor: strin
   Bolt: { label: 'Bolt', color: '#8B5CF6', bgColor: '#F5F3FF' },
   Aria: { label: 'Aria', color: '#EC4899', bgColor: '#FDF2F8' },
   Radar: { label: 'Radar', color: '#F97316', bgColor: '#FFF7ED' },
+  Blaze: { label: 'Blaze', color: '#EF4444', bgColor: '#FEF2F2' },
+  Jarvis: { label: 'Jarvis', color: '#0EA5E9', bgColor: '#F0F9FF' },
 };
 
 export default function DocumentsPage() {
@@ -541,8 +543,8 @@ export default function DocumentsPage() {
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1rem', padding: '1rem' }}>
               {documents.map((doc) => {
-                const statusConfig = STATUS_CONFIG[doc.status];
-                const agentConfig = AGENT_CONFIG[doc.agent];
+                const statusConfig = STATUS_CONFIG[doc.status] || { label: doc.status || 'Unknown', color: '#6B7280', bgColor: '#F3F4F6' };
+                const agentConfig = AGENT_CONFIG[doc.agent] || { label: doc.agent || 'Unknown', color: '#6B7280', bgColor: '#F3F4F6' };
 
                 return (
                   <div

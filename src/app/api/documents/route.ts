@@ -276,6 +276,66 @@ async function handleGetDocument(
 }
 
 // ============================================
+// POST - Create or upsert a document
+// ============================================
+
+async function handlePost(request: NextRequest) {
+  if (!adminDb) throw new Error('Firebase Admin not initialized');
+
+  const body = await request.json();
+  const { title, filename, agent, category, description, status, content, filePath, tags } = body;
+
+  if (!title) {
+    return NextResponse.json({ success: false, error: 'title is required' }, { status: 400 });
+  }
+
+  const now = new Date().toISOString();
+  const contentStr = content || '';
+  const preview = contentStr.substring(0, 300).replace(/[#*_\-`]/g, '').trim();
+  const sizeBytes = Buffer.byteLength(contentStr, 'utf8');
+  const sizeStr = sizeBytes > 1024 ? `${(sizeBytes / 1024).toFixed(1)} KB` : `${sizeBytes} B`;
+
+  const docData = {
+    title: title || 'Untitled',
+    filename: filename || `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.md`,
+    agent: agent || 'Bolt',
+    category: category || 'General',
+    description: description || '',
+    size: sizeStr,
+    status: status || 'completed',
+    created: now,
+    updated: now,
+    filePath: filePath || '',
+    contentPreview: preview,
+    content: contentStr,
+    tags: tags || [],
+    version: '1.0',
+    type: 'markdown',
+  };
+
+  // Upsert: check if doc with same title + agent already exists
+  const existing = await adminDb.collection('documents')
+    .where('title', '==', title)
+    .where('agent', '==', docData.agent)
+    .limit(1)
+    .get();
+
+  let docId: string;
+  if (!existing.empty) {
+    docId = existing.docs[0].id;
+    await adminDb.collection('documents').doc(docId).update({
+      ...docData,
+      created: existing.docs[0].data().created || now, // preserve original created date
+    });
+  } else {
+    const ref = await adminDb.collection('documents').add(docData);
+    docId = ref.id;
+  }
+
+  return NextResponse.json({ success: true, id: docId });
+}
+
+// ============================================
 // Route Exports
 // ============================================
 
@@ -288,4 +348,13 @@ export const GET = withAuth(async (request: NextRequest, context: { params: Prom
   }
   
   return await handleGet(request, context);
+});
+
+export const POST = withAuth(async (request: NextRequest) => {
+  try {
+    return await handlePost(request);
+  } catch (error) {
+    console.error('Document create error:', error);
+    return handleApiError(error);
+  }
 });

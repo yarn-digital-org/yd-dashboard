@@ -24,6 +24,7 @@ const publicApiRoutes = [
   '/api/agents/', // Agent heartbeat, status, messaging endpoints
   '/api/tasks/', // Task CRUD for agents (auth handled in route)
   '/api/slack/', // Slack message feed for agents
+  '/api/documents/upload', // Agent document upload (auto-publish to dashboard)
 ];
 
 // Static file patterns to skip

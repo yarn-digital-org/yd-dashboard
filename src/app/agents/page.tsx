@@ -8,9 +8,10 @@ import { Sidebar } from '@/components/Sidebar';
 import {
   Search, Plus, Bot, X, Edit3, Trash2, MoreHorizontal,
   Zap, BookOpen, MessageSquare, Activity, Check,
-  LayoutGrid, GitBranch,
+  LayoutGrid, GitBranch, Wifi, WifiOff,
 } from 'lucide-react';
 import { OrgChart } from '@/components/OrgChart';
+import { AGENT_MAPPING } from '@/lib/agent-mapping';
 
 // Live status from OpenClaw kanban
 interface LiveAgentStatus {
@@ -640,6 +641,39 @@ export default function AgentsPage() {
                       )}
                     </div>
                   )}
+
+                  {/* OpenClaw Integration Badge */}
+                  {(() => {
+                    const ocConfig = AGENT_MAPPING[agent.name];
+                    return ocConfig ? (
+                      <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '0.375rem 0.5rem', marginBottom: '0.75rem',
+                        backgroundColor: '#F0FDF4', borderRadius: '0.375rem',
+                        border: '1px solid #BBF7D0',
+                      }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.6875rem', color: '#15803D', fontWeight: 500 }}>
+                          <Wifi size={11} />
+                          OpenClaw: <code style={{ fontSize: '0.65rem', fontFamily: 'monospace', backgroundColor: '#DCFCE7', padding: '0 0.25rem', borderRadius: '0.25rem' }}>{ocConfig.openclawId}</code>
+                        </span>
+                        {ocConfig.heartbeatEnabled && (
+                          <span style={{ fontSize: '0.6rem', color: '#16A34A', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#16A34A', display: 'inline-block' }} />
+                            Autonomous
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: '0.375rem',
+                        padding: '0.375rem 0.5rem', marginBottom: '0.75rem',
+                        backgroundColor: '#F9FAFB', borderRadius: '0.375rem',
+                        border: '1px solid #E5E7EB', fontSize: '0.6875rem', color: '#9CA3AF',
+                      }}>
+                        <WifiOff size={11} /> Not connected to OpenClaw
+                      </div>
+                    );
+                  })()}
 
                   {/* Stats */}
                   <div style={{

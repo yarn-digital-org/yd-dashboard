@@ -118,6 +118,8 @@ export default function TasksPage() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [draggedTask, setDraggedTask] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+  const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
+  const [showBulkMenu, setShowBulkMenu] = useState(false);
   const [error, setError] = useState('');
   const [stats, setStats] = useState<Record<string, number>>({});
   const [showCronModal, setShowCronModal] = useState(false);
@@ -259,6 +261,52 @@ export default function TasksPage() {
       console.error('Error updating task:', err);
       await fetchTasks(); // Revert on error
     }
+  };
+
+  // Selection helpers
+  const toggleTaskSelection = (taskId: string) => {
+    setSelectedTasks(prev => {
+      const next = new Set(prev);
+      if (next.has(taskId)) next.delete(taskId);
+      else next.add(taskId);
+      return next;
+    });
+  };
+
+  const selectAllInColumn = (status: TaskStatus) => {
+    const colTasks = getTasksByStatus(status);
+    setSelectedTasks(prev => {
+      const next = new Set(prev);
+      const allSelected = colTasks.every(t => next.has(t.id));
+      if (allSelected) colTasks.forEach(t => next.delete(t.id));
+      else colTasks.forEach(t => next.add(t.id));
+      return next;
+    });
+  };
+
+  const clearSelection = () => {
+    setSelectedTasks(new Set());
+    setShowBulkMenu(false);
+  };
+
+  const handleBulkMove = async (targetStatus: TaskStatus) => {
+    if (selectedTasks.size === 0) return;
+    const taskIds = Array.from(selectedTasks);
+
+    // Optimistic update
+    setTasks(prev => prev.map(t => taskIds.includes(t.id) ? { ...t, status: targetStatus } : t));
+
+    // Update each task via API
+    const updates = taskIds.map(id =>
+      fetch(`/api/tasks/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: targetStatus }),
+      }).catch(err => console.error(`Failed to update ${id}:`, err))
+    );
+    await Promise.all(updates);
+    clearSelection();
+    await fetchTasks();
   };
 
   // CRUD
@@ -465,19 +513,41 @@ export default function TasksPage() {
       const a = agents.find(ag => ag.id === id);
       return { id, name: a?.name || assignedNames[i] || 'Unknown', avatar: a?.avatar || '👤' };
     });
+    const isSelected = selectedTasks.has(task.id);
 
     return (
       <div
         draggable={isDraggable}
         onDragStart={(e) => handleDragStart(e, task.id)}
         style={{
-          backgroundColor: '#FFFFFF', borderRadius: '0.5rem', border: '1px solid #E5E7EB',
+          backgroundColor: isSelected ? '#EFF6FF' : '#FFFFFF',
+          borderRadius: '0.5rem',
+          border: isSelected ? '2px solid #3B82F6' : '1px solid #E5E7EB',
           padding: '0.875rem', cursor: isDraggable ? 'grab' : 'default',
           opacity: draggedTask === task.id ? 0.5 : 1,
-          transition: 'box-shadow 0.15s ease',
+          transition: 'all 0.15s ease',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+          {/* Checkbox */}
+          <button
+            onClick={(e) => { e.stopPropagation(); toggleTaskSelection(task.id); }}
+            onMouseDown={(e) => e.stopPropagation()}
+            draggable={false}
+            style={{
+              width: '18px', height: '18px', minWidth: '18px', borderRadius: '4px',
+              border: isSelected ? 'none' : '2px solid #D1D5DB',
+              backgroundColor: isSelected ? '#3B82F6' : 'transparent',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              marginRight: '0.5rem', marginTop: '1px', flexShrink: 0, padding: 0,
+            }}
+          >
+            {isSelected && (
+              <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
+          </button>
           <h4 style={{ fontSize: '0.875rem', fontWeight: 500, color: '#111827', margin: 0, flex: 1, lineHeight: '1.4' }}>
             {task.title}
           </h4>
@@ -666,6 +736,27 @@ export default function TasksPage() {
                     marginBottom: '0.75rem', padding: '0 0.25rem',
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      {colTasks.length > 0 && (
+                        <button
+                          onClick={() => selectAllInColumn(col.key)}
+                          style={{
+                            width: '16px', height: '16px', borderRadius: '3px',
+                            border: colTasks.every(t => selectedTasks.has(t.id))
+                              ? 'none' : '2px solid #D1D5DB',
+                            backgroundColor: colTasks.every(t => selectedTasks.has(t.id))
+                              ? '#3B82F6' : 'transparent',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center',
+                            justifyContent: 'center', padding: 0, flexShrink: 0,
+                          }}
+                          title={colTasks.every(t => selectedTasks.has(t.id)) ? 'Deselect all' : 'Select all'}
+                        >
+                          {colTasks.every(t => selectedTasks.has(t.id)) && (
+                            <svg width="8" height="6" viewBox="0 0 10 8" fill="none">
+                              <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          )}
+                        </button>
+                      )}
                       <span style={{ color: col.color }}>{col.icon}</span>
                       <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#374151' }}>{col.label}</span>
                     </div>
@@ -995,6 +1086,69 @@ export default function TasksPage() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* ======================== BULK ACTION BAR ======================== */}
+        {selectedTasks.size > 0 && (
+          <div style={{
+            position: 'fixed', bottom: '1.5rem', left: '50%', transform: 'translateX(-50%)',
+            zIndex: 90, display: 'flex', alignItems: 'center', gap: '0.75rem',
+            backgroundColor: '#1F2937', color: '#FFFFFF', padding: '0.75rem 1.25rem',
+            borderRadius: '1rem', boxShadow: '0 10px 25px rgba(0,0,0,0.25)',
+          }}>
+            <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+              {selectedTasks.size} selected
+            </span>
+            <div style={{ width: '1px', height: '20px', backgroundColor: 'rgba(255,255,255,0.2)' }} />
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setShowBulkMenu(!showBulkMenu)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.375rem',
+                  padding: '0.5rem 0.875rem', backgroundColor: '#FF3300',
+                  color: '#FFFFFF', border: 'none', borderRadius: '0.5rem',
+                  fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                Move to… <ChevronDown size={14} />
+              </button>
+              {showBulkMenu && (
+                <div style={{
+                  position: 'absolute', bottom: '100%', left: 0, marginBottom: '0.5rem',
+                  backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB',
+                  borderRadius: '0.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  overflow: 'hidden', minWidth: '160px',
+                }}>
+                  {[...STATUS_COLUMNS, { key: 'archived' as TaskStatus, label: 'Archived', color: '#6B7280', icon: null }].map(col => (
+                    <button
+                      key={col.key}
+                      onClick={() => handleBulkMove(col.key)}
+                      style={{
+                        display: 'block', width: '100%', textAlign: 'left',
+                        padding: '0.625rem 1rem', border: 'none',
+                        backgroundColor: 'transparent', cursor: 'pointer',
+                        fontSize: '0.8125rem', fontWeight: 500, color: '#374151',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F3F4F6')}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                    >
+                      {col.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={clearSelection}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                padding: '0.375rem', color: 'rgba(255,255,255,0.6)', display: 'flex',
+              }}
+              title="Clear selection"
+            >
+              <X size={16} />
+            </button>
           </div>
         )}
 

@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     const unreadOnly = searchParams.get('unread') === 'true';
     const limitN     = parseInt(searchParams.get('limit') ?? '30', 10);
 
-    let q = adminDb
+    let q = requireDb()
       .collection('notifications')
       .orderBy('createdAt', 'desc')
       .limit(Math.min(limitN, 100));
@@ -116,7 +116,7 @@ export async function PATCH(request: NextRequest) {
 
     if (all) {
       // Mark all unread as read
-      const unreadSnap = await adminDb
+      const unreadSnap = await requireDb()
         .collection('notifications')
         .where('read', '==', false)
         .get();

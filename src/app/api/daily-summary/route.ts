@@ -67,7 +67,7 @@ async function getAnalyticsData(startDate: Date, endDate: Date) {
   try {
     // In production, this would integrate with GA4 API
     // For now, return simulated data with realistic patterns
-    const baseSessionsData = await getBaselineMetrics('analytics_sessions', startDate);
+    const baseSessionsData = await getBaselineMetrics('analytics_sessions', startDate) as { sessions: number; pageviews: number };
     
     return {
       sessions: Math.round(baseSessionsData.sessions * (0.8 + Math.random() * 0.4)),
@@ -91,7 +91,7 @@ async function getAnalyticsData(startDate: Date, endDate: Date) {
 async function getCampaignData(startDate: Date, endDate: Date) {
   try {
     // In production, integrate with Meta Ads API and Google Ads API
-    const baseCampaignData = await getBaselineMetrics('campaign_performance', startDate);
+    const baseCampaignData = await getBaselineMetrics('campaign_performance', startDate) as { impressions: number; spend: number };
     
     const impressions = Math.round(baseCampaignData.impressions * (0.7 + Math.random() * 0.6));
     const clicks = Math.round(impressions * (0.02 + Math.random() * 0.06)); // 2-8% CTR
@@ -181,7 +181,7 @@ async function getSystemData(startDate: Date, endDate: Date) {
   };
 }
 
-async function getBaselineMetrics(type: string, date: Date) {
+async function getBaselineMetrics(type: string, date: Date): Promise<Record<string, number>> {
   try {
     const snapshot = await db.collection('baseline_metrics')
       .where('type', '==', type)
@@ -191,14 +191,14 @@ async function getBaselineMetrics(type: string, date: Date) {
       .get();
 
     if (!snapshot.empty) {
-      return snapshot.docs[0].data();
+      return snapshot.docs[0].data() as Record<string, number>;
     }
   } catch (error) {
     console.error('Error fetching baseline metrics:', error);
   }
 
   // Default baselines
-  const defaults = {
+  const defaults: Record<string, Record<string, number>> = {
     analytics_sessions: {
       sessions: 1200,
       pageviews: 3200

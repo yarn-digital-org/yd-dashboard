@@ -1,22 +1,82 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FileText, BarChart, Users, Settings, Calendar, Search, Bell } from 'lucide-react';
+import { FileText, BarChart, Users, Settings, Calendar, Search, Bell, Activity, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+
+const TYPE_CONFIG = {
+  working:   { icon: Activity,      color: 'text-blue-500',   dot: 'bg-blue-500 animate-pulse' },
+  review:    { icon: Clock,         color: 'text-yellow-500', dot: 'bg-yellow-500' },
+  completed: { icon: CheckCircle,   color: 'text-green-500',  dot: 'bg-green-500' },
+  blocked:   { icon: AlertTriangle, color: 'text-red-500',    dot: 'bg-red-500' },
+};
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({
-    totalDocuments: 4,
-    completedTasks: 6,
-    activeProjects: 3,
-    teamMembers: 4
-  });
+  const [stats, setStats] = useState({ inProgress: 0, review: 0, done: 0, total: 0 });
+  const [activities, setActivities] = useState([]);
+  const [highlights, setHighlights] = useState([]);
+  const [workingAgents, setWorkingAgents] = useState([]);
+  const [loadingActivity, setLoadingActivity] = useState(true);
+  const [loadingSummary, setLoadingSummary] = useState(true);
+
+  const fetchActivity = async () => {
+    try {
+      const res = await fetch('/api/activity');
+      const json = await res.json();
+      if (json.success) {
+        setStats(json.stats);
+        setActivities(json.activities.slice(0, 6));
+        setWorkingAgents(json.workingAgents || []);
+      }
+    } catch (e) {
+      console.error('Activity fetch error:', e);
+    } finally {
+      setLoadingActivity(false);
+    }
+  };
+
+  const fetchSummary = async () => {
+    try {
+      const res = await fetch('/api/daily-summary');
+      const json = await res.json();
+      if (json.success && json.summary) {
+        setHighlights(json.summary.highlights || []);
+      }
+    } catch (e) {
+      console.error('Summary fetch error:', e);
+    } finally {
+      setLoadingSummary(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchActivity();
+    fetchSummary();
+    const interval = setInterval(fetchActivity, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const quickActions = [
+    {
+      title: 'Activity Feed',
+      description: 'Live agent activity and task status',
+      icon: Activity,
+      href: '/activity',
+      color: 'bg-teal-500 hover:bg-teal-600',
+      priority: true
+    },
     {
       title: 'Agent Team',
       description: 'View AI team members and org chart',
       icon: Users,
       href: '/team',
       color: 'bg-blue-500 hover:bg-blue-600',
+      priority: true
+    },
+    {
+      title: 'Agent Comms',
+      description: 'Live inter-agent Slack message feed',
+      icon: Users,
+      href: '/comms',
+      color: 'bg-indigo-500 hover:bg-indigo-600',
       priority: true
     },
     {
@@ -32,15 +92,14 @@ export default function Dashboard() {
       description: 'Edit skills with Git commits',
       icon: Settings,
       href: '/skill-editor',
-      color: 'bg-purple-500 hover:bg-purple-600',
-      priority: true
+      color: 'bg-purple-500 hover:bg-purple-600'
     },
     {
       title: 'Skill Import',
       description: 'Import skills from external repositories',
       icon: Settings,
       href: '/skill-import',
-      color: 'bg-indigo-500 hover:bg-indigo-600'
+      color: 'bg-violet-500 hover:bg-violet-600'
     },
     {
       title: 'Version History',
@@ -58,61 +117,12 @@ export default function Dashboard() {
     }
   ];
 
-  const recentActivity = [
-    {
-      id: 1,
-      action: 'Scout completed SEO Audit',
-      file: 'yarn-digital-seo-audit.md',
-      time: '5 minutes ago',
-      type: 'document'
-    },
-    {
-      id: 2,
-      action: 'Scout delivered Competitor Analysis',
-      file: 'belfast-competitor-seo-analysis.md',
-      time: '8 minutes ago',
-      type: 'document'
-    },
-    {
-      id: 3,
-      action: 'Aria created Client Template',
-      file: 'client-overview-template.md',
-      time: '25 minutes ago',
-      type: 'template'
-    },
-    {
-      id: 4,
-      action: 'Radar completed Analytics Setup',
-      file: 'yd-clients-repo',
-      time: '30 minutes ago',
-      type: 'system'
-    }
-  ];
-
   const getActivityIcon = (type) => {
-    switch (type) {
-      case 'document':
-        return FileText;
-      case 'template':
-        return FileText;
-      case 'system':
-        return Settings;
-      default:
-        return FileText;
-    }
+    return (TYPE_CONFIG[type] || TYPE_CONFIG.working).icon;
   };
 
   const getActivityColor = (type) => {
-    switch (type) {
-      case 'document':
-        return 'text-blue-600';
-      case 'template':
-        return 'text-green-600';
-      case 'system':
-        return 'text-purple-600';
-      default:
-        return 'text-gray-600';
-    }
+    return (TYPE_CONFIG[type] || TYPE_CONFIG.working).color;
   };
 
   return (
@@ -131,7 +141,9 @@ export default function Dashboard() {
               </button>
               <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors relative">
                 <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                {stats.review > 0 && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-white text-xs flex items-center justify-center"></span>
+                )}
               </button>
             </div>
           </div>
@@ -139,48 +151,63 @@ export default function Dashboard() {
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* Stats Grid — live data */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm">Total Documents</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.totalDocuments}</p>
+                <p className="text-gray-600 text-sm">In Progress</p>
+                <p className="text-3xl font-bold text-gray-900">{stats.inProgress ?? '—'}</p>
               </div>
-              <FileText className="w-8 h-8 text-blue-500" />
+              <Activity className="w-8 h-8 text-blue-500" />
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm">Completed Tasks</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.completedTasks}</p>
+                <p className="text-gray-600 text-sm">In Review</p>
+                <p className="text-3xl font-bold text-gray-900">{stats.review ?? '—'}</p>
               </div>
-              <BarChart className="w-8 h-8 text-green-500" />
+              <Clock className="w-8 h-8 text-yellow-500" />
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm">Active Projects</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.activeProjects}</p>
+                <p className="text-gray-600 text-sm">Completed</p>
+                <p className="text-3xl font-bold text-gray-900">{stats.done ?? '—'}</p>
               </div>
-              <Calendar className="w-8 h-8 text-purple-500" />
+              <CheckCircle className="w-8 h-8 text-green-500" />
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm">Team Members</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.teamMembers}</p>
+                <p className="text-gray-600 text-sm">Agents Active</p>
+                <p className="text-3xl font-bold text-gray-900">{stats.working ?? '—'}</p>
               </div>
               <Users className="w-8 h-8 text-orange-500" />
             </div>
           </div>
         </div>
+
+        {/* Daily Summary Highlights */}
+        {!loadingSummary && highlights.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 mb-8">
+            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Today&apos;s Summary</h2>
+            <ul className="space-y-1.5">
+              {highlights.map((h, i) => (
+                <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                  <span className="text-gray-400 mt-0.5">•</span>
+                  {h}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Quick Actions */}
@@ -213,28 +240,41 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Recent Activity */}
+          {/* Live Activity Feed */}
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Recent Activity</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+              Live Activity
+              {workingAgents.length > 0 && (
+                <span className="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              )}
+            </h2>
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="space-y-4">
-                {recentActivity.map((activity) => {
-                  const IconComponent = getActivityIcon(activity.type);
-                  return (
-                    <div key={activity.id} className="flex items-start space-x-3">
-                      <IconComponent className={`w-5 h-5 mt-1 ${getActivityColor(activity.type)}`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900 font-medium">{activity.action}</p>
-                        <p className="text-sm text-gray-500 truncate">{activity.file}</p>
-                        <p className="text-xs text-gray-400">{activity.time}</p>
+              {loadingActivity ? (
+                <p className="text-sm text-gray-400 text-center py-4">Loading...</p>
+              ) : activities.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-4">No activity yet</p>
+              ) : (
+                <div className="space-y-4">
+                  {activities.map((activity, i) => {
+                    const IconComponent = getActivityIcon(activity.type);
+                    return (
+                      <div key={activity.id || i} className="flex items-start space-x-3">
+                        <IconComponent className={`w-5 h-5 mt-1 ${getActivityColor(activity.type)}`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-900 font-medium">
+                            <span className="text-gray-500">{activity.agentName}</span>{' '}
+                            {activity.action.toLowerCase()}
+                          </p>
+                          <p className="text-sm text-gray-600 truncate">{activity.taskTitle}</p>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
               <div className="mt-4 pt-4 border-t border-gray-100">
-                <Link href="/documents" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                  View all documents →
+                <Link href="/activity" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                  View full activity feed →
                 </Link>
               </div>
             </div>

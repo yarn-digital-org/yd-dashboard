@@ -10,6 +10,7 @@ const publicRoutes = [
   '/reset-password',
   '/terms',
   '/privacy',
+  '/free-audit',
 ];
 
 // API routes that don't require authentication
@@ -25,6 +26,7 @@ const publicApiRoutes = [
   '/api/tasks/', // Task CRUD for agents (auth handled in route)
   '/api/slack/', // Slack message feed for agents
   '/api/documents/upload', // Agent document upload (auto-publish to dashboard)
+  '/api/public/leads', // Public lead capture from landing pages
 ];
 
 // Static file patterns to skip

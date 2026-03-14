@@ -2,6 +2,74 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { adminDb } from '@/lib/firebase-admin';
 
+// Slack notification — zero AI tokens, pure webhook
+async function notifySlack(lead: {
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  website: string;
+  message: string;
+  utmSource: string;
+  utmCampaign: string;
+}, leadId: string) {
+  const token = process.env.SLACK_BOT_TOKEN;
+  const channel = process.env.SLACK_LEAD_CHANNEL;
+  if (!token || !channel) return;
+
+  const source = lead.utmCampaign
+    ? `${lead.utmSource || 'direct'} / ${lead.utmCampaign}`
+    : lead.utmSource || 'direct';
+
+  const blocks = [
+    {
+      type: 'header',
+      text: { type: 'plain_text', text: '🚨 New Lead from Landing Page', emoji: true },
+    },
+    {
+      type: 'section',
+      fields: [
+        { type: 'mrkdwn', text: `*Name:*\n${lead.name}` },
+        { type: 'mrkdwn', text: `*Company:*\n${lead.company}` },
+        { type: 'mrkdwn', text: `*Email:*\n${lead.email}` },
+        { type: 'mrkdwn', text: `*Phone:*\n${lead.phone || 'Not provided'}` },
+      ],
+    },
+    ...(lead.website ? [{
+      type: 'section' as const,
+      text: { type: 'mrkdwn' as const, text: `*Website:* ${lead.website}` },
+    }] : []),
+    ...(lead.message ? [{
+      type: 'section' as const,
+      text: { type: 'mrkdwn' as const, text: `*Message:*\n${lead.message}` },
+    }] : []),
+    {
+      type: 'context',
+      elements: [
+        { type: 'mrkdwn', text: `Source: ${source} · ID: ${leadId}` },
+      ],
+    },
+  ];
+
+  try {
+    await fetch('https://slack.com/api/chat.postMessage', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        channel,
+        text: `🚨 New lead: ${lead.name} from ${lead.company} (${lead.email})`,
+        blocks,
+      }),
+    });
+  } catch {
+    // Don't let Slack errors break lead submission
+    console.error('Slack notification failed (non-blocking)');
+  }
+}
+
 // Rate limiting: simple in-memory store (resets on deploy)
 const submissions = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT = 5; // max submissions per window
@@ -96,6 +164,9 @@ export async function POST(request: NextRequest) {
     };
 
     const docRef = await adminDb.collection('leads').add(leadDoc);
+
+    // Fire-and-forget Slack notification — doesn't block the response
+    notifySlack(data, docRef.id).catch(() => {});
 
     return NextResponse.json({
       success: true,

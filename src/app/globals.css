@@ -139,6 +139,11 @@ select option {
     padding-bottom: 5rem !important; /* Space for bottom nav */
   }
 
+  /* Landing pages: no padding — edge-to-edge */
+  main.landing-page {
+    padding: 0 !important;
+  }
+
   /* Prevent horizontal overflow */
   body, html {
     overflow-x: hidden;

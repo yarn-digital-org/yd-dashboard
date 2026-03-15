@@ -79,7 +79,7 @@ export default function FreeAuditPage() {
     <>
       <MetaPixelScript />
 
-      <main className="min-h-screen bg-[#0a0a0a] font-sans antialiased" style={{ letterSpacing: '-0.02em' }}>
+      <main className="min-h-screen bg-[#0a0a0a] font-sans antialiased landing-page" style={{ letterSpacing: '-0.02em' }}>
 
         {/* ─── Nav ─── */}
         <nav className="fixed top-0 left-0 right-0 z-50">

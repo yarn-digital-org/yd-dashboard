@@ -83,7 +83,7 @@ export default function FreeAuditPage() {
               <Image src={IMG.logoWhite} alt="YARN Digital" width={130} height={30} className="h-6 sm:h-7 w-auto" priority />
             </a>
             <button
-              onClick={scrollToForm}
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               className="bg-white/10 backdrop-blur-md text-white text-sm font-medium px-6 py-2.5 rounded-full border border-white/20 hover:bg-white/20 transition-all"
               style={{ letterSpacing: '-0.02em' }}
             >

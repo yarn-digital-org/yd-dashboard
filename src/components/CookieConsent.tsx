@@ -1,12 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
+  const pathname = usePathname();
+
+  // Hide on public landing pages
+  const isPublicPage = ['/free-audit'].some(p => pathname?.startsWith(p));
 
   useEffect(() => {
+    if (isPublicPage) return;
     // Check if consent was already given
     const consent = document.cookie
       .split('; ')
@@ -30,7 +36,7 @@ export function CookieConsent() {
     setVisible(false);
   };
 
-  if (!visible) return null;
+  if (!visible || isPublicPage) return null;
 
   return (
     <div

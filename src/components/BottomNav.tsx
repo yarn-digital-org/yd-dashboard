@@ -23,7 +23,9 @@ export function BottomNav() {
   const { isMobile } = useResponsive();
   const pathname = usePathname();
 
-  if (!isMobile) return null;
+  // Hide on public pages (landing pages, login, register)
+  const publicPaths = ['/free-audit', '/login', '/register'];
+  if (!isMobile || publicPaths.some(p => pathname?.startsWith(p))) return null;
 
   return (
     <nav

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader2, TrendingUp, MousePointerClick, PoundSterling, Users, Eye, BarChart3 } from 'lucide-react';
+import { Loader2, TrendingUp, MousePointerClick, PoundSterling, Users, Eye, BarChart3, ArrowRight } from 'lucide-react';
 
 interface FunnelStage {
   label: string;
@@ -93,6 +93,27 @@ export function AdFunnelWidget() {
     if (key === 'spend' || key === 'cpc') return fmtCurrency(val);
     if (key === 'ctr') return fmtPct(val);
     return fmt(val);
+  };
+
+  // Efficiency colour coding
+  const cpcColor = (cpc: number): string => {
+    if (cpc === 0) return '#9CA3AF';
+    if (cpc < 0.30) return '#22C55E';
+    if (cpc <= 0.60) return '#F59E0B';
+    return '#EF4444';
+  };
+  const ctrColor = (ctr: number): string => {
+    if (ctr === 0) return '#9CA3AF';
+    if (ctr >= 1) return '#22C55E';
+    if (ctr >= 0.5) return '#F59E0B';
+    return '#EF4444';
+  };
+  const leadsColor = (leads: number): string => leads > 0 ? '#22C55E' : '#9CA3AF';
+  const metricColor = (key: MetricKey, val: number): string => {
+    if (key === 'cpc') return cpcColor(val);
+    if (key === 'ctr') return ctrColor(val);
+    if (key === 'leads') return leadsColor(val);
+    return '#374151';
   };
 
   const getFunnel = (): Record<string, FunnelStage> => {
@@ -246,6 +267,61 @@ export function AdFunnelWidget() {
             </div>
           </div>
 
+          {/* Funnel Flow Dropoff */}
+          <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #F3F4F6', backgroundColor: '#FAFAFA' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.75rem' }}>
+              <ArrowRight size={13} style={{ color: '#9CA3AF' }} />
+              <span style={{ fontSize: '0.6875rem', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Conversion Flow</span>
+            </div>
+            {(() => {
+              const steps = [
+                { label: 'Impressions', value: viewTotals.impressions, color: '#6B7280' },
+                { label: 'Clicks', value: viewTotals.clicks, color: '#3B82F6' },
+                { label: 'LP Views', value: viewTotals.lpViews, color: '#8B5CF6' },
+                { label: 'Leads', value: viewTotals.leads, color: '#22C55E' },
+              ];
+              const maxVal = Math.max(...steps.map(s => s.value), 1);
+              return (
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0', height: '80px' }}>
+                  {steps.map((step, i) => {
+                    const barHeight = Math.max((step.value / maxVal) * 100, 4);
+                    const prevVal = i > 0 ? steps[i - 1].value : 0;
+                    const dropoff = prevVal > 0 ? Math.round(((prevVal - step.value) / prevVal) * 100) : 0;
+                    return (
+                      <div key={step.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
+                        {/* Dropoff label */}
+                        {i > 0 && prevVal > 0 && (
+                          <div style={{ fontSize: '0.5625rem', color: '#EF4444', fontWeight: 600, marginBottom: '0.125rem' }}>
+                            -{dropoff}%
+                          </div>
+                        )}
+                        {/* Value */}
+                        <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: step.color, fontVariantNumeric: 'tabular-nums' }}>
+                          {fmt(step.value)}
+                        </div>
+                        {/* Bar */}
+                        <div style={{
+                          width: '100%',
+                          maxWidth: '100px',
+                          height: `${barHeight}%`,
+                          minHeight: '3px',
+                          backgroundColor: step.color,
+                          borderRadius: '4px 4px 0 0',
+                          opacity: 0.8,
+                          transition: 'height 0.5s ease',
+                        }} />
+                        {/* Label */}
+                        <div style={{ fontSize: '0.625rem', color: '#6B7280', fontWeight: 500, marginTop: '0.25rem' }}>
+                          {step.label}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+
           {/* Data Table */}
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -267,7 +343,7 @@ export function AdFunnelWidget() {
                     {METRIC_KEYS.map(m => {
                       const val = stage[m as keyof typeof stage] as number;
                       return (
-                        <td key={m} style={{ ...tdStyle, color: m === 'leads' && val > 0 ? '#22C55E' : '#374151' }}>
+                        <td key={m} style={{ ...tdStyle, color: metricColor(m, val) }}>
                           {formatMetric(m, val)}
                         </td>
                       );
@@ -283,7 +359,7 @@ export function AdFunnelWidget() {
                   <td style={tdStyle}>{fmtCurrency(viewCpc)}</td>
                   <td style={tdStyle}>{fmtPct(viewCtr)}</td>
                   <td style={tdStyle}>{fmt(viewTotals.lpViews)}</td>
-                  <td style={{ ...tdStyle, color: viewTotals.leads > 0 ? '#22C55E' : '#374151', fontWeight: 700 }}>{fmt(viewTotals.leads)}</td>
+                  <td style={{ ...tdStyle, color: leadsColor(viewTotals.leads), fontWeight: 700 }}>{fmt(viewTotals.leads)}</td>
                 </tr>
               </tbody>
             </table>
@@ -353,7 +429,7 @@ export function AdFunnelWidget() {
             {[
               { icon: PoundSterling, label: 'Total Spend', value: fmtCurrency(viewTotals.spend), color: '#111827' },
               { icon: MousePointerClick, label: 'Total Clicks', value: fmt(viewTotals.clicks), color: '#111827' },
-              { icon: Users, label: 'Total Leads', value: fmt(viewTotals.leads), color: viewTotals.leads > 0 ? '#22C55E' : '#111827' },
+              { icon: Users, label: 'Total Leads', value: fmt(viewTotals.leads), color: leadsColor(viewTotals.leads) },
               { icon: Eye, label: 'Avg CPC', value: fmtCurrency(viewCpc), color: '#111827' },
             ].map((card, i) => (
               <div key={i} style={{ padding: '0.875rem', textAlign: 'center', borderRight: i < 3 ? '1px solid #F3F4F6' : 'none' }}>

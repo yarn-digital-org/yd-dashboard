@@ -98,7 +98,7 @@ export default function FreeReviewPage() {
             </a>
             <button
               onClick={scrollToForm}
-              className="bg-white/10 backdrop-blur-md text-white text-sm font-medium px-6 py-2.5 rounded-full border border-white/20 hover:bg-white/20 transition-all"
+              className="bg-[#ffffff]/10 backdrop-blur-md text-white text-sm font-medium px-6 py-2.5 rounded-full border border-white/20 hover:bg-[#ffffff]/20 transition-all"
               style={{ letterSpacing: '-0.02em' }}
             >
               Get My Free Review
@@ -148,7 +148,7 @@ export default function FreeReviewPage() {
               {/* CTA — white pill like "Start a Project" on main site */}
               <button
                 onClick={scrollToForm}
-                className="bg-white text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-white/90 transition-all inline-flex items-center gap-2"
+                className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2"
                 style={{ letterSpacing: '-0.02em' }}
               >
                 Get My Free Review
@@ -160,7 +160,7 @@ export default function FreeReviewPage() {
         {/* ═══════════════════════════════════════════
             ABOUT — Scrolling text section (matches yarndigital.co.uk style)
             ═══════════════════════════════════════════ */}
-        <section className="py-24 sm:py-36 bg-white">
+        <section className="py-24 sm:py-36 bg-[#ffffff]">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
             <p
               className="text-2xl sm:text-3xl lg:text-[2.5rem] font-medium text-[#0a0a0a] leading-[1.25] max-w-4xl"
@@ -267,7 +267,7 @@ export default function FreeReviewPage() {
                     <div className="pt-4">
                       <button
                         type="submit" disabled={status === 'submitting'}
-                        className="bg-white text-[#0a0a0a] font-medium text-[15px] px-10 py-4 rounded-full hover:bg-white/90 transition-all disabled:opacity-50 inline-flex items-center gap-2"
+                        className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-10 py-4 rounded-full hover:bg-[#ffffff]/90 transition-all disabled:opacity-50 inline-flex items-center gap-2"
                         style={{ letterSpacing: '-0.02em' }}
                       >
                         {status === 'submitting' ? (
@@ -287,7 +287,7 @@ export default function FreeReviewPage() {
         {/* ═══════════════════════════════════════════
             WHAT YOU GET — 1/3 + 2/3 grid (matches YD layout)
             ═══════════════════════════════════════════ */}
-        <section className="py-24 sm:py-32 bg-white">
+        <section className="py-24 sm:py-32 bg-[#ffffff]">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20">
               <div>
@@ -379,7 +379,7 @@ export default function FreeReviewPage() {
         {/* ═══════════════════════════════════════════
             THE HILLS — Featured Case Study
             ═══════════════════════════════════════════ */}
-        <section className="py-24 sm:py-32 bg-white overflow-hidden">
+        <section className="py-24 sm:py-32 bg-[#ffffff] overflow-hidden">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
               <div>
@@ -463,7 +463,7 @@ export default function FreeReviewPage() {
         {/* ═══════════════════════════════════════════
             ABOUT + FOUNDER
             ═══════════════════════════════════════════ */}
-        <section className="py-24 sm:py-32 bg-white">
+        <section className="py-24 sm:py-32 bg-[#ffffff]">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-20">
               <div>
@@ -519,7 +519,7 @@ export default function FreeReviewPage() {
             <div className="flex flex-wrap gap-3 justify-center">
               <button
                 onClick={scrollToForm}
-                className="bg-white text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-white/90 transition-all inline-flex items-center gap-2"
+                className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2"
                 style={{ letterSpacing: '-0.02em' }}
               >
                 Get My Free Review <ArrowRight size={15} />
@@ -536,7 +536,7 @@ export default function FreeReviewPage() {
         </section>
 
         {/* ─── Footer ─── */}
-        <footer className="bg-white border-t border-[#e5e5e5] py-6">
+        <footer className="bg-[#ffffff] border-t border-[#e5e5e5] py-6">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-4">
               <div className="flex items-baseline gap-0.5 opacity-60">

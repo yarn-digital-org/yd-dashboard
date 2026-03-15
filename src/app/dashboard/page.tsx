@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { CalendarWidget } from '@/components/dashboard/CalendarWidget';
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
+import { AdFunnelWidget } from '@/components/dashboard/AdFunnelWidget';
 import type { RevenueDataPoint } from '@/components/dashboard/RevenueChart';
 
 interface DashboardMetrics {
@@ -379,6 +380,11 @@ export default function DashboardPage() {
             activePeriod={chartPeriod}
             onPeriodChange={setChartPeriod}
           />
+        </div>
+
+        {/* Ad Funnel Widget */}
+        <div className="mb-8">
+          <AdFunnelWidget />
         </div>
 
         {/* Three Column Layout */}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import { ArrowRight, Loader2, Check } from 'lucide-react';
+import { ArrowRight, Loader2, Check, ArrowDown } from 'lucide-react';
 import Image from 'next/image';
 
 
@@ -73,7 +73,6 @@ export default function GetQuotePage() {
   };
 
   const inputClass = 'w-full bg-transparent border-b border-[#333] text-white placeholder-[#555] px-0 py-3 text-[15px] font-medium focus:outline-none focus:border-white transition-colors';
-  const selectClass = 'w-full bg-transparent border-b border-[#333] text-white px-0 py-3 text-[15px] font-medium focus:outline-none focus:border-white transition-colors appearance-none cursor-pointer';
   const labelClass = 'block text-[11px] font-semibold text-[#666] mb-1 uppercase';
 
   return (
@@ -106,9 +105,10 @@ export default function GetQuotePage() {
         </nav>
 
         {/* ═══════════════════════════════════════════
-            HERO
+            HERO — Full-bleed B&W image (matches yarndigital.co.uk)
             ═══════════════════════════════════════════ */}
         <section className="relative min-h-screen overflow-hidden">
+          {/* Background — full-bleed B&W image */}
           <div className="absolute inset-0 w-full h-full">
             <Image
               src={IMG.heroBg}
@@ -120,9 +120,11 @@ export default function GetQuotePage() {
               priority
             />
           </div>
+          {/* Gradient for text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/80 via-transparent to-transparent" />
 
           <div className="relative z-10 max-w-[1520px] mx-auto px-5 sm:px-10 flex flex-col justify-end min-h-screen pb-16 sm:pb-20 pt-32">
+            {/* Content pinned to bottom-left like main site */}
             <div className="max-w-2xl">
               <h1
                 className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-medium text-white leading-[1.02] mb-6"
@@ -136,11 +138,12 @@ export default function GetQuotePage() {
                 className="text-base sm:text-lg text-white/60 leading-relaxed mb-6 max-w-lg"
                 style={{ letterSpacing: '-0.01em', fontWeight: 400 }}
               >
-                A well-designed website isn&apos;t a cost — it&apos;s your best<br className="hidden sm:block" />
-                salesperson. We build websites that look great, load<br className="hidden sm:block" />
+                A well-designed website isn&apos;t a cost — it&apos;s your best{' '}
+                salesperson. We build websites that look great, load{' '}
                 fast, and turn visitors into leads.
               </p>
 
+              {/* CTA — white pill like "Start a Project" on main site */}
               <button
                 onClick={scrollToForm}
                 className="bg-white text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-white/90 transition-all inline-flex items-center gap-2"
@@ -153,7 +156,7 @@ export default function GetQuotePage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            ABOUT
+            ABOUT — Scrolling text section (matches yarndigital.co.uk style)
             ═══════════════════════════════════════════ */}
         <section className="py-24 sm:py-36 bg-white">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
@@ -167,12 +170,13 @@ export default function GetQuotePage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            FORM
+            AUDIT FORM — Clean, editorial (id for scroll)
             ═══════════════════════════════════════════ */}
         <section id="audit-form" className="bg-[#0a0a0a] py-24 sm:py-32">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-20">
 
+              {/* Left — heading + trust */}
               <div>
                 <span className="text-[11px] font-semibold text-[#555] uppercase block mb-6" style={{ letterSpacing: '0.08em' }}>
                   Free Quote
@@ -188,6 +192,7 @@ export default function GetQuotePage() {
                   We&apos;ll come back with a clear, fixed-price quote.
                 </p>
 
+                {/* Trust signals — monochrome */}
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-3 mb-6">
                   <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (
@@ -205,6 +210,7 @@ export default function GetQuotePage() {
                 </div>
               </div>
 
+              {/* Right — form (underline inputs, editorial feel) */}
               <div className="lg:col-span-2">
                 {status === 'success' ? (
                   <div className="py-16 text-center lg:text-left">
@@ -242,24 +248,24 @@ export default function GetQuotePage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-6">
                       <div>
                         <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Budget Range *</label>
-                        <select required className={selectClass}
+                        <select required className={inputClass + ' appearance-none cursor-pointer'}
                           value={formData.budget} onChange={(e) => setFormData({ ...formData, budget: e.target.value })}>
-                          <option value="" disabled className="bg-[#0a0a0a] text-[#555]">Select a range</option>
-                          <option value="under-2k" className="bg-[#0a0a0a] text-white">Under £2k</option>
-                          <option value="2k-5k" className="bg-[#0a0a0a] text-white">£2k – £5k</option>
-                          <option value="5k-10k" className="bg-[#0a0a0a] text-white">£5k – £10k</option>
-                          <option value="10k-plus" className="bg-[#0a0a0a] text-white">£10k+</option>
+                          <option value="" disabled style={{ backgroundColor: '#0a0a0a', color: '#555' }}>Select a range</option>
+                          <option value="under-2k" style={{ backgroundColor: '#0a0a0a', color: 'white' }}>Under £2k</option>
+                          <option value="2k-5k" style={{ backgroundColor: '#0a0a0a', color: 'white' }}>£2k – £5k</option>
+                          <option value="5k-10k" style={{ backgroundColor: '#0a0a0a', color: 'white' }}>£5k – £10k</option>
+                          <option value="10k-plus" style={{ backgroundColor: '#0a0a0a', color: 'white' }}>£10k+</option>
                         </select>
                       </div>
                       <div>
                         <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Timeline *</label>
-                        <select required className={selectClass}
+                        <select required className={inputClass + ' appearance-none cursor-pointer'}
                           value={formData.timeline} onChange={(e) => setFormData({ ...formData, timeline: e.target.value })}>
-                          <option value="" disabled className="bg-[#0a0a0a] text-[#555]">Select a timeline</option>
-                          <option value="asap" className="bg-[#0a0a0a] text-white">ASAP</option>
-                          <option value="1-3-months" className="bg-[#0a0a0a] text-white">1–3 months</option>
-                          <option value="3-6-months" className="bg-[#0a0a0a] text-white">3–6 months</option>
-                          <option value="exploring" className="bg-[#0a0a0a] text-white">Just exploring</option>
+                          <option value="" disabled style={{ backgroundColor: '#0a0a0a', color: '#555' }}>Select a timeline</option>
+                          <option value="asap" style={{ backgroundColor: '#0a0a0a', color: 'white' }}>ASAP</option>
+                          <option value="1-3-months" style={{ backgroundColor: '#0a0a0a', color: 'white' }}>1–3 months</option>
+                          <option value="3-6-months" style={{ backgroundColor: '#0a0a0a', color: 'white' }}>3–6 months</option>
+                          <option value="exploring" style={{ backgroundColor: '#0a0a0a', color: 'white' }}>Just exploring</option>
                         </select>
                       </div>
                     </div>
@@ -289,7 +295,7 @@ export default function GetQuotePage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            WHAT YOU GET
+            WHAT YOU GET — 1/3 + 2/3 grid (matches YD layout)
             ═══════════════════════════════════════════ */}
         <section className="py-24 sm:py-32 bg-white">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
@@ -306,6 +312,7 @@ export default function GetQuotePage() {
                 >
                   A website that works as hard as you do.
                 </h2>
+                {/* List-style like YD services section */}
                 <div className="border-t border-[#e5e5e5]">
                   {[
                     { title: 'Custom Design', desc: 'Bespoke design tailored to your brand — no templates, no compromises.' },
@@ -331,7 +338,7 @@ export default function GetQuotePage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            CASE STUDIES
+            CASE STUDIES — Dark section
             ═══════════════════════════════════════════ */}
         <section className="bg-[#0a0a0a] py-24 sm:py-32">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
@@ -422,7 +429,7 @@ export default function GetQuotePage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            SERVICES
+            SERVICES — Border-separated list (matches YD exactly)
             ═══════════════════════════════════════════ */}
         <section className="bg-[#0a0a0a] py-24 sm:py-32">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
@@ -505,7 +512,7 @@ export default function GetQuotePage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            BOTTOM CTA
+            BOTTOM CTA — B&W image bg (same editorial feel)
             ═══════════════════════════════════════════ */}
         <section className="relative py-28 sm:py-36 overflow-hidden">
           <div className="absolute inset-0">

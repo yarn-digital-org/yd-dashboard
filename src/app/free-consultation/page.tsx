@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import { ArrowRight, Loader2, Check } from 'lucide-react';
+import { ArrowRight, Loader2, Check, ArrowDown } from 'lucide-react';
 import Image from 'next/image';
 
 
@@ -73,7 +73,6 @@ export default function FreeConsultationPage() {
   };
 
   const inputClass = 'w-full bg-transparent border-b border-[#333] text-white placeholder-[#555] px-0 py-3 text-[15px] font-medium focus:outline-none focus:border-white transition-colors';
-  const selectClass = 'w-full bg-transparent border-b border-[#333] text-white px-0 py-3 text-[15px] font-medium focus:outline-none focus:border-white transition-colors appearance-none cursor-pointer';
   const labelClass = 'block text-[11px] font-semibold text-[#666] mb-1 uppercase';
 
   return (
@@ -106,9 +105,10 @@ export default function FreeConsultationPage() {
         </nav>
 
         {/* ═══════════════════════════════════════════
-            HERO
+            HERO — Full-bleed B&W image (matches yarndigital.co.uk)
             ═══════════════════════════════════════════ */}
         <section className="relative min-h-screen overflow-hidden">
+          {/* Background — full-bleed B&W image */}
           <div className="absolute inset-0 w-full h-full">
             <Image
               src={IMG.heroBg}
@@ -120,27 +120,28 @@ export default function FreeConsultationPage() {
               priority
             />
           </div>
+          {/* Gradient for text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/80 via-transparent to-transparent" />
 
           <div className="relative z-10 max-w-[1520px] mx-auto px-5 sm:px-10 flex flex-col justify-end min-h-screen pb-16 sm:pb-20 pt-32">
+            {/* Content pinned to bottom-left like main site */}
             <div className="max-w-2xl">
               <h1
                 className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-medium text-white leading-[1.02] mb-6"
                 style={{ letterSpacing: '-0.03em' }}
               >
-                Belfast&apos;s<br />
-                Strategy-First<br />
+                Belfast&apos;s Strategy-First<br />
                 Digital Agency.
               </h1>
               <p
                 className="text-base sm:text-lg text-white/60 leading-relaxed mb-6 max-w-lg"
                 style={{ letterSpacing: '-0.01em', fontWeight: 400 }}
               >
-                Web design, branding, SEO, and marketing that<br className="hidden sm:block" />
-                drives real business results. Trusted by SMEs<br className="hidden sm:block" />
-                across NI.
+                Web design, branding, SEO, and marketing that drives{' '}
+                real business results. Trusted by SMEs across NI.
               </p>
 
+              {/* CTA — white pill like "Start a Project" on main site */}
               <button
                 onClick={scrollToForm}
                 className="bg-white text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-white/90 transition-all inline-flex items-center gap-2"
@@ -153,7 +154,7 @@ export default function FreeConsultationPage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            ABOUT
+            ABOUT — Scrolling text section (matches yarndigital.co.uk style)
             ═══════════════════════════════════════════ */}
         <section className="py-24 sm:py-36 bg-white">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
@@ -167,12 +168,13 @@ export default function FreeConsultationPage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            FORM
+            AUDIT FORM — Clean, editorial (id for scroll)
             ═══════════════════════════════════════════ */}
         <section id="audit-form" className="bg-[#0a0a0a] py-24 sm:py-32">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-20">
 
+              {/* Left — heading + trust */}
               <div>
                 <span className="text-[11px] font-semibold text-[#555] uppercase block mb-6" style={{ letterSpacing: '0.08em' }}>
                   Free Consultation
@@ -188,6 +190,7 @@ export default function FreeConsultationPage() {
                   We&apos;ll talk through your goals and how we can help.
                 </p>
 
+                {/* Trust signals — monochrome */}
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-3 mb-6">
                   <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (
@@ -205,6 +208,7 @@ export default function FreeConsultationPage() {
                 </div>
               </div>
 
+              {/* Right — form (underline inputs, editorial feel) */}
               <div className="lg:col-span-2">
                 {status === 'success' ? (
                   <div className="py-16 text-center lg:text-left">
@@ -236,14 +240,14 @@ export default function FreeConsultationPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-6">
                       <div>
                         <label className={labelClass} style={{ letterSpacing: '0.04em' }}>What are you looking for? *</label>
-                        <select required className={selectClass}
+                        <select required className={inputClass + ' appearance-none cursor-pointer'}
                           value={formData.lookingFor} onChange={(e) => setFormData({ ...formData, lookingFor: e.target.value })}>
-                          <option value="" disabled className="bg-[#0a0a0a] text-[#555]">Select an option</option>
-                          <option value="new-website" className="bg-[#0a0a0a] text-white">New website</option>
-                          <option value="rebrand" className="bg-[#0a0a0a] text-white">Rebrand</option>
-                          <option value="seo" className="bg-[#0a0a0a] text-white">SEO</option>
-                          <option value="paid-ads" className="bg-[#0a0a0a] text-white">Paid ads</option>
-                          <option value="not-sure" className="bg-[#0a0a0a] text-white">Not sure yet</option>
+                          <option value="" disabled style={{ backgroundColor: '#0a0a0a', color: '#555' }}>Select an option</option>
+                          <option value="new-website" style={{ backgroundColor: '#0a0a0a', color: 'white' }}>New website</option>
+                          <option value="rebrand" style={{ backgroundColor: '#0a0a0a', color: 'white' }}>Rebrand</option>
+                          <option value="seo" style={{ backgroundColor: '#0a0a0a', color: 'white' }}>SEO</option>
+                          <option value="paid-ads" style={{ backgroundColor: '#0a0a0a', color: 'white' }}>Paid ads</option>
+                          <option value="not-sure" style={{ backgroundColor: '#0a0a0a', color: 'white' }}>Not sure yet</option>
                         </select>
                       </div>
                       <div>
@@ -278,14 +282,14 @@ export default function FreeConsultationPage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            WHAT YOU GET
+            WHAT YOU GET — 1/3 + 2/3 grid (matches YD layout)
             ═══════════════════════════════════════════ */}
         <section className="py-24 sm:py-32 bg-white">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20">
               <div>
                 <span className="text-[11px] font-semibold text-[#999] uppercase" style={{ letterSpacing: '0.08em' }}>
-                  Why Yarn Digital
+                  What You Get
                 </span>
               </div>
               <div className="lg:col-span-2">
@@ -295,6 +299,7 @@ export default function FreeConsultationPage() {
                 >
                   Strategy first. Results always.
                 </h2>
+                {/* List-style like YD services section */}
                 <div className="border-t border-[#e5e5e5]">
                   {[
                     { title: 'Strategy-Led Approach', desc: 'We don\'t just build — we research, plan, and execute with purpose.' },
@@ -320,7 +325,7 @@ export default function FreeConsultationPage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            CASE STUDIES
+            CASE STUDIES — Dark section
             ═══════════════════════════════════════════ */}
         <section className="bg-[#0a0a0a] py-24 sm:py-32">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
@@ -411,7 +416,7 @@ export default function FreeConsultationPage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            SERVICES
+            SERVICES — Border-separated list (matches YD exactly)
             ═══════════════════════════════════════════ */}
         <section className="bg-[#0a0a0a] py-24 sm:py-32">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
@@ -494,7 +499,7 @@ export default function FreeConsultationPage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            BOTTOM CTA
+            BOTTOM CTA — B&W image bg (same editorial feel)
             ═══════════════════════════════════════════ */}
         <section className="relative py-28 sm:py-36 overflow-hidden">
           <div className="absolute inset-0">

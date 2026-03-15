@@ -74,10 +74,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const range = searchParams.get('range') || '7d';
 
-    const accessToken = process.env.META_ACCESS_TOKEN;
-    const adAccountId = process.env.META_AD_ACCOUNT_ID || 'act_1118539906224369';
+    const accessToken = (process.env.META_ACCESS_TOKEN || '').trim();
+    const adAccountId = (process.env.META_AD_ACCOUNT_ID || 'act_1118539906224369').trim();
 
-    if (!accessToken) {
+    if (!accessToken || accessToken.length === 0) {
       // Return mock/empty data when not configured
       return NextResponse.json({
         configured: false,
@@ -99,16 +99,17 @@ export async function GET(request: NextRequest) {
     
     // Build URL with appsecret_proof if META_APP_SECRET is set
     let authParams = `access_token=${accessToken}`;
-    const appSecret = process.env.META_APP_SECRET;
+    const appSecret = (process.env.META_APP_SECRET || '').trim();
     if (appSecret) {
       const crypto = await import('crypto');
-      const proof = crypto.createHmac('sha256', appSecret).update(accessToken).digest('hex');
+      const proof = crypto.createHmac('sha256', appSecret).update(accessToken!).digest('hex');
       authParams += `&appsecret_proof=${proof}`;
     }
     
+    const timeRange = encodeURIComponent(JSON.stringify({ since, until }));
     const url = `https://graph.facebook.com/v19.0/${adAccountId}/insights?` +
       `fields=${fields}` +
-      `&time_range={"since":"${since}","until":"${until}"}` +
+      `&time_range=${timeRange}` +
       `&level=campaign` +
       `&limit=50` +
       `&${authParams}`;

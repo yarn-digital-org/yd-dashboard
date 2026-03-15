@@ -11,6 +11,7 @@ const publicRoutes = [
   '/terms',
   '/privacy',
   '/free-audit',
+  '/lp/',
   '/brand',
   '/web-design',
   '/grow',

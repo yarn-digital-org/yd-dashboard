@@ -32,6 +32,7 @@ import {
   Sun,
   Moon,
   List,
+  Globe,
 } from 'lucide-react';
 import { useTheme, getColors } from '@/context/ThemeContext';
 
@@ -93,6 +94,7 @@ export function Sidebar() {
     { name: 'Calendar', icon: Calendar, href: '/calendar' },
     { name: 'Documents', icon: FolderOpen, href: '/documents' },
     { name: 'Library', icon: BookOpen, href: '/library' },
+    { name: 'Landing Pages', icon: Globe, href: '/landing-pages' },
     { name: 'Automations', icon: Zap, href: '/automations' },
   ];
 

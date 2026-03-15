@@ -96,6 +96,7 @@ function NotificationHandler({
 function IntegrationsContent() {
   const [googleStatus, setGoogleStatus] = useState<GoogleCalendarStatus | null>(null);
   const [xeroStatus, setXeroStatus] = useState<XeroStatus | null>(null);
+  const [metaPixelStatus, setMetaPixelStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [disconnecting, setDisconnecting] = useState(false);
   const [disconnectingXero, setDisconnectingXero] = useState(false);
@@ -125,6 +126,14 @@ function IntegrationsContent() {
         console.error('Failed to fetch Xero status:', error);
       }
       
+      // Fetch Meta Pixel / CAPI status
+      try {
+        const metaRes = await fetch('/api/meta/verify');
+        if (metaRes.ok) {
+          setMetaPixelStatus(await metaRes.json());
+        }
+      } catch { /* silent */ }
+
       setLoading(false);
     }
     fetchStatus();
@@ -365,6 +374,71 @@ function IntegrationsContent() {
               </button>
             </div>
           ))}
+        </div>
+
+        {/* Meta Pixel + CAPI verification card */}
+        <div className="mt-6 border border-gray-200 rounded-xl overflow-hidden">
+          <div className="flex items-center gap-4 p-4 border-b border-gray-100 bg-gray-50">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white text-xs" style={{ backgroundColor: '#1877F2' }}>
+              Meta
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-gray-900">Meta Pixel &amp; Conversions API</h3>
+              <p className="text-xs text-gray-500">Track leads across all landing pages and verify event delivery</p>
+            </div>
+            <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+              metaPixelStatus?.overall === 'full' ? 'bg-green-100 text-green-700' :
+              metaPixelStatus?.overall === 'partial' ? 'bg-yellow-100 text-yellow-700' :
+              'bg-gray-100 text-gray-500'
+            }`}>
+              {metaPixelStatus?.overall === 'full' ? '✓ Full tracking' :
+               metaPixelStatus?.overall === 'partial' ? '⚠ Partial' :
+               loading ? '…' : 'Not configured'}
+            </span>
+          </div>
+
+          <div className="p-4 space-y-3">
+            {/* Browser Pixel row */}
+            <div className="flex items-start gap-3">
+              <span className={`mt-0.5 text-xs font-semibold px-1.5 py-0.5 rounded ${
+                metaPixelStatus?.browserPixel?.configured ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'
+              }`}>JS</span>
+              <div>
+                <p className="text-sm font-medium text-gray-800">Browser Pixel</p>
+                <p className="text-xs text-gray-500">
+                  {metaPixelStatus?.browserPixel?.message ||
+                    'Set NEXT_PUBLIC_META_PIXEL_ID in Vercel env vars'}
+                </p>
+              </div>
+            </div>
+
+            {/* CAPI row */}
+            <div className="flex items-start gap-3">
+              <span className={`mt-0.5 text-xs font-semibold px-1.5 py-0.5 rounded ${
+                metaPixelStatus?.capi?.status === 'ok' ? 'bg-green-100 text-green-700' :
+                metaPixelStatus?.capi?.status === 'error' ? 'bg-red-100 text-red-600' :
+                'bg-gray-100 text-gray-400'
+              }`}>API</span>
+              <div>
+                <p className="text-sm font-medium text-gray-800">Conversions API (CAPI)</p>
+                <p className="text-xs text-gray-500">
+                  {metaPixelStatus?.capi?.message ||
+                    'Set META_PIXEL_ID and META_ACCESS_TOKEN in Vercel env vars'}
+                </p>
+                {metaPixelStatus?.capi?.pixelInfo && (
+                  <p className="text-xs text-blue-600 mt-0.5">
+                    Pixel: {metaPixelStatus.capi.pixelInfo.name || metaPixelStatus.capi.pixelInfo.id}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {metaPixelStatus?.overall !== 'full' && (
+              <div className="bg-blue-50 rounded-lg p-3 text-xs text-blue-700">
+                <strong>To enable full tracking:</strong> Add <code className="bg-blue-100 px-1 rounded">NEXT_PUBLIC_META_PIXEL_ID</code>, <code className="bg-blue-100 px-1 rounded">META_PIXEL_ID</code>, and <code className="bg-blue-100 px-1 rounded">META_ACCESS_TOKEN</code> to your Vercel environment variables. Find your access token in Meta Business Manager → System Users.
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="mt-6 p-4 bg-blue-50 rounded-lg">

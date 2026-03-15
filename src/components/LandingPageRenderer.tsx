@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import type { LandingPageData } from '@/app/lp/[slug]/page';
+import { LpAnalyticsTracker } from '@/components/LpAnalyticsTracker';
+import MetaPixel, { trackLead as trackMetaLead } from '@/components/MetaPixel';
 
 const FIELD_LABELS: Record<string, string> = {
   name: 'Full Name',
@@ -55,6 +57,12 @@ export default function LandingPageRenderer({ page }: { page: LandingPageData })
         return;
       }
       setSubmitted(true);
+      // Fire Meta Pixel Lead event (browser + CAPI server-side)
+      trackMetaLead({
+        email: formData.email || '',
+        name: formData.name,
+        phone: formData.phone,
+      }).catch(() => {}); // non-fatal
     } catch {
       setError('Something went wrong. Please try again.');
     } finally {
@@ -69,6 +77,8 @@ export default function LandingPageRenderer({ page }: { page: LandingPageData })
       backgroundColor: '#0a0a0a',
       color: '#fafafa',
     }}>
+      <LpAnalyticsTracker pageId={page.id} />
+      <MetaPixel />
       {/* Hero */}
       <section style={{
         position: 'relative',

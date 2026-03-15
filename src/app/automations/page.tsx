@@ -29,12 +29,12 @@ import {
 } from 'lucide-react';
 
 interface AutomationTrigger {
-  type: 'new_contact' | 'new_lead' | 'invoice_overdue' | 'form_submission';
+  type: 'new_contact' | 'new_lead' | 'invoice_overdue' | 'form_submission' | 'new_booking' | 'event_starting_soon';
   config: Record<string, any>;
 }
 
 interface AutomationAction {
-  type: 'send_email' | 'create_task' | 'update_status' | 'notify';
+  type: 'send_email' | 'create_task' | 'update_status' | 'notify' | 'delay' | 'add_to_list' | 'update_contact' | 'webhook';
   config: {
     to?: string;
     subject?: string;
@@ -44,6 +44,15 @@ interface AutomationAction {
     field?: string;
     value?: string;
     message?: string;
+    // Delay
+    days?: number | string;
+    hours?: number | string;
+    // Add to list
+    listId?: string;
+    // Webhook
+    url?: string;
+    method?: string;
+    [key: string]: unknown;
   };
 }
 
@@ -52,7 +61,7 @@ interface Automation {
   name: string;
   description: string;
   trigger: {
-    type: 'new_contact' | 'new_lead' | 'invoice_overdue' | 'form_submission';
+    type: 'new_contact' | 'new_lead' | 'invoice_overdue' | 'form_submission' | 'new_booking' | 'event_starting_soon';
     config?: Record<string, any>;
   };
   actions: AutomationAction[];
@@ -67,13 +76,19 @@ const TRIGGER_OPTIONS = [
   { value: 'new_lead', label: 'New Lead Added', icon: Users, description: 'When a new lead is created' },
   { value: 'invoice_overdue', label: 'Invoice Overdue', icon: FileWarning, description: 'When an invoice becomes overdue' },
   { value: 'form_submission', label: 'Form Submission', icon: FileText, description: 'When a form is submitted' },
+  { value: 'new_booking', label: 'New Booking', icon: Clock, description: 'When a booking is made' },
+  { value: 'event_starting_soon', label: 'Event Starting Soon', icon: Clock, description: '24h before an event starts' },
 ];
 
 const ACTION_OPTIONS = [
   { value: 'send_email', label: 'Send Email', icon: Mail, description: 'Send an automated email' },
   { value: 'create_task', label: 'Create Task', icon: CheckSquare, description: 'Create a new task' },
-  { value: 'update_status', label: 'Update Status', icon: RefreshCw, description: 'Update a field value' },
-  { value: 'notify', label: 'Send Notification', icon: Bell, description: 'Send a notification' },
+  { value: 'notify', label: 'Send Notification', icon: Bell, description: 'Send an internal notification' },
+  { value: 'update_status', label: 'Update Field', icon: RefreshCw, description: 'Update a contact or record field' },
+  { value: 'add_to_list', label: 'Add to Email List', icon: Users, description: 'Add contact to an email list' },
+  { value: 'update_contact', label: 'Update Contact', icon: UserPlus, description: 'Update a contact field' },
+  { value: 'webhook', label: 'Send Webhook', icon: Hash, description: 'POST data to an external URL' },
+  { value: 'delay', label: 'Wait / Delay', icon: Clock, description: 'Wait before the next step' },
 ];
 
 export default function AutomationsPage() {
@@ -827,10 +842,45 @@ export default function AutomationsPage() {
                           <textarea
                             value={action.config.message || ''}
                             onChange={(e) => updateAction(index, 'message', e.target.value)}
-                            placeholder="Notification message"
+                            placeholder="Notification message. Use {{firstName}}, {{name}}, {{email}}"
                             rows={2}
                             className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300] text-sm"
                           />
+                        )}
+
+                        {action.type === 'delay' && (
+                          <div className="flex gap-3">
+                            <div className="flex-1">
+                              <label className="block text-xs text-gray-500 mb-1">Days</label>
+                              <input type="number" min="0" value={action.config.days || ''} onChange={e => updateAction(index, 'days', e.target.value)} placeholder="0" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20" />
+                            </div>
+                            <div className="flex-1">
+                              <label className="block text-xs text-gray-500 mb-1">Hours</label>
+                              <input type="number" min="0" max="23" value={action.config.hours || ''} onChange={e => updateAction(index, 'hours', e.target.value)} placeholder="0" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20" />
+                            </div>
+                          </div>
+                        )}
+
+                        {action.type === 'add_to_list' && (
+                          <input type="text" value={action.config.listId || ''} onChange={e => updateAction(index, 'listId', e.target.value)} placeholder="Email List ID" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20" />
+                        )}
+
+                        {action.type === 'update_contact' && (
+                          <div className="space-y-2">
+                            <input type="text" value={action.config.field || ''} onChange={e => updateAction(index, 'field', e.target.value)} placeholder="Contact field (e.g. tags, type, notes)" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20" />
+                            <input type="text" value={action.config.value || ''} onChange={e => updateAction(index, 'value', e.target.value)} placeholder="New value" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20" />
+                          </div>
+                        )}
+
+                        {action.type === 'webhook' && (
+                          <div className="space-y-2">
+                            <input type="url" value={action.config.url || ''} onChange={e => updateAction(index, 'url', e.target.value)} placeholder="https://your-webhook-url.com/endpoint" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20" />
+                            <select value={action.config.method || 'POST'} onChange={e => updateAction(index, 'method', e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none bg-white">
+                              <option value="POST">POST</option>
+                              <option value="PUT">PUT</option>
+                              <option value="PATCH">PATCH</option>
+                            </select>
+                          </div>
                         )}
                       </div>
                     ))}
@@ -844,6 +894,50 @@ export default function AutomationsPage() {
                     </button>
                   </div>
                 </div>
+
+                {/* Workflow preview */}
+                {(formData.trigger.type || formData.actions.length > 0) && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Workflow Preview</p>
+                    <div className="flex flex-col gap-1">
+                      {/* Trigger */}
+                      <div className="flex items-center gap-2 bg-white border border-[#FF3300]/30 rounded-lg px-3 py-2 text-sm">
+                        <span className="w-5 h-5 bg-[#FF3300] rounded-full flex items-center justify-center flex-shrink-0">
+                          <Zap size={10} className="text-white" />
+                        </span>
+                        <span className="font-medium text-gray-900">
+                          {TRIGGER_OPTIONS.find(t => t.value === formData.trigger.type)?.label || 'Trigger'}
+                        </span>
+                      </div>
+                      {/* Actions */}
+                      {formData.actions.map((action, idx) => (
+                        <div key={idx} className="flex flex-col gap-1 ml-4">
+                          <div className="w-px h-3 bg-gray-200 ml-0.5" />
+                          <div className={`flex items-center gap-2 bg-white border rounded-lg px-3 py-2 text-sm ${
+                            action.type === 'delay' ? 'border-amber-200' : 'border-gray-200'
+                          }`}>
+                            <span className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
+                              action.type === 'delay' ? 'bg-amber-100' : 'bg-blue-100'
+                            }`}>
+                              {action.type === 'delay' ? <Clock size={10} className="text-amber-600" /> : <span className="text-blue-600 text-xs font-bold">{idx + 1}</span>}
+                            </span>
+                            <span className="text-gray-700">
+                              {ACTION_OPTIONS.find(a => a.value === action.type)?.label || action.type}
+                              {action.type === 'delay' && (action.config.days || action.config.hours) && (
+                                <span className="text-amber-600 ml-1 font-medium">
+                                  — {action.config.days ? `${action.config.days}d ` : ''}{action.config.hours ? `${action.config.hours}h` : ''}
+                                </span>
+                              )}
+                              {action.type === 'send_email' && action.config.subject && (
+                                <span className="text-gray-400 ml-1 truncate max-w-[180px]">&ldquo;{action.config.subject}&rdquo;</span>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Submit */}
                 <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">

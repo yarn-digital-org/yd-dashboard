@@ -15,7 +15,7 @@ export type TriggerType =
   | 'new_booking'
   | 'event_starting_soon'
   | 'event_completed';
-export type ActionType = 'send_email' | 'create_task' | 'update_status' | 'notify';
+export type ActionType = 'send_email' | 'create_task' | 'update_status' | 'notify' | 'delay' | 'add_to_list' | 'update_contact' | 'webhook';
 
 export interface AutomationTrigger {
   type: TriggerType;
@@ -33,6 +33,15 @@ export interface AutomationAction {
     field?: string;
     value?: string;
     message?: string;
+    // Delay
+    hours?: number | string;
+    days?: number | string;
+    // Add to list
+    listId?: string;
+    // Webhook
+    url?: string;
+    method?: string;
+    [key: string]: unknown;
   };
 }
 
@@ -79,7 +88,7 @@ async function executeAction(
   action: AutomationAction,
   triggerData: Record<string, any>,
   userId: string
-): Promise<{ success: boolean; error?: string; result?: any }> {
+): Promise<{ success: boolean; error?: string; result?: any; skipped?: boolean; note?: string; statusCode?: number }> {
   try {
     switch (action.type) {
       case 'send_email': {
@@ -145,6 +154,51 @@ async function executeAction(
           source: 'automation',
         });
         return { success: true, result: { notificationId: notifRef.id } };
+      }
+
+      case 'delay': {
+        // Delay is a workflow step — in synchronous execution we note it but don't actually wait
+        // For real async delays, the queue system would re-schedule remaining actions
+        const hours = Number(action.config.hours || 0);
+        const days = Number(action.config.days || 0);
+        const totalMs = (hours * 60 * 60 + days * 24 * 60 * 60) * 1000;
+        return { success: true, skipped: true, note: `Delay: ${days}d ${hours}h (${totalMs}ms) — async only` };
+      }
+
+      case 'add_to_list': {
+        if (!adminDb || !action.config.listId) return { success: false, error: 'listId required' };
+        const contactId = triggerData.id || triggerData.contactId;
+        if (!contactId) return { success: true, skipped: true, note: 'No contactId in trigger data' };
+        await adminDb
+          .collection('emailLists').doc(action.config.listId as string)
+          .collection('members').doc(contactId)
+          .set({ addedAt: new Date().toISOString() }, { merge: true });
+        return { success: true };
+      }
+
+      case 'update_contact': {
+        if (!adminDb) return { success: false, error: 'DB not configured' };
+        const contactId = triggerData.id || triggerData.contactId;
+        if (!contactId || !action.config.field) return { success: true, skipped: true, note: 'Missing contactId or field' };
+        await adminDb.collection('contacts').doc(contactId).update({
+          [action.config.field as string]: interpolate(action.config.value as string, triggerData),
+          updatedAt: new Date().toISOString(),
+        });
+        return { success: true };
+      }
+
+      case 'webhook': {
+        if (!action.config.url) return { success: false, error: 'URL required' };
+        const webhookRes = await fetch(action.config.url as string, {
+          method: (action.config.method as string) || 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event: triggerData,
+            automationAction: action.type,
+            timestamp: new Date().toISOString(),
+          }),
+        });
+        return { success: webhookRes.ok, statusCode: webhookRes.status };
       }
 
       default:

@@ -11,6 +11,7 @@ const publicRoutes = [
   '/terms',
   '/privacy',
   '/free-audit',
+  '/questionnaire',
   '/lp/',
   '/brand',
   '/web-design',
@@ -43,6 +44,8 @@ const publicApiRoutes = [
   '/api/slack/', // Slack message feed for agents
   '/api/documents/upload', // Agent document upload (auto-publish to dashboard)
   '/api/public/leads', // Public lead capture from landing pages
+  '/api/public/analytics', // Public page view tracking
+  '/api/public/questionnaire', // Lead intake questionnaire responses
   '/api/public/unsubscribe', // GDPR unsubscribe
   '/api/public/subscribe', // Email list subscribe
 ];

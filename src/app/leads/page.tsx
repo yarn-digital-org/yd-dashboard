@@ -372,7 +372,7 @@ export default function LeadsPage() {
 
         {/* Stats Cards */}
         {stats && (
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(6, 1fr)', gap: '0.75rem', marginBottom: '1.5rem' }}>
+          <div style={{ display: isMobile ? 'flex' : 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.75rem', marginBottom: '1.5rem', overflowX: isMobile ? 'auto' : undefined, WebkitOverflowScrolling: isMobile ? 'touch' : undefined, paddingBottom: isMobile ? '0.5rem' : undefined }}>
             {STATUS_OPTIONS.map((status) => {
               const config = STATUS_CONFIG[status];
               const count = stats.byStatus[status] || 0;
@@ -383,13 +383,15 @@ export default function LeadsPage() {
                   key={status}
                   onClick={() => setActiveStatus(isActive ? 'all' : status)}
                   style={{
-                    padding: '1rem',
+                    padding: isMobile ? '0.75rem' : '1rem',
                     borderRadius: '0.75rem',
                     border: isActive ? `2px solid ${config.color}` : '1px solid #E5E7EB',
                     backgroundColor: isActive ? config.bgColor : '#FFFFFF',
                     cursor: 'pointer',
                     textAlign: 'left',
                     transition: 'all 0.15s',
+                    minWidth: isMobile ? '100px' : undefined,
+                    flexShrink: isMobile ? 0 : undefined,
                   }}
                 >
                   <div style={{ fontSize: '1.5rem', fontWeight: 700, color: config.color }}>{count}</div>
@@ -563,6 +565,84 @@ export default function LeadsPage() {
                   ? 'Try adjusting your filters'
                   : 'Add your first lead to get started'}
               </div>
+            </div>
+          ) : isMobile ? (
+            /* Mobile Card View */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem' }}>
+              {leads.map((lead) => {
+                const statusConfig = STATUS_CONFIG[lead.status];
+                const priorityConfig = PRIORITY_CONFIG[lead.priority];
+                return (
+                  <Link
+                    key={lead.id}
+                    href={`/leads/${lead.id}`}
+                    style={{
+                      display: 'block',
+                      padding: '1rem',
+                      backgroundColor: '#fff',
+                      borderRadius: '0.75rem',
+                      border: '1px solid #E5E7EB',
+                      textDecoration: 'none',
+                      color: 'inherit',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, color: '#111827', fontSize: '0.9375rem' }}>{lead.name}</div>
+                        {lead.company && (
+                          <div style={{ fontSize: '0.8125rem', color: '#6B7280', marginTop: '0.125rem' }}>{lead.company}</div>
+                        )}
+                      </div>
+                      <span style={{
+                        padding: '0.25rem 0.625rem',
+                        borderRadius: '100px',
+                        fontSize: '0.6875rem',
+                        fontWeight: 600,
+                        backgroundColor: statusConfig.bgColor,
+                        color: statusConfig.color,
+                      }}>
+                        {statusConfig.label}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.8125rem', color: '#6B7280' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <Mail size={13} style={{ color: '#9CA3AF' }} />
+                        {lead.email}
+                      </span>
+                      {lead.phone && (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <Phone size={13} style={{ color: '#9CA3AF' }} />
+                          {lead.phone}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                      <span style={{
+                        padding: '0.125rem 0.5rem',
+                        borderRadius: '100px',
+                        fontSize: '0.6875rem',
+                        fontWeight: 500,
+                        backgroundColor: priorityConfig.bgColor,
+                        color: priorityConfig.color,
+                      }}>
+                        {priorityConfig.label}
+                      </span>
+                      {lead.source && (
+                        <span style={{
+                          padding: '0.125rem 0.5rem',
+                          borderRadius: '100px',
+                          fontSize: '0.6875rem',
+                          fontWeight: 500,
+                          backgroundColor: '#F3F4F6',
+                          color: '#6B7280',
+                        }}>
+                          {lead.source}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>

@@ -70,6 +70,7 @@ export default function InvoicesPage() {
     status: 'draft' as Invoice['status'],
     dueDate: '',
     notes: '',
+    template: 'professional' as 'professional' | 'creative' | 'minimal',
   });
 
   useEffect(() => {
@@ -203,6 +204,28 @@ export default function InvoicesPage() {
     }
   };
 
+  const [sendingInvoiceId, setSendingInvoiceId] = useState<string | null>(null);
+
+  const handleSendInvoice = async (id: string, invoiceNumber: string) => {
+    if (!confirm(`Send invoice ${invoiceNumber} to the client via email?`)) return;
+    setSendingInvoiceId(id);
+    try {
+      const response = await fetch(`/api/invoices/${id}/send`, { method: 'POST' });
+      const data = await response.json();
+      if (!response.ok) {
+        alert(data.error || 'Failed to send invoice');
+        return;
+      }
+      alert(`Invoice sent to ${data.sentTo}${data.fallback ? ' (email service not configured — logged only)' : ''}`);
+      fetchInvoices();
+    } catch (error) {
+      console.error('Error sending invoice:', error);
+      alert('Failed to send invoice. Please try again.');
+    } finally {
+      setSendingInvoiceId(null);
+    }
+  };
+
   const openEdit = (invoice: Invoice) => {
     setEditingInvoice(invoice);
     setFormData({
@@ -213,6 +236,7 @@ export default function InvoicesPage() {
       status: invoice.status,
       dueDate: invoice.dueDate || '',
       notes: invoice.notes || '',
+      template: ((invoice as unknown as Record<string, unknown>).template as 'professional' | 'creative' | 'minimal') || 'professional',
     });
     setShowModal(true);
   };
@@ -226,6 +250,7 @@ export default function InvoicesPage() {
       status: 'draft',
       dueDate: '',
       notes: '',
+      template: 'professional',
     });
   };
 
@@ -395,6 +420,17 @@ export default function InvoicesPage() {
                       >
                         <Download size={14} />
                         Download PDF
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleSendInvoice(invoice.id, invoice.invoiceNumber);
+                          setActiveMenu(null);
+                        }}
+                        disabled={sendingInvoiceId === invoice.id}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full disabled:opacity-50"
+                      >
+                        <Mail size={14} />
+                        {sendingInvoiceId === invoice.id ? 'Sending...' : 'Send to Client'}
                       </button>
                       <button
                         onClick={() => {
@@ -640,6 +676,34 @@ export default function InvoicesPage() {
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300]"
                     rows={3}
                   />
+                </div>
+
+                {/* Template Selector */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    PDF Template
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { value: 'professional', label: 'Professional', desc: 'Clean & corporate' },
+                      { value: 'creative', label: 'Creative', desc: 'Bold & colourful' },
+                      { value: 'minimal', label: 'Minimal', desc: 'Simple & elegant' },
+                    ].map((tmpl) => (
+                      <button
+                        key={tmpl.value}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, template: tmpl.value as 'professional' | 'creative' | 'minimal' })}
+                        className={`p-3 rounded-lg border-2 text-left transition ${
+                          formData.template === tmpl.value
+                            ? 'border-[#FF3300] bg-[#FF3300]/5'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <p className="font-medium text-sm text-gray-900">{tmpl.label}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{tmpl.desc}</p>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4">

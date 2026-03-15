@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import { ArrowRight, Loader2, Check, ArrowDown, Menu } from 'lucide-react';
+import { ArrowRight, Loader2, Check, ArrowDown } from 'lucide-react';
 import Image from 'next/image';
 
 
@@ -96,11 +96,10 @@ export default function FreeAuditPage() {
             </a>
             <button
               onClick={scrollToForm}
-              className="flex items-center gap-2 text-white text-sm font-medium hover:opacity-70 transition-opacity"
-              style={{ letterSpacing: '-0.01em' }}
+              className="bg-white/10 backdrop-blur-md text-white text-sm font-medium px-6 py-2.5 rounded-full border border-white/20 hover:bg-white/20 transition-all"
+              style={{ letterSpacing: '-0.02em' }}
             >
-              <Menu size={18} strokeWidth={1.5} />
-              <span className="hidden sm:inline">MENU</span>
+              Get Your Free Audit
             </button>
           </div>
         </nav>

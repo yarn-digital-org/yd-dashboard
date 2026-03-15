@@ -143,6 +143,7 @@ export function getUserCalendarClient(accessToken: string): calendar_v3.Calendar
 
 /**
  * List events from user's calendar
+ * Supports syncToken for incremental sync (only changed events since last sync)
  */
 export async function listUserCalendarEvents(
   userId: string,
@@ -153,26 +154,39 @@ export async function listUserCalendarEvents(
     maxResults?: number;
     q?: string;
     pageToken?: string;
+    syncToken?: string; // If provided, only returns events changed since this token
   } = {}
 ) {
   const accessToken = await getValidAccessToken(userId);
   const calendar = getUserCalendarClient(accessToken);
   const calendarId = options.calendarId || 'primary';
 
-  const response = await calendar.events.list({
-    calendarId,
-    timeMin: options.timeMin,
-    timeMax: options.timeMax,
-    maxResults: options.maxResults || 100,
-    singleEvents: true,
-    orderBy: 'startTime',
-    q: options.q,
-    pageToken: options.pageToken,
-  });
+  // When using syncToken, we cannot specify timeMin/timeMax/q
+  const params = options.syncToken
+    ? {
+        calendarId,
+        maxResults: options.maxResults || 250,
+        singleEvents: true,
+        syncToken: options.syncToken,
+        pageToken: options.pageToken,
+      }
+    : {
+        calendarId,
+        timeMin: options.timeMin,
+        timeMax: options.timeMax,
+        maxResults: options.maxResults || 100,
+        singleEvents: true,
+        orderBy: 'startTime' as const,
+        q: options.q,
+        pageToken: options.pageToken,
+      };
+
+  const response = await calendar.events.list(params);
 
   return {
     events: response.data.items || [],
     nextPageToken: response.data.nextPageToken,
+    nextSyncToken: response.data.nextSyncToken,
     summary: response.data.summary,
   };
 }

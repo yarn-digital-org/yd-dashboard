@@ -5,23 +5,27 @@ import { importGoogleEvents, syncAllEventsToGoogle } from '@/lib/google-calendar
 export const POST = withAuth(async (request, { user }) => {
   try {
     const body = await request.json();
-    const { action, timeMin, timeMax } = body;
+    const { action, timeMin, timeMax, calendarId } = body;
 
     if (!action) {
       return errorResponse('Action is required', 400, 'VALIDATION_ERROR');
     }
 
     if (action === 'import') {
-      // Import Google events to app
-      const result = await importGoogleEvents(user.userId, timeMin, timeMax);
+      // Import Google events to app (incremental if syncToken exists, full otherwise)
+      const result = await importGoogleEvents(user.userId, timeMin, timeMax, calendarId);
 
       if (!result.success) {
         return errorResponse(result.error || 'Failed to import events', 500, 'IMPORT_ERROR');
       }
 
+      const syncType = result.wasIncremental ? 'incremental' : 'full';
       return successResponse({
-        message: `Imported ${result.imported} events from Google Calendar`,
+        message: `${syncType === 'incremental' ? 'Incrementally synced' : 'Imported'} ${result.imported} new, ${result.updated} updated, ${result.deleted} deleted events from Google Calendar`,
         imported: result.imported,
+        updated: result.updated,
+        deleted: result.deleted,
+        wasIncremental: result.wasIncremental,
       });
     } else if (action === 'export') {
       // Export app events to Google

@@ -348,7 +348,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Quick Stats Row */}
+        {/* Pipeline Stats Row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
             <p className="text-sm text-gray-500 mb-1">Total Contacts</p>
@@ -359,15 +359,20 @@ export default function DashboardPage() {
             <p className="text-xl font-bold text-gray-900">{metrics?.clientsCount ?? 0}</p>
           </div>
           <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-            <p className="text-sm text-gray-500 mb-1">Leads</p>
-            <p className="text-xl font-bold text-gray-900">{metrics?.leadsCount ?? 0}</p>
-          </div>
-          <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-            <p className="text-sm text-gray-500 mb-1">Conversion Rate</p>
+            <p className="text-sm text-gray-500 mb-1">Lead → Client</p>
             <p className="text-xl font-bold text-gray-900">
               {metrics && metrics.leadsCount > 0 
                 ? `${Math.round((metrics.clientsCount / (metrics.clientsCount + metrics.leadsCount)) * 100)}%`
-                : '0%'
+                : '—'
+              }
+            </p>
+          </div>
+          <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+            <p className="text-sm text-gray-500 mb-1">Avg Deal Value</p>
+            <p className="text-xl font-bold text-gray-900">
+              {metrics && metrics.revenue > 0 && metrics.clientsCount > 0
+                ? formatCurrency(metrics.revenue / metrics.clientsCount)
+                : '—'
               }
             </p>
           </div>
@@ -428,52 +433,61 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Quick Access */}
+          {/* Quick Actions */}
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div className="p-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">Quick Access</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
             </div>
-            <div className="p-4 space-y-3">
+            <div className="p-4 space-y-2">
               <Link
-                href="/contacts"
-                className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition group"
+                href="/contacts?action=new"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group"
               >
-                <div className="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition">
-                  <Users size={24} className="text-blue-600" />
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <UserPlus size={18} className="text-blue-600" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">Contacts</h3>
-                  <p className="text-sm text-gray-500">Manage your contacts and clients</p>
-                </div>
-                <ArrowUpRight size={20} className="text-gray-400 group-hover:text-gray-600 transition" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Add Contact</span>
+                <ArrowUpRight size={14} className="text-gray-300 ml-auto" />
               </Link>
-              
+              <Link
+                href="/invoices?action=new"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group"
+              >
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <DollarSign size={18} className="text-green-600" />
+                </div>
+                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Create Invoice</span>
+                <ArrowUpRight size={14} className="text-gray-300 ml-auto" />
+              </Link>
               <Link
                 href="/leads"
-                className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition group"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group"
               >
-                <div className="p-3 bg-orange-100 rounded-lg group-hover:bg-orange-200 transition">
-                  <Target size={24} className="text-orange-600" />
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <Target size={18} className="text-orange-600" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">Leads CRM</h3>
-                  <p className="text-sm text-gray-500">Track and manage your sales pipeline</p>
-                </div>
-                <ArrowUpRight size={20} className="text-gray-400 group-hover:text-gray-600 transition" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">View Leads</span>
+                <ArrowUpRight size={14} className="text-gray-300 ml-auto" />
               </Link>
-              
               <Link
-                href="/content"
-                className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition group"
+                href="/campaigns"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group"
               >
-                <div className="p-3 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition">
-                  <Calendar size={24} className="text-purple-600" />
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Briefcase size={18} className="text-purple-600" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">Content Scheduler</h3>
-                  <p className="text-sm text-gray-500">Schedule social media content</p>
+                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Email Campaign</span>
+                <ArrowUpRight size={14} className="text-gray-300 ml-auto" />
+              </Link>
+              <Link
+                href="/landing-pages"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group"
+              >
+                <div className="p-2 bg-red-50 rounded-lg">
+                  <TrendingUp size={18} className="text-[#FF3300]" />
                 </div>
-                <ArrowUpRight size={20} className="text-gray-400 group-hover:text-gray-600 transition" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Landing Pages</span>
+                <ArrowUpRight size={14} className="text-gray-300 ml-auto" />
               </Link>
             </div>
           </div>

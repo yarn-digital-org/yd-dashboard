@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { BrandProvider } from "@/context/BrandContext";
 import { CookieConsent } from "@/components/CookieConsent";
 import { BottomNav } from "@/components/BottomNav";
 
@@ -35,9 +36,11 @@ export default function RootLayout({
       <body className={inter.className} style={{ margin: 0, padding: 0, minHeight: '100vh' }}>
         <ThemeProvider>
           <AuthProvider>
+            <BrandProvider>
             {children}
             <BottomNav />
             <CookieConsent />
+            </BrandProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

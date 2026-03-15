@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useBrand } from '@/context/BrandContext';
 import {
   LayoutDashboard,
   Users,
@@ -41,6 +42,8 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { brand } = useBrand();
+  const accentColor = brand.primaryColor || '#FF3300';
 
   // Detect mobile
   useEffect(() => {
@@ -148,7 +151,7 @@ export function Sidebar() {
           <div style={{
             width: '32px',
             height: '32px',
-            backgroundColor: '#FF3300',
+            backgroundColor: accentColor,
             borderRadius: '0.5rem',
             display: 'flex',
             alignItems: 'center',
@@ -246,7 +249,7 @@ export function Sidebar() {
             width: '36px',
             height: '36px',
             borderRadius: '50%',
-            backgroundColor: '#FF3300',
+            backgroundColor: accentColor,
             color: '#FFFFFF',
             display: 'flex',
             alignItems: 'center',

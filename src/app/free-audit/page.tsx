@@ -77,20 +77,18 @@ export default function FreeAuditPage() {
       <main className="min-h-screen bg-[#f5f5f5] font-sans antialiased" style={{ letterSpacing: '-0.02em' }}>
 
         {/* ─── Nav ─── */}
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5">
-          <div className="max-w-[1520px] mx-auto flex items-center justify-between px-5 sm:px-10 py-3.5">
+        <nav className="fixed top-0 left-0 right-0 z-50">
+          <div className="max-w-[1520px] mx-auto flex items-center justify-between px-5 sm:px-10 py-5 sm:py-6">
             <a href="https://www.yarndigital.co.uk" className="flex items-center">
               <Image src={IMG.logoWhite} alt="YARN Digital" width={130} height={30} className="h-6 sm:h-7 w-auto" priority />
             </a>
-            <a
-              href="https://www.yarndigital.co.uk"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#888] text-sm font-medium hover:text-white transition-colors hidden sm:block"
+            <button
+              onClick={scrollToForm}
+              className="bg-white/10 backdrop-blur-md text-white text-sm font-medium px-6 py-2.5 rounded-full border border-white/20 hover:bg-white/20 transition-all"
               style={{ letterSpacing: '-0.02em' }}
             >
-              yarndigital.co.uk
-            </a>
+              Get Audit
+            </button>
           </div>
         </nav>
 
@@ -483,14 +481,14 @@ export default function FreeAuditPage() {
             <div className="flex flex-wrap gap-3 justify-center">
               <button
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="bg-white text-[#0a0a0a] font-semibold text-sm px-8 py-3.5 rounded-lg hover:bg-gray-100 transition-all inline-flex items-center gap-2"
+                className="bg-white/10 text-white font-semibold text-sm px-8 py-3.5 rounded-full border border-white/20 backdrop-blur-md hover:bg-gray-100 transition-all inline-flex items-center gap-2"
                 style={{ letterSpacing: '-0.02em' }}
               >
                 Get My Free Audit <ArrowRight size={15} />
               </button>
               <a
                 href="mailto:hello@yarndigital.co.uk"
-                className="border border-[#333] text-[#888] font-medium text-sm px-8 py-3.5 rounded-lg hover:border-[#555] hover:text-white transition-colors"
+                className="border border-[#333] text-[#888] font-medium text-sm px-8 py-3.5 rounded-full backdrop-blur-md hover:border-[#555] hover:text-white transition-colors"
                 style={{ letterSpacing: '-0.02em' }}
               >
                 hello@yarndigital.co.uk

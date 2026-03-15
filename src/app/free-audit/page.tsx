@@ -3,6 +3,9 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { ArrowRight, Loader2, Check, ArrowDown, Menu } from 'lucide-react';
 import Image from 'next/image';
+import { Playfair_Display } from 'next/font/google';
+
+const playfair = Playfair_Display({ subsets: ['latin'], weight: ['400', '500', '600'] });
 
 // ============================================
 // Meta Pixel + UTM
@@ -99,7 +102,7 @@ export default function FreeAuditPage() {
         <nav className="relative z-50 bg-transparent">
           <div className="max-w-[1520px] mx-auto flex items-center justify-between px-5 sm:px-10 py-5 sm:py-6">
             <a href="https://www.yarndigital.co.uk" className="flex flex-col">
-              <Image src={IMG.logoWhite} alt="YARN Digital" width={160} height={40} className="h-7 sm:h-8 w-auto" priority />
+              <Image src={IMG.logoWhite} alt="YARN Digital" width={200} height={50} className="h-10 sm:h-12 w-auto" priority />
               <span className="text-[10px] text-white/40 font-medium mt-0.5" style={{ letterSpacing: '0.02em' }}>
                 Design, Build, Grow
               </span>
@@ -130,15 +133,15 @@ export default function FreeAuditPage() {
               priority
             />
           </div>
-          {/* Subtle gradient for text readability — lighter than before */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent" />
+          {/* Light gradient for text readability — keeps image visible */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/90 via-[#0a0a0a]/20 to-transparent" />
 
           <div className="relative z-10 max-w-[1520px] mx-auto px-5 sm:px-10 flex flex-col justify-end min-h-[90vh] sm:min-h-screen pb-16 sm:pb-20 pt-32">
             {/* Content pinned to bottom-left like main site */}
             <div className="max-w-2xl">
               <h1
-                className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-medium text-white leading-[1.02] mb-6"
-                style={{ letterSpacing: '-0.04em' }}
+                className={`text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-medium text-white leading-[1.02] mb-6 ${playfair.className}`}
+                style={{ letterSpacing: '-0.03em' }}
               >
                 Your Website<br />
                 Should Be Winning<br />

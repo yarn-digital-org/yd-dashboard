@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
       source: data.source,
       status: 'new',
       priority: 'high', // Landing page leads are high intent
-      tags: ['landing-page', 'free-audit', ...(data.utmCampaign ? [`campaign:${data.utmCampaign}`] : [])],
+      tags: ['landing-page', data.source || 'free-audit', ...(data.utmCampaign ? [`campaign:${data.utmCampaign}`] : [])],
       notes: data.message
         ? [{
             id: `note_${Date.now()}`,
@@ -164,6 +164,58 @@ export async function POST(request: NextRequest) {
     };
 
     const docRef = await adminDb.collection('leads').add(leadDoc);
+
+    // Also create/update a contact in the contacts collection for CRM visibility
+    try {
+      const sourceTag = data.source || 'landing-page';
+      const nameParts = data.name.trim().split(/\s+/);
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      // Check if contact with this email already exists
+      const existingContacts = await adminDb.collection('contacts')
+        .where('email', '==', data.email)
+        .where('userId', '==', leadDoc.userId)
+        .limit(1)
+        .get();
+
+      if (existingContacts.empty) {
+        // Create new contact
+        await adminDb.collection('contacts').add({
+          firstName,
+          lastName,
+          email: data.email,
+          phone: data.phone || '',
+          company: data.company || '',
+          website: data.website || '',
+          type: 'lead',
+          source: sourceTag,
+          tags: ['lead', sourceTag, ...(data.utmCampaign ? [`campaign:${data.utmCampaign}`] : [])],
+          notes: data.message || '',
+          status: 'active',
+          userId: leadDoc.userId,
+          createdAt: now,
+          updatedAt: now,
+          leadId: docRef.id,
+        });
+      } else {
+        // Update existing contact with lead info
+        const existingDoc = existingContacts.docs[0];
+        const existingData = existingDoc.data();
+        const existingTags: string[] = existingData.tags || [];
+        const newTags = [...new Set([...existingTags, 'lead', sourceTag])];
+        await existingDoc.ref.update({
+          tags: newTags,
+          type: 'lead',
+          source: sourceTag,
+          updatedAt: now,
+          leadId: docRef.id,
+        });
+      }
+    } catch (contactErr) {
+      // Don't fail the lead submission if contact creation fails
+      console.error('Contact creation from lead failed (non-blocking):', contactErr);
+    }
 
     // Fire-and-forget Slack notification — doesn't block the response
     notifySlack(data, docRef.id).catch(() => {});

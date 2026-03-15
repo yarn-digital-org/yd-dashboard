@@ -74,13 +74,13 @@ export default function FreeAuditPage() {
     <>
       <MetaPixelScript />
 
-      <main className="min-h-screen bg-[#f5f5f5] font-sans antialiased" style={{ letterSpacing: '-0.02em' }}>
+      <main className="min-h-screen bg-[#0a0a0a] font-sans antialiased" style={{ letterSpacing: '-0.02em' }}>
 
         {/* ─── Nav ─── */}
         <nav className="fixed top-0 left-0 right-0 z-50">
           <div className="max-w-[1520px] mx-auto flex items-center justify-between px-5 sm:px-10 py-5 sm:py-6">
             <a href="https://www.yarndigital.co.uk" className="flex items-center">
-              <Image src={IMG.logoWhite} alt="YARN Digital" width={130} height={30} className="h-6 sm:h-7 w-auto" priority />
+              <Image src={IMG.logoWhite} alt="YARN Digital" width={140} height={140} className="h-8 sm:h-9 w-auto" priority />
             </a>
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -98,7 +98,7 @@ export default function FreeAuditPage() {
         <section className="relative min-h-screen bg-[#0a0a0a] overflow-hidden">
           {/* Background */}
           <div className="absolute inset-0">
-            <Image src={IMG.heroBg} alt="" fill className="object-cover opacity-20" priority />
+            <Image src={IMG.heroBg} alt="" fill className="object-cover opacity-30" priority />
           </div>
           <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-[#0a0a0a]/90 to-[#0a0a0a]/70" />
 

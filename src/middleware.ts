@@ -11,6 +11,10 @@ const publicRoutes = [
   '/terms',
   '/privacy',
   '/free-audit',
+  '/seo-audit',
+  '/new-website',
+  '/new-brand',
+  '/shopify',
 ];
 
 // API routes that don't require authentication

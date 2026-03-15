@@ -4,6 +4,7 @@ import { useState, useEffect, FormEvent } from 'react';
 import { ArrowRight, Loader2, Check, ArrowDown } from 'lucide-react';
 import Image from 'next/image';
 import { ForceLightTheme } from '@/components/ForceLightTheme';
+import PageViewTracker from '@/components/PageViewTracker';
 
 
 // ============================================
@@ -79,6 +80,7 @@ export default function FreeAuditPage() {
   return (
     <>
       <ForceLightTheme />
+      <PageViewTracker page="website-not-working" />
       <MetaPixelScript />
 
       <main className="min-h-screen bg-[#0a0a0a] font-sans antialiased landing-page" style={{ letterSpacing: '-0.02em' }}>

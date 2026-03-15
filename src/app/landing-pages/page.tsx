@@ -6,8 +6,17 @@ import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
 import {
   Plus, Globe, Eye, Trash2, Edit, Copy, ToggleLeft, ToggleRight,
-  BarChart3, ExternalLink, X, Check, Loader2,
+  BarChart3, ExternalLink, X, Check, Loader2, TrendingUp, Smartphone, Monitor,
 } from 'lucide-react';
+
+interface LandingPageVariant {
+  id: string;
+  label: string;
+  weight: number;
+  headline?: string;
+  subheadline?: string;
+  ctaText?: string;
+}
 
 interface LandingPage {
   id: string;
@@ -23,6 +32,8 @@ interface LandingPage {
   views?: number;
   leads?: number;
   createdAt?: string;
+  variants?: LandingPageVariant[];
+  abTestEnabled?: boolean;
 }
 
 const AVAILABLE_FIELDS = ['name', 'email', 'phone', 'company', 'website', 'message', 'budget', 'service'];
@@ -41,6 +52,8 @@ const DEFAULT_FORM: Omit<LandingPage, 'id'> = {
   heroImage: '',
   template: 'standard',
   published: false,
+  variants: [{ id: 'control', label: 'Control', weight: 100 }],
+  abTestEnabled: false,
 };
 
 export default function LandingPagesPage() {
@@ -54,6 +67,22 @@ export default function LandingPagesPage() {
   const [saving, setSaving] = useState(false);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [analyticsPageId, setAnalyticsPageId] = useState<string | null>(null);
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+
+  const openAnalytics = async (pageId: string) => {
+    setAnalyticsPageId(pageId);
+    setAnalyticsData(null);
+    setLoadingAnalytics(true);
+    try {
+      const res = await fetch(`/api/landing-pages/${pageId}/analytics`);
+      const data = await res.json();
+      setAnalyticsData(data.data);
+    } catch { /* silent */ } finally {
+      setLoadingAnalytics(false);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/login');
@@ -249,6 +278,13 @@ export default function LandingPagesPage() {
                         </a>
                       )}
                       <button
+                        onClick={() => openAnalytics(page.id)}
+                        className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition"
+                        title="View analytics"
+                      >
+                        <TrendingUp size={16} />
+                      </button>
+                      <button
                         onClick={() => copyUrl(page.slug)}
                         className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition"
                         title="Copy URL"
@@ -390,6 +426,95 @@ export default function LandingPagesPage() {
                   />
                 </div>
 
+                {/* A/B Testing */}
+                <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">A/B Testing</p>
+                      <p className="text-xs text-gray-400">Test different headlines and CTAs to optimise conversions</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer"
+                        checked={!!formData.abTestEnabled}
+                        onChange={e => {
+                          const enabled = e.target.checked;
+                          const variants = enabled && (!formData.variants || formData.variants.length < 2)
+                            ? [
+                                { id: 'control', label: 'Control', weight: 50 },
+                                { id: 'variant_a', label: 'Variant A', weight: 50 },
+                              ]
+                            : formData.variants || [{ id: 'control', label: 'Control', weight: 100 }];
+                          setFormData({ ...formData, abTestEnabled: enabled, variants });
+                        }}
+                      />
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#FF3300]" />
+                    </label>
+                  </div>
+
+                  {formData.abTestEnabled && (
+                    <div className="space-y-3">
+                      {(formData.variants || []).map((v, vi) => (
+                        <div key={v.id} className="bg-gray-50 rounded-lg p-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-gray-600">{v.label}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-400">Weight:</span>
+                              <input type="number" min="1" max="100" value={v.weight}
+                                onChange={e => {
+                                  const variants = [...(formData.variants || [])];
+                                  variants[vi] = { ...variants[vi], weight: Number(e.target.value) };
+                                  setFormData({ ...formData, variants });
+                                }}
+                                className="w-14 px-2 py-1 border border-gray-200 rounded text-xs text-center focus:outline-none focus:ring-1 focus:ring-[#FF3300]/30"
+                              />
+                              {vi > 0 && (
+                                <button type="button" onClick={() => {
+                                  const variants = (formData.variants || []).filter((_, i) => i !== vi);
+                                  setFormData({ ...formData, variants });
+                                }} className="text-gray-400 hover:text-red-500 transition text-xs">✕</button>
+                              )}
+                            </div>
+                          </div>
+                          <input type="text" placeholder={vi === 0 ? `Headline (default: ${formData.headline || 'main headline'})` : 'Headline override'}
+                            value={v.headline || ''}
+                            onChange={e => {
+                              const variants = [...(formData.variants || [])];
+                              variants[vi] = { ...variants[vi], headline: e.target.value };
+                              setFormData({ ...formData, variants });
+                            }}
+                            className="w-full px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-[#FF3300]/30 bg-white"
+                          />
+                          <input type="text" placeholder="CTA button text override"
+                            value={v.ctaText || ''}
+                            onChange={e => {
+                              const variants = [...(formData.variants || [])];
+                              variants[vi] = { ...variants[vi], ctaText: e.target.value };
+                              setFormData({ ...formData, variants });
+                            }}
+                            className="w-full px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-[#FF3300]/30 bg-white"
+                          />
+                        </div>
+                      ))}
+                      {(formData.variants || []).length < 4 && (
+                        <button type="button"
+                          onClick={() => {
+                            const idx = (formData.variants || []).length;
+                            const labels = ['Variant A', 'Variant B', 'Variant C'];
+                            const ids = ['variant_a', 'variant_b', 'variant_c'];
+                            setFormData({
+                              ...formData,
+                              variants: [...(formData.variants || []), { id: ids[idx - 1] || `variant_${idx}`, label: labels[idx - 1] || `Variant ${idx}`, weight: 50 }],
+                            });
+                          }}
+                          className="w-full py-1.5 border border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-[#FF3300] hover:text-[#FF3300] text-xs transition font-medium"
+                        >
+                          + Add Variant
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 {error && <p className="text-sm text-red-600">{error}</p>}
 
                 <div className="flex justify-end gap-3 pt-2">
@@ -403,6 +528,113 @@ export default function LandingPagesPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Analytics Modal */}
+        {analyticsPageId && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setAnalyticsPageId(null)}>
+            <div className="bg-white rounded-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-5 border-b border-gray-200">
+                <div>
+                  <h2 className="text-base font-bold text-gray-900">Page Analytics</h2>
+                  <p className="text-xs text-gray-400 mt-0.5">{pages.find(p => p.id === analyticsPageId)?.title || analyticsPageId}</p>
+                </div>
+                <button onClick={() => setAnalyticsPageId(null)} className="p-2 hover:bg-gray-100 rounded-lg transition">
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="p-5 space-y-5">
+                {loadingAnalytics ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 size={24} className="animate-spin text-gray-400" />
+                  </div>
+                ) : analyticsData ? (
+                  <>
+                    {/* Summary */}
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { label: 'Total Views', value: analyticsData.summary?.totalViews ?? 0 },
+                        { label: 'Total Leads', value: analyticsData.summary?.totalLeads ?? 0 },
+                        { label: 'Conversion Rate', value: `${analyticsData.summary?.conversionRate ?? 0}%` },
+                      ].map(stat => (
+                        <div key={stat.label} className="bg-gray-50 rounded-xl p-4 text-center">
+                          <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+                          <div className="text-xs text-gray-500 mt-1">{stat.label}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* A/B Variant Breakdown */}
+                    {analyticsData.abTestEnabled && analyticsData.variants?.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-700 mb-3">A/B Test Results</h3>
+                        <div className="space-y-2">
+                          {analyticsData.variants.map((v: any, i: number) => {
+                            const maxViews = Math.max(...analyticsData.variants.map((x: any) => x.views), 1);
+                            const isWinner = analyticsData.variants.length > 1 && i === 0 &&
+                              v.conversionRate >= Math.max(...analyticsData.variants.map((x: any) => x.conversionRate));
+                            return (
+                              <div key={v.variantId} className="bg-gray-50 rounded-lg p-3">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-gray-800">{v.label}</span>
+                                    {isWinner && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Winner</span>}
+                                  </div>
+                                  <div className="flex gap-4 text-xs text-gray-500">
+                                    <span><span className="font-semibold text-gray-800">{v.views}</span> views</span>
+                                    <span><span className="font-semibold text-gray-800">{v.leads}</span> leads</span>
+                                    <span className={`font-semibold ${v.conversionRate > 0 ? 'text-green-600' : 'text-gray-500'}`}>{v.conversionRate}%</span>
+                                  </div>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                  <div className="bg-[#FF3300] h-1.5 rounded-full transition-all" style={{ width: `${(v.views / maxViews) * 100}%` }} />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Top Sources */}
+                    {analyticsData.topSources?.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-700 mb-3">Traffic Sources</h3>
+                        <div className="space-y-2">
+                          {analyticsData.topSources.map((s: any) => {
+                            const maxCount = analyticsData.topSources[0]?.count || 1;
+                            return (
+                              <div key={s.source} className="flex items-center gap-3">
+                                <span className="text-xs text-gray-600 w-24 truncate">{s.source}</span>
+                                <div className="flex-1 bg-gray-100 rounded-full h-2">
+                                  <div className="bg-blue-400 h-2 rounded-full" style={{ width: `${(s.count / maxCount) * 100}%` }} />
+                                </div>
+                                <span className="text-xs text-gray-500 w-8 text-right">{s.count}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Device split */}
+                    {(analyticsData.devices?.mobile > 0 || analyticsData.devices?.desktop > 0) && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-700 mb-2">Devices</h3>
+                        <div className="flex gap-4 text-sm">
+                          <span className="text-gray-600">📱 Mobile: <span className="font-semibold">{analyticsData.devices.mobile}</span></span>
+                          <span className="text-gray-600">💻 Desktop: <span className="font-semibold">{analyticsData.devices.desktop}</span></span>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-400 text-center py-8">No analytics data yet for this page.</p>
+                )}
+              </div>
             </div>
           </div>
         )}

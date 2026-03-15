@@ -26,7 +26,8 @@ function getUtmParams(): Record<string, string> {
 
 // Self-hosted images
 const IMG = {
-  logo: '/images/yd/AFnpNp2BAEaLd7ZiVoPt8eguUg.png',
+  logoDark: '/images/yd/logo-dark.png',   // Black text — for light backgrounds
+  logoWhite: '/images/yd/logo-white.png',  // White text — for dark backgrounds
   heroBg: '/images/yd/d2waLq2nwXqrYR11yjS6gYIdocM.png',
   founder: '/images/yd/gt2H9pZhxxqOiw8FCUVWqnG0DTQ.png',
   hillsMockup: '/images/yd/wtOblvlwQViPkZXQy7otlTIMaMQ.png',
@@ -79,7 +80,7 @@ export default function FreeAuditPage() {
         <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5">
           <div className="max-w-[1520px] mx-auto flex items-center justify-between px-5 sm:px-10 py-3.5">
             <a href="https://www.yarndigital.co.uk" className="flex items-center">
-              <Image src={IMG.logo} alt="YARN Digital" width={130} height={30} className="h-6 sm:h-7 w-auto" priority />
+              <Image src={IMG.logoWhite} alt="YARN Digital" width={130} height={30} className="h-6 sm:h-7 w-auto" priority />
             </a>
             <a
               href="https://www.yarndigital.co.uk"
@@ -502,7 +503,7 @@ export default function FreeAuditPage() {
         <footer className="bg-[#f5f5f5] border-t border-[#e5e5e5] py-6">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-4">
-              <Image src={IMG.logo} alt="YARN Digital" width={90} height={20} className="opacity-40" />
+              <Image src={IMG.logoDark} alt="YARN Digital" width={90} height={20} className="opacity-60" />
               <span className="text-[11px] font-medium text-[#999]">
                 © {new Date().getFullYear()} Belfast, Northern Ireland
               </span>

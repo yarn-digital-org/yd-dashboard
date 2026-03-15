@@ -27,6 +27,7 @@ import {
   Upload,
   X,
   Loader2,
+  HardDrive,
 } from 'lucide-react';
 
 // Types
@@ -102,6 +103,28 @@ export default function DocumentsPage() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadSaving, setUploadSaving] = useState(false);
+  const [driveSyncing, setDriveSyncing] = useState(false);
+  const [driveSyncResult, setDriveSyncResult] = useState<string | null>(null);
+
+  const handleDriveSync = async () => {
+    setDriveSyncing(true);
+    setDriveSyncResult(null);
+    try {
+      const res = await fetch('/api/drive', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        setDriveSyncResult(`✓ ${data.synced} new, ${data.updated} updated from Google Drive`);
+        fetchDocuments();
+      } else {
+        setDriveSyncResult(`✗ ${data.error || 'Sync failed'}`);
+      }
+    } catch {
+      setDriveSyncResult('✗ Connection error');
+    } finally {
+      setDriveSyncing(false);
+      setTimeout(() => setDriveSyncResult(null), 5000);
+    }
+  };
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadForm, setUploadForm] = useState({
     title: '',
@@ -397,6 +420,29 @@ export default function DocumentsPage() {
                 New Document
               </button>
               <button
+                onClick={handleDriveSync}
+                disabled={driveSyncing}
+                style={{
+                  backgroundColor: driveSyncing ? '#F3F4F6' : '#FFFFFF',
+                  color: '#374151',
+                  padding: '0.625rem 1rem',
+                  borderRadius: '0.5rem',
+                  fontWeight: 500,
+                  border: '1px solid #E5E7EB',
+                  cursor: driveSyncing ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.875rem',
+                  justifyContent: 'center',
+                  opacity: driveSyncing ? 0.7 : 1,
+                }}
+                title="Sync files from Google Drive"
+              >
+                <HardDrive size={16} style={{ color: driveSyncing ? '#9CA3AF' : '#4285F4' }} />
+                {driveSyncing ? 'Syncing…' : 'Drive Sync'}
+              </button>
+              <button
                 onClick={fetchDocuments}
                 style={{
                   backgroundColor: '#FFFFFF',
@@ -419,6 +465,25 @@ export default function DocumentsPage() {
             </div>
           </div>
         </div>
+
+        {/* Drive sync result toast */}
+        {driveSyncResult && (
+          <div style={{
+            marginBottom: '1rem',
+            padding: '0.75rem 1rem',
+            borderRadius: '0.5rem',
+            backgroundColor: driveSyncResult.startsWith('✓') ? '#ECFDF5' : '#FEF2F2',
+            border: `1px solid ${driveSyncResult.startsWith('✓') ? '#A7F3D0' : '#FECACA'}`,
+            color: driveSyncResult.startsWith('✓') ? '#065F46' : '#991B1B',
+            fontSize: '0.875rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+          }}>
+            <HardDrive size={14} />
+            {driveSyncResult}
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: '0.75rem', marginBottom: '1.5rem' }}>

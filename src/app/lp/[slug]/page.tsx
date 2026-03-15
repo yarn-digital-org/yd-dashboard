@@ -24,10 +24,21 @@ export default async function PublicLandingPage({ params }: Props) {
   const doc = snapshot.docs[0];
   const page = { id: doc.id, ...doc.data() } as LandingPageData;
 
-  // Track view (fire-and-forget)
-  adminDb.collection('landingPages').doc(doc.id).update({
-    views: (page.views || 0) + 1,
-  }).catch(() => {});
+  // Track view: increment counter + log analytics event (fire-and-forget)
+  const now = new Date().toISOString();
+  Promise.all([
+    adminDb.collection('landingPages').doc(doc.id).update({
+      views: (page.views || 0) + 1,
+    }),
+    adminDb.collection('lp_analytics').add({
+      pageId: doc.id,
+      slug,
+      userId: page.userId,
+      type: 'view',
+      timestamp: now,
+      // UTM / referrer would be captured client-side; server has no access to query params here
+    }),
+  ]).catch(() => {});
 
   return <LandingPageRenderer page={page} />;
 }
@@ -46,4 +57,5 @@ export interface LandingPageData {
   published?: boolean;
   views?: number;
   leads?: number;
+  userId?: string;
 }

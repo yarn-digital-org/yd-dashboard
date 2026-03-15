@@ -88,7 +88,7 @@ export default function Home() {
           </Link>
           <Link href="/login" style={{
             backgroundColor: '#fafafa', color: '#0a0a0a',
-            padding: '0.625rem 1.5rem', borderRadius: '6px',
+            padding: '0.625rem 1.5rem', borderRadius: '8px',
             fontWeight: 600, textDecoration: 'none', fontSize: '0.875rem',
             letterSpacing: '-0.02em', transition: 'all 0.2s',
           }}>
@@ -119,7 +119,7 @@ export default function Home() {
 
         <div style={{
           position: 'relative', zIndex: 2,
-          maxWidth: '1440px', width: '100%', margin: '0 auto',
+          maxWidth: '1520px', width: '100%', margin: '0 auto',
           paddingBottom: '4rem',
         }}>
           <p style={{
@@ -149,7 +149,7 @@ export default function Home() {
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
             <Link href="/login" style={{
               backgroundColor: '#fafafa', color: '#0a0a0a',
-              padding: '0.875rem 2rem', borderRadius: '6px',
+              padding: '0.875rem 2rem', borderRadius: '8px',
               fontWeight: 600, textDecoration: 'none', fontSize: '0.9375rem',
               letterSpacing: '-0.02em', display: 'inline-flex',
               alignItems: 'center', gap: '0.5rem',
@@ -159,7 +159,7 @@ export default function Home() {
             </Link>
             <a href="https://www.yarndigital.co.uk" target="_blank" rel="noopener noreferrer" style={{
               color: '#a3a3a3', padding: '0.875rem 2rem',
-              border: '1px solid #333', borderRadius: '6px',
+              border: '1px solid #333', borderRadius: '8px',
               fontWeight: 500, textDecoration: 'none', fontSize: '0.9375rem',
               letterSpacing: '-0.02em', display: 'inline-flex',
               alignItems: 'center', gap: '0.5rem',
@@ -293,7 +293,7 @@ export default function Home() {
           }}>
             {caseStudies.map((cs, i) => (
               <div key={i} style={{
-                backgroundColor: '#fafafa', borderRadius: '1.5rem',
+                backgroundColor: '#fafafa', borderRadius: '24px',
                 overflow: 'hidden', transition: 'transform 0.3s',
               }}>
                 <div style={{
@@ -414,7 +414,7 @@ export default function Home() {
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                 <Link href="/login" style={{
                   backgroundColor: '#fafafa', color: '#0a0a0a',
-                  padding: '0.875rem 2rem', borderRadius: '6px',
+                  padding: '0.875rem 2rem', borderRadius: '8px',
                   fontWeight: 600, textDecoration: 'none', fontSize: '0.9375rem',
                   letterSpacing: '-0.02em', display: 'inline-flex',
                   alignItems: 'center', gap: '0.5rem',
@@ -423,7 +423,7 @@ export default function Home() {
                 </Link>
                 <a href="mailto:hello@yarndigital.co.uk" style={{
                   color: '#a3a3a3', padding: '0.875rem 2rem',
-                  border: '1px solid #333', borderRadius: '6px',
+                  border: '1px solid #333', borderRadius: '8px',
                   fontWeight: 500, textDecoration: 'none', fontSize: '0.9375rem',
                   letterSpacing: '-0.02em',
                 }}>

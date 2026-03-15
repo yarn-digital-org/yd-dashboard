@@ -254,7 +254,7 @@ export default function SeoAuditPage() {
                       </div>
                       <div>
                         <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Phone *</label>
-                        <input type="tel" required placeholder="Phone number" className={inputClass}
+                        <input type="tel" placeholder="Phone (optional) number" className={inputClass}
                           value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
                       </div>
                     </div>

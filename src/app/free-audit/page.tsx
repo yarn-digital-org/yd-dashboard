@@ -225,7 +225,7 @@ export default function FreeAuditPage() {
                       We&apos;ve got your details.
                     </h3>
                     <p className="text-sm text-[#666] font-medium" style={{ letterSpacing: '-0.02em' }}>
-                      We&apos;ll be in touch within 1 business day with your free audit.
+                      We&apos;ll be in touch within 48 hours with your free audit.
                     </p>
                   </div>
                 ) : (
@@ -257,7 +257,7 @@ export default function FreeAuditPage() {
                       </div>
                       <div>
                         <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Phone *</label>
-                        <input type="tel" required placeholder="Phone number" className={inputClass}
+                        <input type="tel" placeholder="Phone (optional) number" className={inputClass}
                           value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
                       </div>
                     </div>

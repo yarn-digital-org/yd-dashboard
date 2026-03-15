@@ -22,6 +22,23 @@ export async function GET(
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
+    // Load brand settings for this user
+    let brandName = 'Yarn Digital';
+    let brandEmail = '';
+    let brandAddress = '';
+    try {
+      const brandDoc = await db.collection('users').doc(user.userId).collection('settings').doc('branding').get();
+      if (brandDoc.exists) {
+        const brandData = brandDoc.data();
+        // Business info fields from branding settings
+        if (brandData?.businessName) brandName = String(brandData.businessName);
+        if (brandData?.businessEmail) brandEmail = String(brandData.businessEmail);
+        if (brandData?.businessAddress) brandAddress = String(brandData.businessAddress);
+      }
+    } catch {
+      // Use defaults
+    }
+
     const items = (invoice.items as Array<Record<string, unknown>> || []).map((item) => ({
       description: String(item.description || ''),
       quantity: Number(item.quantity || 1),
@@ -35,9 +52,9 @@ export async function GET(
       dueDate: String(invoice.dueDate || ''),
       status: String(invoice.status || 'draft'),
       from: {
-        name: String(invoice.fromName || invoice.businessName || 'Yarn Digital'),
-        email: String(invoice.fromEmail || ''),
-        address: String(invoice.fromAddress || ''),
+        name: String(invoice.fromName || invoice.businessName || brandName),
+        email: String(invoice.fromEmail || brandEmail),
+        address: String(invoice.fromAddress || brandAddress),
       },
       to: {
         name: String(invoice.clientName || invoice.toName || ''),

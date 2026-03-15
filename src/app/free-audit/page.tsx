@@ -83,23 +83,8 @@ export default function FreeAuditPage() {
 
       <main className="min-h-screen bg-[#0a0a0a] font-sans antialiased" style={{ letterSpacing: '-0.02em' }}>
 
-        {/* ─── "Let's Talk" Marquee Bar (matches yarndigital.co.uk) ─── */}
-        <div className="bg-[#0a0a0a] border-b border-[#1a1a1a] py-2.5 overflow-hidden">
-          <div className="flex items-center justify-center gap-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-white/40" />
-            <a
-              href="mailto:hello@yarndigital.co.uk"
-              className="text-[12px] font-medium text-white/70 hover:text-white transition-colors"
-              style={{ letterSpacing: '0.02em' }}
-            >
-              Let&apos;s Talk
-            </a>
-            <span className="w-1.5 h-1.5 rounded-full bg-white/40" />
-          </div>
-        </div>
-
-        {/* ─── Nav (matches yarndigital.co.uk style) ─── */}
-        <nav className="relative z-50 bg-transparent">
+        {/* ─── Nav ─── */}
+        <nav className="fixed top-0 left-0 right-0 z-50">
           <div className="max-w-[1520px] mx-auto flex items-center justify-between px-5 sm:px-10 py-5 sm:py-6">
             <a href="https://www.yarndigital.co.uk" className="flex flex-col">
               <Image src={IMG.logoWhite} alt="YARN Digital" width={200} height={50} className="h-10 sm:h-12 w-auto" priority />
@@ -121,22 +106,23 @@ export default function FreeAuditPage() {
         {/* ═══════════════════════════════════════════
             HERO — Full-bleed B&W image (matches yarndigital.co.uk)
             ═══════════════════════════════════════════ */}
-        <section className="relative min-h-[90vh] sm:min-h-screen overflow-hidden -mt-[72px] sm:-mt-[80px]">
-          {/* Background — prominent B&W image like main site */}
-          <div className="absolute inset-0">
+        <section className="relative min-h-screen overflow-hidden">
+          {/* Background — full-bleed B&W image */}
+          <div className="absolute inset-0 w-full h-full">
             <Image
               src={IMG.heroBg}
               alt=""
               fill
-              className="object-cover grayscale"
-              style={{ opacity: 0.7 }}
+              sizes="100vw"
+              className="object-cover object-center grayscale"
+              style={{ opacity: 0.55 }}
               priority
             />
           </div>
-          {/* Light gradient for text readability — keeps image visible */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/90 via-[#0a0a0a]/20 to-transparent" />
+          {/* Gradient for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/80 via-transparent to-transparent" />
 
-          <div className="relative z-10 max-w-[1520px] mx-auto px-5 sm:px-10 flex flex-col justify-end min-h-[90vh] sm:min-h-screen pb-16 sm:pb-20 pt-32">
+          <div className="relative z-10 max-w-[1520px] mx-auto px-5 sm:px-10 flex flex-col justify-end min-h-screen pb-16 sm:pb-20 pt-32">
             {/* Content pinned to bottom-left like main site */}
             <div className="max-w-2xl">
               <h1

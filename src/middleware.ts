@@ -23,6 +23,7 @@ const publicRoutes = [
   '/get-quote',
   '/free-review',
   '/free-consultation',
+  '/seo-belfast',
   '/web-design-belfast',
   '/website-not-working',
   '/yarn-digital',

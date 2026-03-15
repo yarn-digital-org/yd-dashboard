@@ -287,6 +287,49 @@ export default function FreeAuditPage() {
         </section>
 
         {/* ═══════════════════════════════════════════
+            HOW IT WORKS — 3-step process strip
+            ═══════════════════════════════════════════ */}
+        <section className="py-20 sm:py-24 bg-[#ffffff]">
+          <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20 mb-14">
+              <div>
+                <span className="text-[11px] font-semibold text-[#999] uppercase" style={{ letterSpacing: '0.08em' }}>
+                  How It Works
+                </span>
+              </div>
+              <div className="lg:col-span-2">
+                <h2
+                  className="text-3xl sm:text-4xl font-medium text-[#0a0a0a] leading-[1.1]"
+                  style={{ letterSpacing: '-0.04em' }}
+                >
+                  Three steps. Zero hassle.
+                </h2>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-[#e5e5e5]">
+              {[
+                { num: '01', title: 'Submit your URL', desc: 'Takes 30 seconds — just your website address and email.' },
+                { num: '02', title: 'We do the work', desc: 'Our team audits your performance, SEO, design, and conversion rate.' },
+                { num: '03', title: 'Get your report', desc: 'Clear findings and actionable fixes, delivered within 48 hours.' },
+              ].map((step, i) => (
+                <div key={i} className={`py-8 md:px-8 ${i === 0 ? 'md:pl-0' : ''} ${i < 2 ? 'border-b md:border-b-0 md:border-r border-[#e5e5e5]' : ''}`}>
+                  <span className="text-[40px] font-medium text-[#eee] leading-none block mb-4" style={{ letterSpacing: '-0.04em' }}>
+                    {step.num}
+                  </span>
+                  <h3 className="text-lg font-semibold text-[#0a0a0a] mb-2" style={{ letterSpacing: '-0.03em' }}>
+                    {step.title}
+                  </h3>
+                  <p className="text-sm text-[#666] leading-relaxed" style={{ letterSpacing: '-0.01em' }}>
+                    {step.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════
             WHAT YOU GET — 1/3 + 2/3 grid (matches YD layout)
             ═══════════════════════════════════════════ */}
         <section className="py-24 sm:py-32 bg-[#ffffff]">
@@ -421,6 +464,45 @@ export default function FreeAuditPage() {
         </section>
 
         {/* ═══════════════════════════════════════════
+            TESTIMONIALS — Dark section
+            ═══════════════════════════════════════════ */}
+        <section className="bg-[#0a0a0a] py-20 sm:py-24">
+          <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20 mb-14">
+              <div>
+                <span className="text-[11px] font-semibold text-[#555] uppercase" style={{ letterSpacing: '0.08em' }}>
+                  What Clients Say
+                </span>
+              </div>
+              <div className="lg:col-span-2">
+                <h2 className="text-3xl sm:text-4xl font-medium text-white leading-[1.15]" style={{ letterSpacing: '-0.04em' }}>
+                  Don&apos;t take our word for it.
+                </h2>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                { quote: 'Yarn Digital rebuilt our website from scratch. Within a month we had more enquiries than the whole previous year.', name: 'Stonebridge Farm', tag: 'Brand & Web Design' },
+                { quote: 'Straightforward, fast, and they delivered exactly what they promised. Our team uses the platform every day.', name: 'React Clarity', tag: 'Web Application' },
+                { quote: 'The new site looks exactly like us. Our customers keep commenting on it.', name: 'Krumb Bakery', tag: 'Brand & E-Commerce' },
+              ].map((t, i) => (
+                <div key={i} className="p-6 sm:p-8 rounded-[24px] border border-[#1a1a1a] bg-[#111]">
+                  <span className="text-4xl text-[#333] leading-none block mb-4">&ldquo;</span>
+                  <p className="text-[15px] text-white/80 leading-relaxed mb-6" style={{ letterSpacing: '-0.02em' }}>
+                    {t.quote}
+                  </p>
+                  <div>
+                    <p className="text-sm font-semibold text-white" style={{ letterSpacing: '-0.02em' }}>{t.name}</p>
+                    <p className="text-xs text-[#666] mt-0.5">{t.tag}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════
             SERVICES — Border-separated list (matches YD exactly)
             ═══════════════════════════════════════════ */}
         <section className="bg-[#0a0a0a] py-24 sm:py-32">
@@ -498,6 +580,52 @@ export default function FreeAuditPage() {
                     Jonny Davison, Founder
                   </cite>
                 </blockquote>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════
+            FAQs — Accordion style
+            ═══════════════════════════════════════════ */}
+        <section className="py-24 sm:py-32 bg-[#ffffff]">
+          <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20">
+              <div>
+                <span className="text-[11px] font-semibold text-[#999] uppercase" style={{ letterSpacing: '0.08em' }}>
+                  Common Questions
+                </span>
+              </div>
+              <div className="lg:col-span-2">
+                <h2
+                  className="text-3xl sm:text-4xl font-medium text-[#0a0a0a] leading-[1.1] mb-12"
+                  style={{ letterSpacing: '-0.04em' }}
+                >
+                  Everything you need to know.
+                </h2>
+                <div className="border-t border-[#e5e5e5]">
+                  {[
+                    { q: 'Is it really free?', a: 'Yes. No credit card, no commitment. We do the full audit — performance, SEO, design, and conversion — and deliver it to your inbox. There\'s no catch and no sales pitch attached.' },
+                    { q: 'What does the audit actually cover?', a: 'We look at five areas: page speed and Core Web Vitals, SEO fundamentals (keywords, meta, structure), design and user experience, conversion rate (is your site actually turning visitors into enquiries?), and mobile performance. You\'ll get a clear summary of what\'s working, what isn\'t, and what to fix first.' },
+                    { q: 'How long does it take?', a: 'You fill in the form in under a minute. We deliver your audit within 48 hours. If we need any clarification, we\'ll reach out — but usually we have everything we need from your URL.' },
+                    { q: 'Will someone try to sell me something?', a: 'No. We deliver the audit, give you honest feedback, and leave the next step entirely up to you. If you want to talk about working together after that, great — but there\'s no obligation and no follow-up calls unless you ask for one.' },
+                    { q: 'What if I don\'t have a website yet?', a: 'We can still help. Get in touch and we\'ll talk through what you need — from brand strategy to a website that works from day one.' },
+                  ].map((faq, i) => (
+                    <details key={i} className="group border-b border-[#e5e5e5]">
+                      <summary className="flex items-center justify-between py-5 cursor-pointer list-none">
+                        <span className="text-[15px] font-semibold text-[#0a0a0a] pr-4" style={{ letterSpacing: '-0.02em' }}>
+                          {faq.q}
+                        </span>
+                        <span className="text-[#999] text-xl flex-shrink-0 transition-transform group-open:rotate-45">+</span>
+                      </summary>
+                      <div className="pb-5 pr-8">
+                        <p className="text-sm text-[#666] leading-relaxed" style={{ letterSpacing: '-0.01em' }}>
+                          {faq.a}
+                        </p>
+                      </div>
+                    </details>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

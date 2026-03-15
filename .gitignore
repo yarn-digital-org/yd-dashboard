@@ -46,3 +46,16 @@ firebase-credentials.json
 .env.*
 *.key
 node_modules/
+.openclaw/
+AGENTS.md
+HEARTBEAT.md
+IDENTITY.md
+MEMORY.md
+SOUL.md
+TOOLS.md
+USER.md
+memory/
+sops/
+yd-dashboard/*.patch
+yd-skills/
+skills/

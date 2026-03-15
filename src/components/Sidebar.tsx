@@ -27,12 +27,17 @@ import {
   Building2,
   FolderOpen,
   Lightbulb,
+  Sun,
+  Moon,
 } from 'lucide-react';
+import { useTheme, getColors } from '@/context/ThemeContext';
 
 export function Sidebar() {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const { theme, toggleTheme, isDark } = useTheme();
+  const colors = getColors(theme);
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -89,8 +94,8 @@ export function Sidebar() {
   const sidebarStyle: React.CSSProperties = {
     width: isMobile ? '280px' : (isExpanded ? '240px' : '72px'),
     minWidth: isMobile ? '280px' : (isExpanded ? '240px' : '72px'),
-    backgroundColor: '#FFFFFF',
-    borderRight: '1px solid #E5E7EB',
+    backgroundColor: colors.sidebarBg,
+    borderRight: `1px solid ${colors.border}`,
     display: 'flex',
     flexDirection: 'column',
     transition: isMobile ? 'transform 0.3s ease' : 'width 0.2s ease, min-width 0.2s ease',
@@ -116,8 +121,8 @@ export function Sidebar() {
     gap: '0.75rem',
     padding: isMobile ? '0.875rem 1rem' : '0.75rem 1rem',
     borderRadius: '0.5rem',
-    backgroundColor: isActive ? '#FF3300' : 'transparent',
-    color: isActive ? '#FFFFFF' : '#374151',
+    backgroundColor: isActive ? colors.accent : 'transparent',
+    color: isActive ? '#FFFFFF' : colors.sidebarText,
     textDecoration: 'none',
     fontWeight: isActive ? 600 : 500,
     fontSize: isMobile ? '1rem' : '0.875rem',
@@ -134,7 +139,7 @@ export function Sidebar() {
       {/* Logo */}
       <div style={{
         padding: '1.25rem 1rem',
-        borderBottom: '1px solid #E5E7EB',
+        borderBottom: `1px solid ${colors.border}`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -155,7 +160,7 @@ export function Sidebar() {
             Y
           </div>
           {showExpanded && (
-            <span style={{ fontSize: '1.125rem', fontWeight: 700, color: '#111827' }}>
+            <span style={{ fontSize: '1.125rem', fontWeight: 700, color: colors.text }}>
               Yarn Digital
             </span>
           )}
@@ -163,7 +168,7 @@ export function Sidebar() {
         {isMobile && (
           <button
             onClick={() => setIsMobileOpen(false)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: '#6B7280' }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: colors.textSecondary }}
           >
             <X size={20} />
           </button>
@@ -199,30 +204,40 @@ export function Sidebar() {
         </Link>
       </div>
 
-      {/* Bottom Controls - desktop only */}
-      {!isMobile && (
-        <div style={{
-          padding: '0.75rem',
-          borderTop: '1px solid #E5E7EB',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.25rem',
-        }}>
+      {/* Bottom Controls */}
+      <div style={{
+        padding: '0.75rem',
+        borderTop: `1px solid ${colors.border}`,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.25rem',
+      }}>
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          style={{ ...navItemStyle(false), color: colors.textSecondary }}
+          title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {isDark ? <Sun size={20} /> : <Moon size={20} />}
+          {showExpanded && <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>}
+        </button>
+        {/* Collapse - desktop only */}
+        {!isMobile && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            style={{ ...navItemStyle(false), color: '#6B7280' }}
+            style={{ ...navItemStyle(false), color: colors.textSecondary }}
           >
             {isExpanded ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
             {isExpanded && <span>Collapse</span>}
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* User info */}
       {user && (
         <div style={{
           padding: '0.75rem 1rem',
-          borderTop: '1px solid #E5E7EB',
+          borderTop: `1px solid ${colors.border}`,
           display: 'flex',
           alignItems: 'center',
           gap: '0.75rem',
@@ -247,7 +262,7 @@ export function Sidebar() {
               <p style={{
                 fontSize: '0.875rem',
                 fontWeight: 500,
-                color: '#111827',
+                color: colors.text,
                 margin: 0,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -257,7 +272,7 @@ export function Sidebar() {
               </p>
               <p style={{
                 fontSize: '0.75rem',
-                color: '#6B7280',
+                color: colors.textSecondary,
                 margin: 0,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -275,7 +290,7 @@ export function Sidebar() {
                 border: 'none',
                 padding: '0.5rem',
                 cursor: 'pointer',
-                color: '#6B7280',
+                color: colors.textSecondary,
                 display: 'flex',
                 alignItems: 'center',
                 borderRadius: '0.375rem',
@@ -301,8 +316,8 @@ export function Sidebar() {
             top: '0.75rem',
             left: '0.75rem',
             zIndex: 30,
-            backgroundColor: '#FFFFFF',
-            border: '1px solid #E5E7EB',
+            backgroundColor: colors.bg,
+            border: `1px solid ${colors.border}`,
             borderRadius: '0.5rem',
             padding: '0.625rem',
             cursor: 'pointer',

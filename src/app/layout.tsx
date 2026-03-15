@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import { CookieConsent } from "@/components/CookieConsent";
 import { BottomNav } from "@/components/BottomNav";
 
@@ -18,13 +19,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            try {
+              var t = localStorage.getItem('yd-theme');
+              if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+              }
+            } catch(e) {}
+          })();
+        `}} />
+      </head>
       <body className={inter.className} style={{ margin: 0, padding: 0, minHeight: '100vh' }}>
-        <AuthProvider>
-          {children}
-          <BottomNav />
-          <CookieConsent />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            {children}
+            <BottomNav />
+            <CookieConsent />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -24,7 +24,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   // Hide on public pages (landing pages, login, register)
-  const publicPaths = ['/free-audit', '/free-consultation', '/free-review', '/get-quote', '/web-design-belfast', '/website-not-working', '/yarn-digital', '/login', '/register'];
+  const publicPaths = ['/free-audit', '/free-consultation', '/free-review', '/get-quote', '/web-design-belfast', '/website-not-working', '/yarn-digital', '/seo-belfast', '/seo-audit', '/new-website', '/new-brand', '/shopify', '/brand', '/grow', '/web-design', '/login', '/register'];
   if (!isMobile || publicPaths.some(p => pathname?.startsWith(p))) return null;
 
   return (

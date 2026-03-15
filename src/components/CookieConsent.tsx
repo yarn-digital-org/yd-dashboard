@@ -9,7 +9,7 @@ export function CookieConsent() {
   const pathname = usePathname();
 
   // Hide on public landing pages
-  const isPublicPage = ['/free-audit'].some(p => pathname?.startsWith(p));
+  const isPublicPage = ['/free-audit', '/free-consultation', '/free-review', '/get-quote', '/web-design-belfast', '/website-not-working', '/yarn-digital', '/seo-belfast', '/seo-audit', '/new-website', '/new-brand', '/shopify', '/brand', '/grow', '/web-design', '/login', '/register'].some(p => pathname?.startsWith(p));
 
   useEffect(() => {
     if (isPublicPage) return;

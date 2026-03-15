@@ -260,3 +260,44 @@ select option {
     display: none !important;
   }
 }
+
+/* ==========================================
+   Landing pages: immune to dark mode overrides
+   These pages control their own light/dark sections
+   ========================================== */
+[data-theme="dark"] .landing-page .bg-white {
+  background-color: #FFFFFF !important;
+}
+[data-theme="dark"] .landing-page .bg-white * {
+  color: revert;
+}
+[data-theme="dark"] .landing-page input,
+[data-theme="dark"] .landing-page select,
+[data-theme="dark"] .landing-page textarea {
+  background-color: transparent !important;
+  border-color: revert;
+  color: revert;
+}
+[data-theme="dark"] .landing-page input::placeholder,
+[data-theme="dark"] .landing-page textarea::placeholder {
+  color: revert;
+}
+[data-theme="dark"] .landing-page .shadow-sm {
+  box-shadow: revert !important;
+}
+[data-theme="dark"] .landing-page .bg-gray-50,
+[data-theme="dark"] .landing-page .bg-gray-100 {
+  background-color: revert !important;
+}
+[data-theme="dark"] .landing-page .text-gray-900 {
+  color: revert !important;
+}
+[data-theme="dark"] .landing-page .text-gray-700 {
+  color: revert !important;
+}
+[data-theme="dark"] .landing-page .text-gray-600 {
+  color: revert !important;
+}
+[data-theme="dark"] .landing-page .text-gray-500 {
+  color: revert !important;
+}

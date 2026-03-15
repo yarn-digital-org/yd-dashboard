@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, requireDb } from '@/lib/api-middleware';
-import { generateInvoiceHtml, InvoicePdfData } from '@/lib/pdf-generator';
+import { generateInvoiceWithTemplate, InvoicePdfData, InvoiceTemplate } from '@/lib/pdf-generator';
 
 export async function GET(
   request: NextRequest,
@@ -53,7 +53,8 @@ export async function GET(
       currency: String(invoice.currency || '£'),
     };
 
-    const html = generateInvoiceHtml(pdfData);
+    const template = (invoice.template as InvoiceTemplate) || 'professional';
+    const html = generateInvoiceWithTemplate(pdfData, template);
 
     return new NextResponse(html, {
       headers: { 'Content-Type': 'text/html; charset=utf-8' },

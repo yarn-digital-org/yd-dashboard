@@ -12,6 +12,14 @@ interface GoogleCalendarStatus {
   hasRefreshToken?: boolean;
 }
 
+interface XeroStatus {
+  connected: boolean;
+  tenantName: string | null;
+  connectedAt: string | null;
+  tokenExpired?: boolean;
+  hasRefreshToken?: boolean;
+}
+
 interface Integration {
   id: string;
   name: string;
@@ -47,6 +55,14 @@ const staticIntegrations: Integration[] = [
     connected: false,
     comingSoon: true,
   },
+  {
+    id: 'resend',
+    name: 'Resend',
+    description: 'Send transactional and marketing emails',
+    icon: '📧',
+    connected: false,
+    comingSoon: true,
+  },
 ];
 
 // Separate component that uses useSearchParams
@@ -79,8 +95,10 @@ function NotificationHandler({
 
 function IntegrationsContent() {
   const [googleStatus, setGoogleStatus] = useState<GoogleCalendarStatus | null>(null);
+  const [xeroStatus, setXeroStatus] = useState<XeroStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [disconnecting, setDisconnecting] = useState(false);
+  const [disconnectingXero, setDisconnectingXero] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Fetch Google Calendar connection status
@@ -94,16 +112,48 @@ function IntegrationsContent() {
         }
       } catch (error) {
         console.error('Failed to fetch Google Calendar status:', error);
-      } finally {
-        setLoading(false);
       }
+      
+      // Fetch Xero status
+      try {
+        const xeroRes = await fetch('/api/integrations/xero/status');
+        if (xeroRes.ok) {
+          const xeroData = await xeroRes.json();
+          setXeroStatus(xeroData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch Xero status:', error);
+      }
+      
+      setLoading(false);
     }
     fetchStatus();
   }, []);
 
   const handleConnectGoogle = () => {
-    // Redirect to OAuth authorize endpoint
     window.location.href = '/api/auth/google/authorize';
+  };
+
+  const handleConnectXero = () => {
+    window.location.href = '/api/integrations/xero/authorize';
+  };
+
+  const handleDisconnectXero = async () => {
+    if (!confirm('Are you sure you want to disconnect Xero?')) return;
+    setDisconnectingXero(true);
+    try {
+      const res = await fetch('/api/integrations/xero/disconnect', { method: 'POST' });
+      if (res.ok) {
+        setXeroStatus({ connected: false, tenantName: null, connectedAt: null });
+        setNotification({ type: 'success', message: 'Xero disconnected successfully' });
+      } else {
+        setNotification({ type: 'error', message: 'Failed to disconnect Xero' });
+      }
+    } catch {
+      setNotification({ type: 'error', message: 'Failed to disconnect Xero' });
+    } finally {
+      setDisconnectingXero(false);
+    }
   };
 
   const handleDisconnectGoogle = async () => {
@@ -227,6 +277,55 @@ function IntegrationsContent() {
               <button
                 onClick={handleConnectGoogle}
                 className="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+              >
+                Connect
+                <ExternalLink className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Xero Integration */}
+          <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 flex items-center justify-center bg-gray-50 rounded-lg">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M5.5 7L9.5 12L5.5 17" stroke="#13B5EA" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M14.5 7L18.5 12L14.5 17" stroke="#13B5EA" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">Xero</h3>
+                <p className="text-sm text-gray-500">
+                  {xeroStatus?.connected && xeroStatus.tenantName
+                    ? `Connected to ${xeroStatus.tenantName}`
+                    : 'Sync invoices and payments with Xero'}
+                </p>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Checking...
+              </div>
+            ) : xeroStatus?.connected ? (
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1 text-sm text-green-600">
+                  <Check className="h-4 w-4" />
+                  Connected
+                </span>
+                <button
+                  onClick={handleDisconnectXero}
+                  disabled={disconnectingXero}
+                  className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {disconnectingXero ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Disconnect'}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleConnectXero}
+                className="px-4 py-2 text-sm font-medium bg-[#13B5EA] text-white rounded-lg hover:bg-[#0fa0d0] flex items-center gap-2"
               >
                 Connect
                 <ExternalLink className="h-4 w-4" />

@@ -19,7 +19,11 @@ import {
   DollarSign,
   Loader2,
   Download,
-  ExternalLink
+  ExternalLink,
+  RefreshCw,
+  CheckCircle2,
+  AlertCircle,
+  Link2
 } from 'lucide-react';
 
 interface InvoiceItem {
@@ -42,6 +46,19 @@ interface Invoice {
   dueDate: string;
   notes?: string;
   createdAt: string;
+  // Xero fields
+  xeroInvoiceId?: string;
+  xeroStatus?: string; // DRAFT, SUBMITTED, AUTHORISED, PAID, VOIDED
+  xeroSyncedAt?: string;
+  template?: string;
+}
+
+interface XeroSummary {
+  connected: boolean;
+  tenantName: string | null;
+  totalSynced: number;
+  totalPaid: number;
+  lastSyncAt: string | null;
 }
 
 const STATUS_OPTIONS = [
@@ -81,6 +98,7 @@ export default function InvoicesPage() {
     }
     if (user) {
       fetchInvoices();
+      fetchXeroSummary();
     }
   }, [user, authLoading, router]);
 
@@ -98,7 +116,14 @@ export default function InvoicesPage() {
 
       const res = await fetch(`/api/invoices?${params.toString()}`);
       const data = await res.json();
-      setInvoices(data.invoices || []);
+      const fetchedInvoices = data.invoices || [];
+      setInvoices(fetchedInvoices);
+      // Update Xero summary counts from fresh invoice data
+      setXeroSummary(prev => prev ? {
+        ...prev,
+        totalSynced: fetchedInvoices.filter((inv: Invoice) => inv.xeroInvoiceId).length,
+        totalPaid: fetchedInvoices.filter((inv: Invoice) => inv.xeroStatus === 'PAID').length,
+      } : prev);
     } catch (err) {
       console.error('Failed to fetch invoices:', err);
     } finally {
@@ -207,6 +232,30 @@ export default function InvoicesPage() {
 
   const [sendingInvoiceId, setSendingInvoiceId] = useState<string | null>(null);
   const [syncingToXero, setSyncingToXero] = useState<string | null>(null);
+  const [pullingFromXero, setPullingFromXero] = useState(false);
+  const [xeroSummary, setXeroSummary] = useState<XeroSummary | null>(null);
+
+  const fetchXeroSummary = async () => {
+    try {
+      const [statusRes] = await Promise.all([
+        fetch('/api/integrations/xero/status'),
+      ]);
+      if (!statusRes.ok) return;
+      const status = await statusRes.json();
+      // Count synced invoices from current list
+      const synced = invoices.filter(inv => inv.xeroInvoiceId).length;
+      const paid = invoices.filter(inv => inv.xeroStatus === 'PAID').length;
+      setXeroSummary({
+        connected: status.connected,
+        tenantName: status.tenantName,
+        totalSynced: synced,
+        totalPaid: paid,
+        lastSyncAt: null,
+      });
+    } catch {
+      // Xero not configured — no banner
+    }
+  };
 
   const handleSyncToXero = async (id: string) => {
     if (!confirm('Sync this invoice to Xero?')) return;
@@ -222,12 +271,28 @@ export default function InvoicesPage() {
         alert(data.error || 'Failed to sync to Xero');
         return;
       }
-      alert('Invoice synced to Xero successfully');
       fetchInvoices();
     } catch {
       alert('Failed to sync to Xero');
     } finally {
       setSyncingToXero(null);
+    }
+  };
+
+  const handlePullFromXero = async () => {
+    setPullingFromXero(true);
+    try {
+      const response = await fetch('/api/integrations/xero/pull', { method: 'POST' });
+      const data = await response.json();
+      if (!response.ok) {
+        alert(data.error || 'Failed to pull from Xero');
+        return;
+      }
+      fetchInvoices();
+    } catch {
+      alert('Failed to pull payment status from Xero');
+    } finally {
+      setPullingFromXero(false);
     }
   };
 
@@ -344,6 +409,45 @@ export default function InvoicesPage() {
             Create Invoice
           </button>
         </div>
+
+        {/* Xero Summary Card */}
+        {xeroSummary && xeroSummary.connected && (
+          <div className="bg-[#13B5EA]/5 border border-[#13B5EA]/20 rounded-xl p-4 mb-6 flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2 text-[#13B5EA]">
+              <Link2 size={18} />
+              <span className="font-semibold text-sm text-gray-900">Xero</span>
+              {xeroSummary.tenantName && (
+                <span className="text-xs text-gray-500">— {xeroSummary.tenantName}</span>
+              )}
+              <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+                <CheckCircle2 size={12} />
+                Connected
+              </span>
+            </div>
+            <div className="flex items-center gap-6 text-sm ml-2">
+              <div className="text-center">
+                <div className="font-bold text-gray-900">{xeroSummary.totalSynced}</div>
+                <div className="text-xs text-gray-500">Synced</div>
+              </div>
+              <div className="text-center">
+                <div className="font-bold text-gray-900">{xeroSummary.totalPaid}</div>
+                <div className="text-xs text-gray-500">Paid in Xero</div>
+              </div>
+              <div className="text-center">
+                <div className="font-bold text-gray-900">{invoices.length - xeroSummary.totalSynced}</div>
+                <div className="text-xs text-gray-500">Not Synced</div>
+              </div>
+            </div>
+            <button
+              onClick={handlePullFromXero}
+              disabled={pullingFromXero}
+              className="ml-auto flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-[#13B5EA] border border-[#13B5EA]/30 rounded-lg hover:bg-[#13B5EA]/10 disabled:opacity-50 transition"
+            >
+              <RefreshCw size={13} className={pullingFromXero ? 'animate-spin' : ''} />
+              {pullingFromXero ? 'Pulling...' : 'Pull Status from Xero'}
+            </button>
+          </div>
+        )}
 
         {/* Search and Filters */}
         <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-200">
@@ -462,11 +566,11 @@ export default function InvoicesPage() {
                           handleSyncToXero(invoice.id);
                           setActiveMenu(null);
                         }}
-                        disabled={syncingToXero === invoice.id || !!(invoice as unknown as Record<string, unknown>).xeroInvoiceId}
+                        disabled={syncingToXero === invoice.id || !!invoice.xeroInvoiceId}
                         className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full disabled:opacity-50"
                       >
                         <ExternalLink size={14} />
-                        {(invoice as unknown as Record<string, unknown>).xeroInvoiceId ? 'Synced to Xero ✓' : syncingToXero === invoice.id ? 'Syncing...' : 'Sync to Xero'}
+                        {invoice.xeroInvoiceId ? 'Synced to Xero ✓' : syncingToXero === invoice.id ? 'Syncing...' : 'Sync to Xero'}
                       </button>
                       <button
                         onClick={() => {
@@ -515,11 +619,28 @@ export default function InvoicesPage() {
                   </div>
                 </div>
 
-                {/* Status Badge */}
+                {/* Status Badge + Xero Badge */}
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusStyle(invoice.status)}`}>
                     {getStatusLabel(invoice.status)}
                   </span>
+                  {invoice.xeroInvoiceId ? (
+                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${
+                      invoice.xeroStatus === 'PAID'
+                        ? 'bg-green-50 text-green-700 border-green-200'
+                        : invoice.xeroStatus === 'VOIDED'
+                        ? 'bg-red-50 text-red-700 border-red-200'
+                        : 'bg-[#13B5EA]/10 text-[#13B5EA] border-[#13B5EA]/20'
+                    }`}>
+                      <CheckCircle2 size={10} />
+                      Xero{invoice.xeroStatus ? ` · ${invoice.xeroStatus}` : ' · Synced'}
+                    </span>
+                  ) : xeroSummary?.connected ? (
+                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
+                      <AlertCircle size={10} />
+                      Not in Xero
+                    </span>
+                  ) : null}
                 </div>
 
                 {/* Created Date */}

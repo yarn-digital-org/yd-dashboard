@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useIsMobile } from '@/hooks/useIsMobile';
@@ -22,7 +22,11 @@ import {
   FileEdit,
   Archive,
   FolderOpen,
-  ArrowLeft
+  ArrowLeft,
+  Plus,
+  Upload,
+  X,
+  Loader2,
 } from 'lucide-react';
 
 // Types
@@ -93,6 +97,69 @@ export default function DocumentsPage() {
 
   // Viewer state
   const [viewingDocument, setViewingDocument] = useState<Document | null>(null);
+
+  // Upload / create state
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadSaving, setUploadSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadForm, setUploadForm] = useState({
+    title: '',
+    category: '',
+    content: '',
+    status: 'draft' as DocumentStatus,
+  });
+
+  const handleFileDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) readFileIntoForm(file);
+  }, []);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) readFileIntoForm(file);
+  };
+
+  const readFileIntoForm = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const text = evt.target?.result as string;
+      setUploadForm(prev => ({
+        ...prev,
+        title: prev.title || file.name.replace(/\.[^.]+$/, ''),
+        content: text,
+      }));
+    };
+    reader.readAsText(file);
+    setShowUploadModal(true);
+  };
+
+  const handleUploadSubmit = async () => {
+    if (!uploadForm.title || !uploadForm.content) return;
+    setUploadSaving(true);
+    try {
+      const res = await fetch('/api/documents/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: uploadForm.title,
+          content: uploadForm.content,
+          agent: 'Bolt',
+          category: uploadForm.category || 'General',
+          status: uploadForm.status,
+        }),
+      });
+      if (res.ok) {
+        setShowUploadModal(false);
+        setUploadForm({ title: '', category: '', content: '', status: 'draft' });
+        fetchDocuments();
+      }
+    } finally {
+      setUploadSaving(false);
+    }
+  };
 
   // Auth check
   useEffect(() => {
@@ -307,30 +374,49 @@ export default function DocumentsPage() {
                 Review all deliverables created by the Yarn Digital AI team
               </p>
             </div>
-            <button
-              onClick={fetchDocuments}
-              style={{
-                backgroundColor: '#FF3300',
-                color: '#FFFFFF',
-                padding: '0.625rem 1rem',
-                borderRadius: '0.5rem',
-                fontWeight: 500,
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                fontSize: '0.875rem',
-                transition: 'background-color 0.15s',
-                width: isMobile ? '100%' : 'auto',
-                justifyContent: 'center',
-              }}
-              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#E62E00')}
-              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#FF3300')}
-            >
-              <RefreshCw size={18} />
-              Refresh
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
+              <button
+                onClick={() => { setUploadForm({ title: '', category: '', content: '', status: 'draft' }); setShowUploadModal(true); }}
+                style={{
+                  backgroundColor: '#FF3300',
+                  color: '#FFFFFF',
+                  padding: '0.625rem 1rem',
+                  borderRadius: '0.5rem',
+                  fontWeight: 500,
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.875rem',
+                  flex: isMobile ? 1 : undefined,
+                  justifyContent: 'center',
+                }}
+              >
+                <Plus size={18} />
+                New Document
+              </button>
+              <button
+                onClick={fetchDocuments}
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  color: '#374151',
+                  padding: '0.625rem 1rem',
+                  borderRadius: '0.5rem',
+                  fontWeight: 500,
+                  border: '1px solid #E5E7EB',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.875rem',
+                  justifyContent: 'center',
+                }}
+              >
+                <RefreshCw size={18} />
+                Refresh
+              </button>
+            </div>
           </div>
         </div>
 
@@ -352,6 +438,40 @@ export default function DocumentsPage() {
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#6B7280' }}>{stats.draft}</div>
             <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>Drafts</div>
           </div>
+        </div>
+
+        {/* Drag-drop zone */}
+        <div
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={handleFileDrop}
+          onClick={() => fileInputRef.current?.click()}
+          style={{
+            border: `2px dashed ${isDragging ? '#FF3300' : '#E5E7EB'}`,
+            borderRadius: '0.75rem',
+            padding: '1.25rem',
+            marginBottom: '1rem',
+            textAlign: 'center',
+            cursor: 'pointer',
+            backgroundColor: isDragging ? '#FFF5F0' : '#FAFAFA',
+            transition: 'all 0.15s',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.75rem',
+            color: isDragging ? '#FF3300' : '#9CA3AF',
+            fontSize: '0.875rem',
+          }}
+        >
+          <Upload size={18} />
+          <span>Drag &amp; drop a file here, or <span style={{ color: '#FF3300', fontWeight: 500 }}>click to upload</span> (.md, .txt, .csv)</span>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".md,.txt,.csv,.json"
+            style={{ display: 'none' }}
+            onChange={handleFileSelect}
+          />
         </div>
 
         {/* Search and Filters */}
@@ -730,6 +850,90 @@ export default function DocumentsPage() {
             </div>
           )}
         </div>
+      {/* Upload / New Document Modal */}
+      {showUploadModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}
+          onClick={() => setShowUploadModal(false)}
+        >
+          <div
+            style={{ backgroundColor: '#FFFFFF', borderRadius: '0.75rem', width: '100%', maxWidth: '560px', maxHeight: '90vh', overflowY: 'auto' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem 1.5rem', borderBottom: '1px solid #E5E7EB' }}>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#111827', margin: 0 }}>New Document</h2>
+              <button onClick={() => setShowUploadModal(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '0.25rem', color: '#6B7280' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal body */}
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.375rem' }}>Title *</label>
+                <input
+                  value={uploadForm.title}
+                  onChange={(e) => setUploadForm(p => ({ ...p, title: e.target.value }))}
+                  placeholder="Document title"
+                  style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #E5E7EB', borderRadius: '0.5rem', fontSize: '0.875rem', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.375rem' }}>Category</label>
+                  <input
+                    value={uploadForm.category}
+                    onChange={(e) => setUploadForm(p => ({ ...p, category: e.target.value }))}
+                    placeholder="e.g. Strategy, Research"
+                    style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #E5E7EB', borderRadius: '0.5rem', fontSize: '0.875rem', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.375rem' }}>Status</label>
+                  <select
+                    value={uploadForm.status}
+                    onChange={(e) => setUploadForm(p => ({ ...p, status: e.target.value as DocumentStatus }))}
+                    style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #E5E7EB', borderRadius: '0.5rem', fontSize: '0.875rem', outline: 'none', backgroundColor: '#FFFFFF', boxSizing: 'border-box' }}
+                  >
+                    {STATUS_OPTIONS.map(s => <option key={s} value={s}>{STATUS_CONFIG[s].label}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.375rem' }}>Content *</label>
+                <textarea
+                  value={uploadForm.content}
+                  onChange={(e) => setUploadForm(p => ({ ...p, content: e.target.value }))}
+                  placeholder="Paste or type document content (markdown supported)…"
+                  rows={12}
+                  style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #E5E7EB', borderRadius: '0.5rem', fontSize: '0.875rem', outline: 'none', resize: 'vertical', fontFamily: 'monospace', boxSizing: 'border-box' }}
+                />
+              </div>
+            </div>
+
+            {/* Modal footer */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', padding: '1rem 1.5rem', borderTop: '1px solid #F3F4F6' }}>
+              <button
+                onClick={() => setShowUploadModal(false)}
+                style={{ padding: '0.5rem 1rem', border: '1px solid #E5E7EB', borderRadius: '0.5rem', fontSize: '0.875rem', cursor: 'pointer', backgroundColor: '#FFFFFF', color: '#374151' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUploadSubmit}
+                disabled={!uploadForm.title || !uploadForm.content || uploadSaving}
+                style={{ padding: '0.5rem 1rem', border: 'none', borderRadius: '0.5rem', fontSize: '0.875rem', cursor: 'pointer', backgroundColor: '#FF3300', color: '#FFFFFF', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: (!uploadForm.title || !uploadForm.content || uploadSaving) ? 0.5 : 1 }}
+              >
+                {uploadSaving && <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />}
+                Save Document
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </main>
     </div>
   );

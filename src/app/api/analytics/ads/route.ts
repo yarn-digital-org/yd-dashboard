@@ -178,6 +178,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Ads analytics error:', error);
-    return NextResponse.json({ error: 'Failed to fetch ad analytics' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: `Failed to fetch ad analytics: ${message}` }, { status: 500 });
   }
 }

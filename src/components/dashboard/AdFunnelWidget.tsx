@@ -43,6 +43,7 @@ const RANGES = [
 export function AdFunnelWidget() {
   const [data, setData] = useState<AdData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [range, setRange] = useState('7d');
 
   useEffect(() => {
@@ -51,13 +52,17 @@ export function AdFunnelWidget() {
 
   const fetchData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch(`/api/analytics/ads?range=${range}`);
+      const json = await res.json();
       if (res.ok) {
-        setData(await res.json());
+        setData(json);
+      } else {
+        setError(json.error || 'Failed to load');
       }
     } catch {
-      // Silent fail
+      setError('Network error');
     } finally {
       setLoading(false);
     }
@@ -109,7 +114,7 @@ export function AdFunnelWidget() {
         </div>
       ) : !data ? (
         <div style={{ padding: '2rem', textAlign: 'center', color: '#9CA3AF', fontSize: '0.875rem' }}>
-          Failed to load ad data
+          {error || 'Failed to load ad data'}
         </div>
       ) : !data.configured ? (
         <div style={{ padding: '1.5rem', textAlign: 'center', color: '#9CA3AF', fontSize: '0.875rem', backgroundColor: '#F9FAFB', borderRadius: '0.5rem' }}>

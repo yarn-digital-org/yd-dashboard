@@ -185,12 +185,12 @@ export default function FreeAuditPage() {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Name *</label>
-                          <input type="text" required placeholder="Jonny Davison" className={inputClass}
+                          <input type="text" required placeholder="Name" className={inputClass}
                             value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
                         </div>
                         <div>
                           <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Business *</label>
-                          <input type="text" required placeholder="Your Business Ltd" className={inputClass}
+                          <input type="text" required placeholder="Business Name" className={inputClass}
                             value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })} />
                         </div>
                       </div>
@@ -204,12 +204,12 @@ export default function FreeAuditPage() {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Email *</label>
-                          <input type="email" required placeholder="you@business.co.uk" className={inputClass}
+                          <input type="email" required placeholder="Email Address" className={inputClass}
                             value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
                         </div>
                         <div>
-                          <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Phone</label>
-                          <input type="tel" placeholder="028 9000 0000" className={inputClass}
+                          <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Phone *</label>
+                          <input type="tel" required placeholder="Phone Number" className={inputClass}
                             value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
                         </div>
                       </div>

@@ -3,9 +3,7 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { ArrowRight, Loader2, Check, ArrowDown, Menu } from 'lucide-react';
 import Image from 'next/image';
-import { Playfair_Display } from 'next/font/google';
 
-const playfair = Playfair_Display({ subsets: ['latin'], weight: ['400', '500', '600'] });
 
 // ============================================
 // Meta Pixel + UTM
@@ -126,7 +124,7 @@ export default function FreeAuditPage() {
             {/* Content pinned to bottom-left like main site */}
             <div className="max-w-2xl">
               <h1
-                className={`text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-medium text-white leading-[1.02] mb-6 ${playfair.className}`}
+                className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-medium text-white leading-[1.02] mb-6"
                 style={{ letterSpacing: '-0.03em' }}
               >
                 Your Website<br />

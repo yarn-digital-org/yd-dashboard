@@ -15,7 +15,7 @@
     },
     {
       "path": "/api/cron/automation-triggers",
-      "schedule": "0 * * * *"
+      "schedule": "0 6 * * *"
     },
     {
       "path": "/api/cron/drive-sync",

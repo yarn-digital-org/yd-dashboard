@@ -24,6 +24,8 @@ import {
   ChevronDown,
   Clock,
   Hash,
+  Sparkles,
+  Loader2,
 } from 'lucide-react';
 
 interface AutomationTrigger {
@@ -83,6 +85,10 @@ export default function AutomationsPage() {
   const [editingAutomation, setEditingAutomation] = useState<Automation | null>(null);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [usingTemplate, setUsingTemplate] = useState<string | null>(null);
+  const [templateCategory, setTemplateCategory] = useState<string>('all');
 
   const [formData, setFormData] = useState<{
     name: string;
@@ -103,6 +109,7 @@ export default function AutomationsPage() {
     }
     if (user) {
       fetchAutomations();
+      fetch('/api/automations/templates').then(r => r.json()).then(d => setTemplates(d.data || [])).catch(() => {});
     }
   }, [user, authLoading, router]);
 
@@ -115,6 +122,23 @@ export default function AutomationsPage() {
       console.error('Failed to fetch automations:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUseTemplate = async (templateId: string) => {
+    setUsingTemplate(templateId);
+    try {
+      const res = await fetch('/api/automations/templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ templateId }),
+      });
+      if (res.ok) {
+        setShowTemplates(false);
+        fetchAutomations();
+      }
+    } finally {
+      setUsingTemplate(null);
     }
   };
 
@@ -269,17 +293,26 @@ export default function AutomationsPage() {
               {automations.length} {automations.length === 1 ? 'automation' : 'automations'}
             </p>
           </div>
-          <button
-            onClick={() => {
-              setEditingAutomation(null);
-              resetForm();
-              setShowModal(true);
-            }}
-            className="flex items-center justify-center gap-2 bg-[#FF3300] hover:bg-[#E62E00] text-white px-4 py-2 min-h-[44px] rounded-lg font-medium transition w-full sm:w-auto"
-          >
-            <Plus size={18} />
-            Create Automation
-          </button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => setShowTemplates(true)}
+              className="flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 min-h-[44px] rounded-lg font-medium transition flex-1 sm:flex-none"
+            >
+              <Sparkles size={18} className="text-purple-500" />
+              Templates
+            </button>
+            <button
+              onClick={() => {
+                setEditingAutomation(null);
+                resetForm();
+                setShowModal(true);
+              }}
+              className="flex items-center justify-center gap-2 bg-[#FF3300] hover:bg-[#E62E00] text-white px-4 py-2 min-h-[44px] rounded-lg font-medium transition flex-1 sm:flex-none"
+            >
+              <Plus size={18} />
+              Create
+            </button>
+          </div>
         </div>
 
         {/* Automations List */}
@@ -439,6 +472,76 @@ export default function AutomationsPage() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Templates Modal */}
+        {showTemplates && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowTemplates(false)}>
+            <div className="bg-white rounded-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center p-6 border-b border-gray-200">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <Sparkles size={20} className="text-purple-500" />
+                    Automation Templates
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-0.5">Pick a template to get started — you can customise it after.</p>
+                </div>
+                <button onClick={() => setShowTemplates(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                  <X size={20} className="text-gray-400" />
+                </button>
+              </div>
+
+              {/* Category filter */}
+              <div className="flex gap-2 p-4 border-b border-gray-100 overflow-x-auto">
+                {['all', 'leads', 'contacts', 'invoices', 'forms', 'bookings'].map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setTemplateCategory(cat)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap capitalize transition ${
+                      templateCategory === cat
+                        ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {cat === 'all' ? 'All' : cat}
+                  </button>
+                ))}
+              </div>
+
+              <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {templates
+                  .filter(t => templateCategory === 'all' || t.category === templateCategory)
+                  .map(t => (
+                    <div key={t.id} className="border border-gray-200 rounded-xl p-4 hover:border-purple-300 hover:bg-purple-50/30 transition group">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xl">{t.icon}</span>
+                            <span className="font-semibold text-sm text-gray-900">{t.name}</span>
+                          </div>
+                          <p className="text-xs text-gray-500 mb-3">{t.description}</p>
+                          <div className="flex flex-wrap gap-1">
+                            <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs capitalize">{t.trigger.type.replace(/_/g, ' ')}</span>
+                            <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs">{t.actions.length} action{t.actions.length > 1 ? 's' : ''}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleUseTemplate(t.id)}
+                        disabled={usingTemplate === t.id}
+                        className="mt-3 w-full py-1.5 text-xs font-medium bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center justify-center gap-1.5 disabled:opacity-50 transition"
+                      >
+                        {usingTemplate === t.id ? (
+                          <><Loader2 size={12} className="animate-spin" /> Adding…</>
+                        ) : (
+                          <>Use Template</>
+                        )}
+                      </button>
+                    </div>
+                  ))}
+              </div>
+            </div>
           </div>
         )}
 

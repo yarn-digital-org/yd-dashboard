@@ -106,11 +106,11 @@ export function generateCSV(headers: string[], rows: (string | number | null | u
  * Common contact field mappings for auto-detection
  */
 export const FIELD_MAPPINGS: Record<string, string[]> = {
-  firstName: ['first name', 'firstname', 'first', 'given name', 'givenname', 'fname'],
-  lastName: ['last name', 'lastname', 'last', 'surname', 'family name', 'familyname', 'lname'],
-  email: ['email', 'email address', 'e-mail', 'mail'],
-  phone: ['phone', 'telephone', 'tel', 'mobile', 'cell', 'phone number', 'contact number'],
-  company: ['company', 'organization', 'organisation', 'business', 'employer', 'company name'],
+  firstName: ['first name', 'firstname', 'first', 'given name', 'givenname', 'fname', 'name prefix'],
+  lastName: ['last name', 'lastname', 'last', 'surname', 'family name', 'familyname', 'lname', 'family name yomi'],
+  email: ['email', 'email address', 'e-mail', 'mail', 'emailaddress'],
+  phone: ['phone', 'telephone', 'tel', 'mobile', 'cell', 'phone number', 'contact number', 'phone 1 - value', 'phone 1 value'],
+  company: ['company', 'organization', 'organisation', 'business', 'employer', 'company name', 'organization 1 - name', 'organization name'],
   jobTitle: ['job title', 'jobtitle', 'title', 'position', 'role', 'job'],
   website: ['website', 'web', 'url', 'site', 'homepage'],
   street: ['street', 'address', 'address line 1', 'street address', 'address1'],

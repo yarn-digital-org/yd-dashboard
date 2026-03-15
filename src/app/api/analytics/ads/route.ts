@@ -96,12 +96,22 @@ export async function GET(request: NextRequest) {
 
     // Fetch campaign insights from Meta Marketing API
     const fields = 'campaign_name,impressions,reach,clicks,spend,cpc,ctr,actions';
+    
+    // Build URL with appsecret_proof if META_APP_SECRET is set
+    let authParams = `access_token=${accessToken}`;
+    const appSecret = process.env.META_APP_SECRET;
+    if (appSecret) {
+      const crypto = await import('crypto');
+      const proof = crypto.createHmac('sha256', appSecret).update(accessToken).digest('hex');
+      authParams += `&appsecret_proof=${proof}`;
+    }
+    
     const url = `https://graph.facebook.com/v19.0/${adAccountId}/insights?` +
       `fields=${fields}` +
       `&time_range={"since":"${since}","until":"${until}"}` +
       `&level=campaign` +
       `&limit=50` +
-      `&access_token=${accessToken}`;
+      `&${authParams}`;
 
     const res = await fetch(url);
     const data = await res.json();

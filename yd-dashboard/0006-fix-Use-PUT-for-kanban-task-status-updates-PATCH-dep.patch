@@ -1,0 +1,26 @@
+From e5902db8d94d27083f00501bd96e96ac47d9821d Mon Sep 17 00:00:00 2001
+From: Yarn Digital <hello@yarndigital.co.uk>
+Date: Wed, 11 Mar 2026 22:14:36 +0000
+Subject: [PATCH 6/7] fix: Use PUT for kanban task status updates (PATCH
+ deploying)
+
+---
+ yd-dashboard/pages/api/agents/[agentId]/tasks.js | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/yd-dashboard/pages/api/agents/[agentId]/tasks.js b/yd-dashboard/pages/api/agents/[agentId]/tasks.js
+index 5287a27..8d6d423 100644
+--- a/yd-dashboard/pages/api/agents/[agentId]/tasks.js
++++ b/yd-dashboard/pages/api/agents/[agentId]/tasks.js
+@@ -60,7 +60,7 @@ export default async function handler(req, res) {
+ 
+     try {
+       const patchRes = await fetch(`https://kanban-project-ten-alpha.vercel.app/api/tasks/${taskId}`, {
+-        method: 'PATCH',
++        method: 'PUT',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ status, assignee: agentName }),
+       });
+-- 
+2.43.0
+

@@ -16,42 +16,52 @@ interface FunnelStage {
   leads: number;
 }
 
+interface CampaignRow {
+  name: string;
+  platform: 'meta' | 'google';
+  stage: string;
+  impressions: number;
+  clicks: number;
+  spend: number;
+  cpc: number;
+  ctr: number;
+  leads: number;
+  landingPageViews: number;
+}
+
 interface AdData {
   configured: boolean;
-  message?: string;
-  funnel: {
-    tofu: FunnelStage;
-    mofu: FunnelStage;
-    bofu: FunnelStage;
+  platforms: {
+    meta: { configured: boolean; error?: string };
+    google: { configured: boolean; error?: string };
   };
-  totals: {
-    spend: number;
-    clicks: number;
-    leads: number;
-    cpc: number;
-    cpl: number;
-  };
+  funnel: Record<string, FunnelStage>;
+  metaFunnel: Record<string, FunnelStage>;
+  googleFunnel: Record<string, FunnelStage>;
+  campaigns: CampaignRow[];
+  totals: { spend: number; clicks: number; leads: number; cpc: number; cpl: number };
   range: string;
 }
 
 const RANGES = [
   { value: '7d', label: '7 Days' },
   { value: '30d', label: '30 Days' },
-  { value: 'mtd', label: 'Month to Date' },
+  { value: 'mtd', label: 'MTD' },
 ];
 
-const METRICS = ['impressions', 'clicks', 'spend', 'cpc', 'ctr', 'landingPageViews', 'leads'] as const;
+const PLATFORMS = [
+  { value: 'combined', label: 'Combined' },
+  { value: 'meta', label: 'Meta' },
+  { value: 'google', label: 'Google' },
+];
 
-type MetricKey = typeof METRICS[number];
+const STAGE_KEYS = ['tofu', 'mofu', 'bofu'] as const;
 
+const METRIC_KEYS = ['impressions', 'clicks', 'spend', 'cpc', 'ctr', 'landingPageViews', 'leads'] as const;
+type MetricKey = typeof METRIC_KEYS[number];
 const METRIC_LABELS: Record<MetricKey, string> = {
-  impressions: 'Impressions',
-  clicks: 'Clicks',
-  spend: 'Spend',
-  cpc: 'CPC',
-  ctr: 'CTR',
-  landingPageViews: 'LP Views',
-  leads: 'Leads',
+  impressions: 'Impressions', clicks: 'Clicks', spend: 'Spend',
+  cpc: 'CPC', ctr: 'CTR', landingPageViews: 'LP Views', leads: 'Leads',
 };
 
 export function AdFunnelWidget() {
@@ -59,10 +69,10 @@ export function AdFunnelWidget() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [range, setRange] = useState('7d');
+  const [platform, setPlatform] = useState('combined');
+  const [showCampaigns, setShowCampaigns] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, [range]);
+  useEffect(() => { fetchData(); }, [range]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -70,72 +80,99 @@ export function AdFunnelWidget() {
     try {
       const res = await fetch(`/api/analytics/ads?range=${range}`);
       const json = await res.json();
-      if (res.ok) {
-        setData(json);
-      } else {
-        setError(json.error || 'Failed to load');
-      }
-    } catch {
-      setError('Network error');
-    } finally {
-      setLoading(false);
-    }
+      if (res.ok) setData(json);
+      else setError(json.error || 'Failed to load');
+    } catch { setError('Network error'); }
+    finally { setLoading(false); }
   };
 
   const fmt = (n: number) => n.toLocaleString();
   const fmtCurrency = (n: number) => `£${n.toFixed(2)}`;
   const fmtPct = (n: number) => `${n.toFixed(2)}%`;
-
   const formatMetric = (key: MetricKey, val: number): string => {
     if (key === 'spend' || key === 'cpc') return fmtCurrency(val);
     if (key === 'ctr') return fmtPct(val);
     return fmt(val);
   };
 
-  const stages = data ? [
-    { key: 'tofu', ...data.funnel.tofu },
-    { key: 'mofu', ...data.funnel.mofu },
-    { key: 'bofu', ...data.funnel.bofu },
-  ] : [];
+  const getFunnel = (): Record<string, FunnelStage> => {
+    if (!data) return {};
+    if (platform === 'meta') return data.metaFunnel;
+    if (platform === 'google') return data.googleFunnel;
+    return data.funnel;
+  };
 
-  // Find max values for bar chart scaling
+  const funnel = getFunnel();
+  const stages = STAGE_KEYS.map(k => ({ key: k, ...(funnel[k] || { label: k, color: '#999', impressions: 0, reach: 0, clicks: 0, spend: 0, cpc: 0, ctr: 0, landingPageViews: 0, leads: 0 }) }));
+
   const maxImpressions = Math.max(...stages.map(s => s.impressions), 1);
   const maxClicks = Math.max(...stages.map(s => s.clicks), 1);
-  const maxSpend = Math.max(...stages.map(s => s.spend), 1);
+
+  const filteredCampaigns = data?.campaigns.filter(c => platform === 'combined' || c.platform === platform) || [];
+
+  // Calculate totals for current platform view
+  const viewTotals = {
+    spend: stages.reduce((s, st) => s + st.spend, 0),
+    clicks: stages.reduce((s, st) => s + st.clicks, 0),
+    leads: stages.reduce((s, st) => s + st.leads, 0),
+    impressions: stages.reduce((s, st) => s + st.impressions, 0),
+    lpViews: stages.reduce((s, st) => s + st.landingPageViews, 0),
+  };
+  const viewCpc = viewTotals.clicks > 0 ? viewTotals.spend / viewTotals.clicks : 0;
+  const viewCtr = viewTotals.impressions > 0 ? (viewTotals.clicks / viewTotals.impressions) * 100 : 0;
+
+  const pillStyle = (active: boolean) => ({
+    padding: '0.3rem 0.625rem',
+    fontSize: '0.6875rem',
+    fontWeight: 500 as const,
+    borderRadius: '6px',
+    border: 'none',
+    cursor: 'pointer' as const,
+    backgroundColor: active ? '#FF3300' : '#F3F4F6',
+    color: active ? '#fff' : '#6B7280',
+    transition: 'all 0.15s',
+  });
+
+  const thStyle = {
+    padding: '0.625rem 0.75rem',
+    textAlign: 'right' as const,
+    fontWeight: 500 as const,
+    color: '#6B7280',
+    fontSize: '0.6875rem',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
+  };
+
+  const tdStyle = {
+    padding: '0.625rem 0.75rem',
+    textAlign: 'right' as const,
+    fontWeight: 600 as const,
+    color: '#374151',
+    fontSize: '0.8125rem',
+    fontVariantNumeric: 'tabular-nums' as const,
+  };
 
   return (
-    <div style={{
-      backgroundColor: '#fff',
-      borderRadius: '0.75rem',
-      border: '1px solid #E5E7EB',
-      overflow: 'hidden',
-    }}>
+    <div style={{ backgroundColor: '#fff', borderRadius: '0.75rem', border: '1px solid #E5E7EB', overflow: 'hidden' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem 1.5rem', borderBottom: '1px solid #F3F4F6' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.25rem', borderBottom: '1px solid #F3F4F6', flexWrap: 'wrap', gap: '0.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <TrendingUp size={20} style={{ color: '#FF3300' }} />
-          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: '#111827' }}>Ad Funnel Overview</h3>
+          <TrendingUp size={18} style={{ color: '#FF3300' }} />
+          <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 600, color: '#111827' }}>Ad Funnel Overview</h3>
         </div>
-        <div style={{ display: 'flex', gap: '0.25rem' }}>
-          {RANGES.map((r) => (
-            <button
-              key={r.value}
-              onClick={() => setRange(r.value)}
-              style={{
-                padding: '0.375rem 0.75rem',
-                fontSize: '0.75rem',
-                fontWeight: 500,
-                borderRadius: '6px',
-                border: 'none',
-                cursor: 'pointer',
-                backgroundColor: range === r.value ? '#FF3300' : '#F3F4F6',
-                color: range === r.value ? '#fff' : '#6B7280',
-                transition: 'all 0.15s',
-              }}
-            >
-              {r.label}
-            </button>
-          ))}
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          {/* Platform toggle */}
+          <div style={{ display: 'flex', gap: '2px', backgroundColor: '#F3F4F6', borderRadius: '8px', padding: '2px' }}>
+            {PLATFORMS.map(p => (
+              <button key={p.value} onClick={() => setPlatform(p.value)} style={pillStyle(platform === p.value)}>{p.label}</button>
+            ))}
+          </div>
+          {/* Range toggle */}
+          <div style={{ display: 'flex', gap: '2px', backgroundColor: '#F3F4F6', borderRadius: '8px', padding: '2px' }}>
+            {RANGES.map(r => (
+              <button key={r.value} onClick={() => setRange(r.value)} style={pillStyle(range === r.value)}>{r.label}</button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -144,173 +181,187 @@ export function AdFunnelWidget() {
           <Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} />
         </div>
       ) : !data ? (
-        <div style={{ padding: '2rem', textAlign: 'center', color: '#9CA3AF', fontSize: '0.875rem' }}>
-          {error || 'Failed to load ad data'}
-        </div>
+        <div style={{ padding: '2rem', textAlign: 'center', color: '#9CA3AF', fontSize: '0.875rem' }}>{error || 'Failed to load'}</div>
       ) : !data.configured ? (
         <div style={{ padding: '2rem', textAlign: 'center', color: '#9CA3AF', fontSize: '0.875rem', margin: '1rem', backgroundColor: '#F9FAFB', borderRadius: '0.5rem' }}>
-          <p style={{ margin: '0 0 0.5rem', fontWeight: 500 }}>Meta Ads not connected</p>
-          <p style={{ margin: 0, fontSize: '0.8125rem' }}>Add META_ACCESS_TOKEN to Vercel env vars to see live data</p>
+          <p style={{ margin: '0 0 0.5rem', fontWeight: 500 }}>Ads not connected</p>
+          <p style={{ margin: 0, fontSize: '0.8125rem' }}>Add META_ACCESS_TOKEN or Google Ads credentials to Vercel</p>
         </div>
       ) : (
         <>
-          {/* Funnel Bar Chart */}
-          <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #F3F4F6' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '1rem' }}>
-              <BarChart3 size={14} style={{ color: '#9CA3AF' }} />
-              <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Funnel Performance</span>
+          {/* Platform status badges */}
+          {(data.platforms.meta.error || data.platforms.google.error) && (
+            <div style={{ padding: '0.5rem 1.25rem', borderBottom: '1px solid #F3F4F6', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              {data.platforms.meta.error && (
+                <span style={{ fontSize: '0.6875rem', color: '#EF4444', backgroundColor: '#FEF2F2', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>
+                  Meta: {data.platforms.meta.error}
+                </span>
+              )}
+              {data.platforms.google.error && (
+                <span style={{ fontSize: '0.6875rem', color: '#F97316', backgroundColor: '#FFF7ED', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>
+                  Google: {data.platforms.google.error}
+                </span>
+              )}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          )}
+
+          {/* Funnel Bar Chart */}
+          <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #F3F4F6' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.875rem' }}>
+              <BarChart3 size={13} style={{ color: '#9CA3AF' }} />
+              <span style={{ fontSize: '0.6875rem', fontWeight: 500, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Funnel Performance {platform !== 'combined' ? `(${platform})` : ''}
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
               {stages.map((stage) => {
                 const impressionPct = (stage.impressions / maxImpressions) * 100;
                 const clickPct = (stage.clicks / maxClicks) * 100;
-                const spendPct = (stage.spend / maxSpend) * 100;
                 return (
-                  <div key={stage.key} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ width: '120px', flexShrink: 0 }}>
+                  <div key={stage.key} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ width: '100px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: stage.color, flexShrink: 0 }} />
+                      <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#374151' }}>{stage.label.split(' (')[0]}</span>
+                    </div>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: stage.color, flexShrink: 0 }} />
-                        <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#374151' }}>{stage.label.split(' (')[0]}</span>
+                        <div style={{ flex: 1, height: 5, backgroundColor: '#F3F4F6', borderRadius: 3, overflow: 'hidden' }}>
+                          <div style={{ width: `${Math.max(impressionPct, 2)}%`, height: '100%', backgroundColor: stage.color, borderRadius: 3, opacity: 0.5, transition: 'width 0.5s ease' }} />
+                        </div>
+                        <span style={{ fontSize: '0.625rem', color: '#9CA3AF', width: '55px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(stage.impressions)}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ flex: 1, height: 5, backgroundColor: '#F3F4F6', borderRadius: 3, overflow: 'hidden' }}>
+                          <div style={{ width: `${Math.max(clickPct, 2)}%`, height: '100%', backgroundColor: stage.color, borderRadius: 3, transition: 'width 0.5s ease' }} />
+                        </div>
+                        <span style={{ fontSize: '0.625rem', color: '#9CA3AF', width: '55px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmt(stage.clicks)} clicks</span>
                       </div>
                     </div>
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                      {/* Impressions bar */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ flex: 1, height: 6, backgroundColor: '#F3F4F6', borderRadius: 3, overflow: 'hidden' }}>
-                          <div style={{
-                            width: `${Math.max(impressionPct, 2)}%`,
-                            height: '100%',
-                            backgroundColor: stage.color,
-                            borderRadius: 3,
-                            opacity: 0.7,
-                            transition: 'width 0.5s ease',
-                          }} />
-                        </div>
-                        <span style={{ fontSize: '0.6875rem', color: '#9CA3AF', width: '60px', textAlign: 'right' }}>{fmt(stage.impressions)}</span>
-                      </div>
-                      {/* Clicks bar */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ flex: 1, height: 6, backgroundColor: '#F3F4F6', borderRadius: 3, overflow: 'hidden' }}>
-                          <div style={{
-                            width: `${Math.max(clickPct, 2)}%`,
-                            height: '100%',
-                            backgroundColor: stage.color,
-                            borderRadius: 3,
-                            transition: 'width 0.5s ease',
-                          }} />
-                        </div>
-                        <span style={{ fontSize: '0.6875rem', color: '#9CA3AF', width: '60px', textAlign: 'right' }}>{fmt(stage.clicks)} clicks</span>
-                      </div>
-                    </div>
-                    <div style={{ width: '60px', textAlign: 'right', flexShrink: 0 }}>
-                      <span style={{ fontSize: '0.875rem', fontWeight: 600, color: stage.color }}>{fmtCurrency(stage.spend)}</span>
+                    <div style={{ width: '55px', textAlign: 'right', flexShrink: 0 }}>
+                      <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: stage.color }}>{fmtCurrency(stage.spend)}</span>
                     </div>
                   </div>
                 );
               })}
             </div>
-            {/* Bar legend */}
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', paddingLeft: '136px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                <div style={{ width: 16, height: 4, backgroundColor: '#9CA3AF', borderRadius: 2, opacity: 0.5 }} />
-                <span style={{ fontSize: '0.625rem', color: '#9CA3AF' }}>Impressions</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                <div style={{ width: 16, height: 4, backgroundColor: '#9CA3AF', borderRadius: 2 }} />
-                <span style={{ fontSize: '0.625rem', color: '#9CA3AF' }}>Clicks</span>
-              </div>
-            </div>
           </div>
 
           {/* Data Table */}
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
-                  <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontWeight: 500, color: '#6B7280', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Stage</th>
-                  {METRICS.map((m) => (
-                    <th key={m} style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 500, color: '#6B7280', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{METRIC_LABELS[m]}</th>
-                  ))}
+                  <th style={{ ...thStyle, textAlign: 'left', paddingLeft: '1.25rem' }}>Stage</th>
+                  {METRIC_KEYS.map(m => <th key={m} style={thStyle}>{METRIC_LABELS[m]}</th>)}
                 </tr>
               </thead>
               <tbody>
                 {stages.map((stage, i) => (
                   <tr key={stage.key} style={{ borderBottom: i < stages.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
-                    <td style={{ padding: '0.75rem 1.5rem', fontWeight: 500, color: '#111827' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: stage.color }} />
-                        {stage.label}
+                    <td style={{ ...tdStyle, textAlign: 'left', paddingLeft: '1.25rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                        <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: stage.color }} />
+                        <span style={{ fontSize: '0.8125rem' }}>{stage.label}</span>
                       </div>
                     </td>
-                    {METRICS.map((m) => {
+                    {METRIC_KEYS.map(m => {
                       const val = stage[m as keyof typeof stage] as number;
-                      const isHighlight = m === 'leads' && val > 0;
                       return (
-                        <td key={m} style={{
-                          padding: '0.75rem 1rem',
-                          textAlign: 'right',
-                          fontWeight: 600,
-                          color: isHighlight ? '#22C55E' : '#374151',
-                          fontVariantNumeric: 'tabular-nums',
-                        }}>
+                        <td key={m} style={{ ...tdStyle, color: m === 'leads' && val > 0 ? '#22C55E' : '#374151' }}>
                           {formatMetric(m, val)}
                         </td>
                       );
                     })}
                   </tr>
                 ))}
-                {/* Totals Row */}
+                {/* Totals */}
                 <tr style={{ borderTop: '2px solid #E5E7EB', backgroundColor: '#F9FAFB' }}>
-                  <td style={{ padding: '0.75rem 1.5rem', fontWeight: 600, color: '#111827' }}>Total</td>
-                  <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 600, color: '#374151', fontVariantNumeric: 'tabular-nums' }}>
-                    {fmt(stages.reduce((s, st) => s + st.impressions, 0))}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 600, color: '#374151', fontVariantNumeric: 'tabular-nums' }}>
-                    {fmt(data.totals.clicks)}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 600, color: '#374151', fontVariantNumeric: 'tabular-nums' }}>
-                    {fmtCurrency(data.totals.spend)}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 600, color: '#374151', fontVariantNumeric: 'tabular-nums' }}>
-                    {fmtCurrency(data.totals.cpc)}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 600, color: '#374151', fontVariantNumeric: 'tabular-nums' }}>
-                    {fmtPct(data.totals.clicks > 0 ? (data.totals.clicks / stages.reduce((s, st) => s + st.impressions, 0)) * 100 : 0)}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 600, color: '#374151', fontVariantNumeric: 'tabular-nums' }}>
-                    {fmt(stages.reduce((s, st) => s + st.landingPageViews, 0))}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 700, color: data.totals.leads > 0 ? '#22C55E' : '#374151', fontVariantNumeric: 'tabular-nums' }}>
-                    {fmt(data.totals.leads)}
-                  </td>
+                  <td style={{ ...tdStyle, textAlign: 'left', paddingLeft: '1.25rem', fontWeight: 700 }}>Total</td>
+                  <td style={tdStyle}>{fmt(viewTotals.impressions)}</td>
+                  <td style={tdStyle}>{fmt(viewTotals.clicks)}</td>
+                  <td style={tdStyle}>{fmtCurrency(viewTotals.spend)}</td>
+                  <td style={tdStyle}>{fmtCurrency(viewCpc)}</td>
+                  <td style={tdStyle}>{fmtPct(viewCtr)}</td>
+                  <td style={tdStyle}>{fmt(viewTotals.lpViews)}</td>
+                  <td style={{ ...tdStyle, color: viewTotals.leads > 0 ? '#22C55E' : '#374151', fontWeight: 700 }}>{fmt(viewTotals.leads)}</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
+          {/* Campaign Breakdown Toggle */}
+          <div style={{ borderTop: '1px solid #E5E7EB' }}>
+            <button
+              onClick={() => setShowCampaigns(!showCampaigns)}
+              style={{
+                width: '100%', padding: '0.625rem 1.25rem', border: 'none', backgroundColor: 'transparent',
+                cursor: 'pointer', fontSize: '0.75rem', fontWeight: 500, color: '#6B7280',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              }}
+            >
+              <span>Campaign Breakdown ({filteredCampaigns.length})</span>
+              <span style={{ transform: showCampaigns ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▼</span>
+            </button>
+
+            {showCampaigns && filteredCampaigns.length > 0 && (
+              <div style={{ overflowX: 'auto', borderTop: '1px solid #F3F4F6' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
+                      <th style={{ ...thStyle, textAlign: 'left', paddingLeft: '1.25rem', minWidth: '180px' }}>Campaign</th>
+                      <th style={{ ...thStyle, minWidth: '50px' }}>Platform</th>
+                      <th style={thStyle}>Impr.</th>
+                      <th style={thStyle}>Clicks</th>
+                      <th style={thStyle}>Spend</th>
+                      <th style={thStyle}>CPC</th>
+                      <th style={thStyle}>CTR</th>
+                      <th style={thStyle}>Leads</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCampaigns.map((c, i) => (
+                      <tr key={i} style={{ borderBottom: '1px solid #F3F4F6' }}>
+                        <td style={{ ...tdStyle, textAlign: 'left', paddingLeft: '1.25rem', fontWeight: 500, maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {c.name}
+                        </td>
+                        <td style={{ ...tdStyle, textAlign: 'center' }}>
+                          <span style={{
+                            display: 'inline-block', fontSize: '0.625rem', fontWeight: 600,
+                            padding: '0.125rem 0.375rem', borderRadius: '4px',
+                            backgroundColor: c.platform === 'meta' ? '#EBF5FF' : '#F0FDF4',
+                            color: c.platform === 'meta' ? '#1877F2' : '#16A34A',
+                          }}>
+                            {c.platform === 'meta' ? 'META' : 'GADS'}
+                          </span>
+                        </td>
+                        <td style={tdStyle}>{fmt(c.impressions)}</td>
+                        <td style={tdStyle}>{fmt(c.clicks)}</td>
+                        <td style={tdStyle}>{fmtCurrency(c.spend)}</td>
+                        <td style={tdStyle}>{fmtCurrency(c.cpc)}</td>
+                        <td style={tdStyle}>{fmtPct(c.ctr)}</td>
+                        <td style={{ ...tdStyle, color: c.leads > 0 ? '#22C55E' : '#374151' }}>{fmt(c.leads)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
           {/* Summary Cards */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '0',
-            borderTop: '1px solid #E5E7EB',
-          }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderTop: '1px solid #E5E7EB' }}>
             {[
-              { icon: PoundSterling, label: 'Total Spend', value: fmtCurrency(data.totals.spend), color: '#111827' },
-              { icon: MousePointerClick, label: 'Total Clicks', value: fmt(data.totals.clicks), color: '#111827' },
-              { icon: Users, label: 'Total Leads', value: fmt(data.totals.leads), color: data.totals.leads > 0 ? '#22C55E' : '#111827' },
-              { icon: Eye, label: 'Avg CPC', value: fmtCurrency(data.totals.cpc), color: '#111827' },
+              { icon: PoundSterling, label: 'Total Spend', value: fmtCurrency(viewTotals.spend), color: '#111827' },
+              { icon: MousePointerClick, label: 'Total Clicks', value: fmt(viewTotals.clicks), color: '#111827' },
+              { icon: Users, label: 'Total Leads', value: fmt(viewTotals.leads), color: viewTotals.leads > 0 ? '#22C55E' : '#111827' },
+              { icon: Eye, label: 'Avg CPC', value: fmtCurrency(viewCpc), color: '#111827' },
             ].map((card, i) => (
-              <div key={i} style={{
-                padding: '1rem',
-                textAlign: 'center',
-                borderRight: i < 3 ? '1px solid #F3F4F6' : 'none',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', marginBottom: '0.375rem' }}>
-                  <card.icon size={13} style={{ color: '#9CA3AF' }} />
-                  <span style={{ fontSize: '0.6875rem', color: '#9CA3AF', fontWeight: 500 }}>{card.label}</span>
+              <div key={i} style={{ padding: '0.875rem', textAlign: 'center', borderRight: i < 3 ? '1px solid #F3F4F6' : 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
+                  <card.icon size={12} style={{ color: '#9CA3AF' }} />
+                  <span style={{ fontSize: '0.625rem', color: '#9CA3AF', fontWeight: 500 }}>{card.label}</span>
                 </div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: card.color, fontVariantNumeric: 'tabular-nums' }}>{card.value}</div>
+                <div style={{ fontSize: '1.125rem', fontWeight: 700, color: card.color, fontVariantNumeric: 'tabular-nums' }}>{card.value}</div>
               </div>
             ))}
           </div>

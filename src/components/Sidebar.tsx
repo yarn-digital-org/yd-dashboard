@@ -31,6 +31,7 @@ import {
   Lightbulb,
   Sun,
   Moon,
+  List,
 } from 'lucide-react';
 import { useTheme, getColors } from '@/context/ThemeContext';
 
@@ -88,6 +89,7 @@ export function Sidebar() {
     { name: 'Contracts', icon: FileSignature, href: '/contracts' },
     { name: 'Messages', icon: MessageSquare, href: '/messages' },
     { name: 'Campaigns', icon: Send, href: '/email-campaigns' },
+    { name: 'Email Lists', icon: List, href: '/email-lists' },
     { name: 'Calendar', icon: Calendar, href: '/calendar' },
     { name: 'Documents', icon: FolderOpen, href: '/documents' },
     { name: 'Library', icon: BookOpen, href: '/library' },

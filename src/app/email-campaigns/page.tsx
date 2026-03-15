@@ -95,6 +95,7 @@ export default function EmailCampaignsPage() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [emailLists, setEmailLists] = useState<{ id: string; name: string; memberCount: number; type: string }[]>([]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -110,7 +111,10 @@ export default function EmailCampaignsPage() {
       router.push('/login');
       return;
     }
-    if (user) fetchCampaigns();
+    if (user) {
+      fetchCampaigns();
+      fetch('/api/email-lists').then(r => r.json()).then(d => setEmailLists(d.data || [])).catch(() => {});
+    }
   }, [user, authLoading, router]);
 
   const fetchCampaigns = async () => {
@@ -407,7 +411,18 @@ export default function EmailCampaignsPage() {
                     onChange={e => setFormData({ ...formData, recipientList: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300] text-sm"
                   >
-                    {RECIPIENT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    <optgroup label="Default segments">
+                      {RECIPIENT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </optgroup>
+                    {emailLists.length > 0 && (
+                      <optgroup label="Email Lists">
+                        {emailLists.map(l => (
+                          <option key={l.id} value={`list:${l.id}`}>
+                            {l.name} ({l.memberCount} members · {l.type})
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
                   </select>
                 </div>
               </div>

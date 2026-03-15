@@ -18,7 +18,8 @@ import {
   Calendar,
   DollarSign,
   Loader2,
-  Download
+  Download,
+  ExternalLink
 } from 'lucide-react';
 
 interface InvoiceItem {
@@ -205,6 +206,30 @@ export default function InvoicesPage() {
   };
 
   const [sendingInvoiceId, setSendingInvoiceId] = useState<string | null>(null);
+  const [syncingToXero, setSyncingToXero] = useState<string | null>(null);
+
+  const handleSyncToXero = async (id: string) => {
+    if (!confirm('Sync this invoice to Xero?')) return;
+    setSyncingToXero(id);
+    try {
+      const response = await fetch('/api/integrations/xero/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invoiceId: id }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        alert(data.error || 'Failed to sync to Xero');
+        return;
+      }
+      alert('Invoice synced to Xero successfully');
+      fetchInvoices();
+    } catch {
+      alert('Failed to sync to Xero');
+    } finally {
+      setSyncingToXero(null);
+    }
+  };
 
   const handleSendInvoice = async (id: string, invoiceNumber: string) => {
     if (!confirm(`Send invoice ${invoiceNumber} to the client via email?`)) return;
@@ -431,6 +456,17 @@ export default function InvoicesPage() {
                       >
                         <Mail size={14} />
                         {sendingInvoiceId === invoice.id ? 'Sending...' : 'Send to Client'}
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleSyncToXero(invoice.id);
+                          setActiveMenu(null);
+                        }}
+                        disabled={syncingToXero === invoice.id || !!(invoice as unknown as Record<string, unknown>).xeroInvoiceId}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full disabled:opacity-50"
+                      >
+                        <ExternalLink size={14} />
+                        {(invoice as unknown as Record<string, unknown>).xeroInvoiceId ? 'Synced to Xero ✓' : syncingToXero === invoice.id ? 'Syncing...' : 'Sync to Xero'}
                       </button>
                       <button
                         onClick={() => {

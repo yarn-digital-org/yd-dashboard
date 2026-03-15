@@ -82,16 +82,21 @@ export default function FreeAuditPage() {
       <MetaPixelScript />
 
       <main className="min-h-screen bg-[#f5f5f5] font-sans" style={{ letterSpacing: '-0.02em' }}>
+        {/* Global style overrides for brand compliance */}
+        <style>{`
+          .yd-card { border-radius: 24px !important; }
+          .yd-btn { border-radius: 8px !important; }
+        `}</style>
 
         {/* ─── Nav ─── */}
         <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-md">
-          <div className="max-w-[1440px] mx-auto flex items-center justify-between px-6 sm:px-10 py-4">
+          <div className="max-w-[1520px] mx-auto flex items-center justify-between px-6 sm:px-10 py-4">
             <a href="https://www.yarndigital.co.uk" className="text-white font-semibold tracking-tight text-base" style={{ letterSpacing: '-0.04em' }}>
               YARN Digital
             </a>
             <button
               onClick={scrollToForm}
-              className="bg-white text-[#0a0a0a] text-sm font-semibold px-5 py-2.5 rounded-md hover:bg-gray-100 transition-colors"
+              className="bg-white text-[#0a0a0a] text-sm font-semibold px-5 py-2.5 rounded-lg hover:bg-gray-100 transition-colors"
               style={{ letterSpacing: '-0.02em' }}
             >
               Get Free Audit
@@ -112,7 +117,7 @@ export default function FreeAuditPage() {
           {/* Gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent" />
 
-          <div className="relative z-10 w-full max-w-[1440px] mx-auto px-6 sm:px-10 pb-16 sm:pb-24 pt-32">
+          <div className="relative z-10 w-full max-w-[1520px] mx-auto px-6 sm:px-10 pb-16 sm:pb-24 pt-32">
             <div className="max-w-2xl">
               <p className="text-xs sm:text-sm font-semibold text-[#999] uppercase mb-4 sm:mb-6" style={{ letterSpacing: '0.05em' }}>
                 Free Website Audit
@@ -135,7 +140,7 @@ export default function FreeAuditPage() {
               <div className="flex flex-wrap gap-3">
                 <button
                   onClick={scrollToForm}
-                  className="bg-white text-[#0a0a0a] font-semibold text-sm sm:text-base px-6 sm:px-8 py-3.5 rounded-md hover:bg-gray-100 transition-colors inline-flex items-center gap-2"
+                  className="bg-white text-[#0a0a0a] font-semibold text-sm sm:text-base px-6 sm:px-8 py-3.5 rounded-lg hover:bg-gray-100 transition-colors inline-flex items-center gap-2"
                   style={{ letterSpacing: '-0.02em' }}
                 >
                   Get My Free Audit <ArrowRight size={16} />
@@ -144,7 +149,7 @@ export default function FreeAuditPage() {
                   href="https://www.yarndigital.co.uk"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="border border-[#333] text-[#999] font-medium text-sm sm:text-base px-6 sm:px-8 py-3.5 rounded-md hover:border-[#666] hover:text-white transition-colors"
+                  className="border border-[#333] text-[#999] font-medium text-sm sm:text-base px-6 sm:px-8 py-3.5 rounded-lg hover:border-[#666] hover:text-white transition-colors"
                   style={{ letterSpacing: '-0.02em' }}
                 >
                   View Our Work
@@ -163,7 +168,7 @@ export default function FreeAuditPage() {
 
         {/* ─── What You Get ─── */}
         <section className="py-20 sm:py-28">
-          <div className="max-w-[1440px] mx-auto px-6 sm:px-10">
+          <div className="max-w-[1520px] mx-auto px-6 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-16">
               <div>
                 <span className="text-xs font-semibold text-[#999] uppercase" style={{ letterSpacing: '0.05em' }}>
@@ -195,13 +200,13 @@ export default function FreeAuditPage() {
         </section>
 
         {/* ─── Divider line ─── */}
-        <div className="max-w-[1440px] mx-auto px-6 sm:px-10">
+        <div className="max-w-[1520px] mx-auto px-6 sm:px-10">
           <div className="border-t border-[#e5e5e5]" />
         </div>
 
         {/* ─── Case Studies ─── */}
         <section className="py-20 sm:py-28">
-          <div className="max-w-[1440px] mx-auto px-6 sm:px-10">
+          <div className="max-w-[1520px] mx-auto px-6 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-16 mb-12">
               <div>
                 <span className="text-xs font-semibold text-[#999] uppercase" style={{ letterSpacing: '0.05em' }}>
@@ -239,7 +244,7 @@ export default function FreeAuditPage() {
                   image: 'https://framerusercontent.com/images/c2ByT5WhAv4Ac8xz0FBRqtJ0DPE.png',
                 },
               ].map((cs, i) => (
-                <div key={i} className="bg-white rounded-2xl overflow-hidden group">
+                <div key={i} className="bg-white rounded-[24px] overflow-hidden group">
                   <div className="aspect-[4/3] overflow-hidden">
                     <img
                       src={cs.image}
@@ -268,7 +273,7 @@ export default function FreeAuditPage() {
 
         {/* ─── Services Strip ─── */}
         <section className="bg-[#0a0a0a] py-20 sm:py-28">
-          <div className="max-w-[1440px] mx-auto px-6 sm:px-10">
+          <div className="max-w-[1520px] mx-auto px-6 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-16 mb-12">
               <div>
                 <span className="text-xs font-semibold text-[#555] uppercase" style={{ letterSpacing: '0.05em' }}>
@@ -311,7 +316,7 @@ export default function FreeAuditPage() {
 
         {/* ─── About / Trust ─── */}
         <section className="py-20 sm:py-28">
-          <div className="max-w-[1440px] mx-auto px-6 sm:px-10">
+          <div className="max-w-[1520px] mx-auto px-6 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-16">
               <div>
                 <span className="text-xs font-semibold text-[#999] uppercase" style={{ letterSpacing: '0.05em' }}>
@@ -341,7 +346,7 @@ export default function FreeAuditPage() {
 
         {/* ─── Form Section ─── */}
         <section className="bg-[#0a0a0a] py-20 sm:py-28" ref={formRef}>
-          <div className="max-w-[1440px] mx-auto px-6 sm:px-10">
+          <div className="max-w-[1520px] mx-auto px-6 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
               {/* Left — copy */}
               <div>
@@ -377,7 +382,7 @@ export default function FreeAuditPage() {
               {/* Right — form */}
               <div>
                 {status === 'success' ? (
-                  <div className="bg-[#111] rounded-2xl p-10 text-center border border-[#222]">
+                  <div className="bg-[#111] rounded-[24px] p-10 text-center border border-[#222]">
                     <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-5">
                       <Check size={28} className="text-white" />
                     </div>
@@ -463,7 +468,7 @@ export default function FreeAuditPage() {
 
                     <button
                       type="submit" disabled={status === 'submitting'}
-                      className="w-full bg-white text-[#0a0a0a] font-semibold text-base py-4 rounded-md hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-4"
+                      className="w-full bg-white text-[#0a0a0a] font-semibold text-base py-4 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-4"
                       style={{ letterSpacing: '-0.02em' }}
                     >
                       {status === 'submitting' ? (
@@ -485,7 +490,7 @@ export default function FreeAuditPage() {
 
         {/* ─── Footer ─── */}
         <footer className="bg-[#f5f5f5] border-t border-[#e5e5e5] py-6">
-          <div className="max-w-[1440px] mx-auto px-6 sm:px-10 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="max-w-[1520px] mx-auto px-6 sm:px-10 flex flex-col sm:flex-row items-center justify-between gap-2">
             <span className="text-xs font-medium text-[#999]" style={{ letterSpacing: '-0.02em' }}>
               © {new Date().getFullYear()} YARN Digital. Belfast, Northern Ireland.
             </span>

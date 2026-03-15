@@ -25,6 +25,8 @@ const publicRoutes = [
   '/web-design-belfast',
   '/website-not-working',
   '/yarn-digital',
+  '/unsubscribe',
+  '/subscribe-confirm',
 ];
 
 // API routes that don't require authentication
@@ -41,6 +43,8 @@ const publicApiRoutes = [
   '/api/slack/', // Slack message feed for agents
   '/api/documents/upload', // Agent document upload (auto-publish to dashboard)
   '/api/public/leads', // Public lead capture from landing pages
+  '/api/public/unsubscribe', // GDPR unsubscribe
+  '/api/public/subscribe', // Email list subscribe
 ];
 
 // Static file patterns to skip

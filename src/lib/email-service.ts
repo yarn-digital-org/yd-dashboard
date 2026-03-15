@@ -7,6 +7,40 @@ import { Resend } from 'resend';
 
 // Default sender email
 const DEFAULT_FROM = process.env.EMAIL_FROM || 'noreply@yarndigital.co.uk';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://yd-dashboard.vercel.app';
+
+/**
+ * Generate GDPR-compliant unsubscribe URL for a given email + list
+ */
+export function getUnsubscribeUrl(email: string, listId: string = 'all'): string {
+  const { createHmac } = require('crypto');
+  const secret = process.env.UNSUBSCRIBE_SECRET || process.env.NEXTAUTH_SECRET || 'unsub-secret';
+  const payload = `${email}:${listId}`;
+  const sig = createHmac('sha256', secret).update(payload).digest('hex').slice(0, 16);
+  const token = Buffer.from(`${payload}:${sig}`).toString('base64url');
+  return `${APP_URL}/api/public/unsubscribe?token=${token}`;
+}
+
+/**
+ * Append GDPR unsubscribe footer to an HTML email
+ */
+export function appendUnsubscribeFooter(html: string, email: string, listId: string = 'all'): string {
+  const unsubUrl = getUnsubscribeUrl(email, listId);
+  const footer = `
+    <div style="margin-top:40px;padding-top:24px;border-top:1px solid #E0E0E0;text-align:center;">
+      <p style="font-size:12px;color:#9CA3AF;margin:0;line-height:1.6;">
+        You received this email because you subscribed to updates from Yarn Digital.<br>
+        <a href="${unsubUrl}" style="color:#9CA3AF;">Unsubscribe</a> ·
+        <a href="${APP_URL}/privacy" style="color:#9CA3AF;">Privacy Policy</a>
+      </p>
+    </div>`;
+
+  // Insert before closing </body> if present, otherwise append
+  if (html.includes('</body>')) {
+    return html.replace('</body>', `${footer}</body>`);
+  }
+  return html + footer;
+}
 
 export interface SendEmailOptions {
   to: string | string[];
@@ -16,6 +50,10 @@ export interface SendEmailOptions {
   replyTo?: string;
   cc?: string | string[];
   bcc?: string | string[];
+  /** If set, GDPR unsubscribe footer is appended to the email */
+  unsubscribeEmail?: string;
+  /** List ID for targeted unsubscribe (defaults to 'all') */
+  unsubscribeListId?: string;
 }
 
 export interface SendEmailResult {
@@ -58,11 +96,17 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
 
     const resend = new Resend(process.env.RESEND_API_KEY);
 
+    // Inject GDPR unsubscribe footer if email address provided
+    let html = options.html;
+    if (options.unsubscribeEmail) {
+      html = appendUnsubscribeFooter(html, options.unsubscribeEmail, options.unsubscribeListId || 'all');
+    }
+
     const { data, error } = await resend.emails.send({
       from: options.from || DEFAULT_FROM,
       to: options.to,
       subject: options.subject,
-      html: options.html,
+      html,
       replyTo: options.replyTo,
       cc: options.cc,
       bcc: options.bcc,

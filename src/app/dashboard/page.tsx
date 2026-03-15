@@ -192,8 +192,8 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-500 text-sm mt-1">
+            <h1 className="text-2xl font-bold text-[#0a0a0a]" style={{ letterSpacing: '-0.04em' }}>Dashboard</h1>
+            <p className="text-[#666] text-sm mt-1">
               Welcome back, {user?.name || user?.email}
             </p>
           </div>
@@ -276,100 +276,96 @@ export default function DashboardPage() {
         {/* Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {/* Revenue Card */}
-          <div className="bg-gradient-to-br from-green-50 to-white p-6 rounded-xl border border-green-100 hover:shadow-md transition">
+          <div className="bg-white p-6 rounded-xl border border-[#e5e5e5] hover:shadow-sm transition">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <DollarSign size={20} className="text-green-600" />
+              <div className="p-2 bg-[#f5f5f5] rounded-lg">
+                <DollarSign size={20} className="text-[#0a0a0a]" />
               </div>
-              <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full">
-                <TrendingUp size={12} />
-                Revenue
-              </span>
+              <span className="text-xs font-medium text-[#666]">Revenue</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900 mb-1">
+            <p className="text-2xl font-bold text-[#0a0a0a] mb-1" style={{ letterSpacing: '-0.04em' }}>
               {metrics ? formatCurrency(metrics.revenue) : '£0'}
             </p>
-            <p className="text-sm text-gray-500">Total lifetime value</p>
+            <p className="text-sm text-[#666]">
+              {chartPeriod === 'month' ? 'This month' : chartPeriod === '6months' ? 'Last 6 months' : 'Last 12 months'}
+            </p>
           </div>
 
           {/* Outstanding Card */}
-          <div className="bg-gradient-to-br from-amber-50 to-white p-6 rounded-xl border border-amber-100 hover:shadow-md transition">
+          <div className="bg-white p-6 rounded-xl border border-[#e5e5e5] hover:shadow-sm transition">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-amber-100 rounded-lg">
-                <Clock size={20} className="text-amber-600" />
+              <div className="p-2 bg-[#f5f5f5] rounded-lg">
+                <Clock size={20} className="text-[#0a0a0a]" />
               </div>
-              <span className="flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-100 px-2 py-1 rounded-full">
-                <TrendingDown size={12} />
-                Outstanding
-              </span>
+              <span className="text-xs font-medium text-[#666]">Outstanding</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900 mb-1">
+            <p className="text-2xl font-bold text-[#0a0a0a] mb-1" style={{ letterSpacing: '-0.04em' }}>
               {metrics ? formatCurrency(metrics.outstanding) : '£0'}
             </p>
-            <p className="text-sm text-gray-500">Pending payments</p>
+            <p className="text-sm text-[#666]">Pending payments</p>
           </div>
 
           {/* Projects Card */}
-          <div className="bg-gradient-to-br from-purple-50 to-white p-6 rounded-xl border border-purple-100 hover:shadow-md transition">
+          <div className="bg-white p-6 rounded-xl border border-[#e5e5e5] hover:shadow-sm transition">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <FolderKanban size={20} className="text-purple-600" />
+              <div className="p-2 bg-[#f5f5f5] rounded-lg">
+                <FolderKanban size={20} className="text-[#0a0a0a]" />
               </div>
               <Link 
                 href="/projects"
-                className="flex items-center gap-1 text-xs font-medium text-purple-600 hover:text-purple-700 transition"
+                className="flex items-center gap-1 text-xs font-medium text-[#666] hover:text-[#0a0a0a] transition"
               >
                 View <ArrowUpRight size={12} />
               </Link>
             </div>
-            <p className="text-2xl font-bold text-gray-900 mb-1">
+            <p className="text-2xl font-bold text-[#0a0a0a] mb-1" style={{ letterSpacing: '-0.04em' }}>
               {metrics?.projectsCount ?? 0}
             </p>
-            <p className="text-sm text-gray-500">Total projects</p>
+            <p className="text-sm text-[#666]">Total projects</p>
           </div>
 
           {/* Leads Card */}
-          <div className="bg-gradient-to-br from-orange-50 to-white p-6 rounded-xl border border-orange-100 hover:shadow-md transition">
+          <div className="bg-white p-6 rounded-xl border border-[#e5e5e5] hover:shadow-sm transition">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Users size={20} className="text-orange-600" />
+              <div className="p-2 bg-[#f5f5f5] rounded-lg">
+                <Users size={20} className="text-[#0a0a0a]" />
               </div>
               <Link 
                 href="/leads"
-                className="flex items-center gap-1 text-xs font-medium text-orange-600 hover:text-orange-700 transition"
+                className="flex items-center gap-1 text-xs font-medium text-[#666] hover:text-[#0a0a0a] transition"
               >
                 View <ArrowUpRight size={12} />
               </Link>
             </div>
-            <p className="text-2xl font-bold text-gray-900 mb-1">
+            <p className="text-2xl font-bold text-[#0a0a0a] mb-1" style={{ letterSpacing: '-0.04em' }}>
               {metrics?.leadsCount ?? 0}
             </p>
-            <p className="text-sm text-gray-500">Active leads</p>
+            <p className="text-sm text-[#666]">Active leads</p>
           </div>
         </div>
 
         {/* Pipeline Stats Row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-          <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-            <p className="text-sm text-gray-500 mb-1">Total Contacts</p>
-            <p className="text-xl font-bold text-gray-900">{metrics?.contactsCount ?? 0}</p>
+          <div className="bg-[#f5f5f5] p-4 rounded-xl border border-[#e5e5e5]">
+            <p className="text-sm text-[#666] mb-1">Total Contacts</p>
+            <p className="text-xl font-bold text-[#0a0a0a]" style={{ letterSpacing: '-0.04em' }}>{metrics?.contactsCount ?? 0}</p>
           </div>
-          <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-            <p className="text-sm text-gray-500 mb-1">Active Clients</p>
-            <p className="text-xl font-bold text-gray-900">{metrics?.clientsCount ?? 0}</p>
+          <div className="bg-[#f5f5f5] p-4 rounded-xl border border-[#e5e5e5]">
+            <p className="text-sm text-[#666] mb-1">Active Clients</p>
+            <p className="text-xl font-bold text-[#0a0a0a]" style={{ letterSpacing: '-0.04em' }}>{metrics?.clientsCount ?? 0}</p>
           </div>
-          <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-            <p className="text-sm text-gray-500 mb-1">Lead → Client</p>
-            <p className="text-xl font-bold text-gray-900">
+          <div className="bg-[#f5f5f5] p-4 rounded-xl border border-[#e5e5e5]">
+            <p className="text-sm text-[#666] mb-1">Lead → Client</p>
+            <p className="text-xl font-bold text-[#0a0a0a]" style={{ letterSpacing: '-0.04em' }}>
               {metrics && metrics.leadsCount > 0 
                 ? `${Math.round((metrics.clientsCount / (metrics.clientsCount + metrics.leadsCount)) * 100)}%`
                 : '—'
               }
             </p>
           </div>
-          <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-            <p className="text-sm text-gray-500 mb-1">Avg Deal Value</p>
-            <p className="text-xl font-bold text-gray-900">
+          <div className="bg-[#f5f5f5] p-4 rounded-xl border border-[#e5e5e5]">
+            <p className="text-sm text-[#666] mb-1">Avg Deal Value</p>
+            <p className="text-xl font-bold text-[#0a0a0a]" style={{ letterSpacing: '-0.04em' }}>
               {metrics && metrics.revenue > 0 && metrics.clientsCount > 0
                 ? formatCurrency(metrics.revenue / metrics.clientsCount)
                 : '—'
@@ -398,9 +394,9 @@ export default function DashboardPage() {
           <CalendarWidget />
 
           {/* Recent Activity */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
+          <div className="bg-white rounded-xl border border-[#e5e5e5] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-[#f0f0f0]">
+              <h2 className="text-base font-semibold text-[#0a0a0a]" style={{ letterSpacing: '-0.03em' }}>Recent Activity</h2>
               <Link 
                 href="/contacts"
                 className="text-sm text-[#FF3300] hover:text-[#E62E00] font-medium"
@@ -408,86 +404,81 @@ export default function DashboardPage() {
                 View all
               </Link>
             </div>
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-[#f0f0f0]">
               {metrics?.recentActivity && metrics.recentActivity.length > 0 ? (
                 metrics.recentActivity.slice(0, 5).map((activity) => (
-                  <div key={activity.id} className="flex items-center gap-3 p-4 hover:bg-gray-50 transition">
-                    <div className="p-2 bg-gray-100 rounded-lg">
+                  <div key={activity.id} className="flex items-center gap-3 p-4 hover:bg-[#f5f5f5] transition">
+                    <div className="p-2 bg-[#f5f5f5] rounded-lg">
                       {getActivityIcon(activity.type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{activity.title}</p>
-                      <p className="text-xs text-gray-500 truncate">{activity.subtitle}</p>
+                      <p className="text-sm font-medium text-[#0a0a0a] truncate">{activity.title}</p>
+                      <p className="text-xs text-[#666] truncate">{activity.subtitle}</p>
                     </div>
-                    <span className="text-xs text-gray-400 flex-shrink-0">
+                    <span className="text-xs text-[#999] flex-shrink-0">
                       {formatDate(activity.timestamp)}
                     </span>
                   </div>
                 ))
               ) : (
-                <div className="p-8 text-center text-gray-500">
-                  <Clock className="mx-auto mb-2 text-gray-300" size={32} />
+                <div className="p-8 text-center text-[#666]">
+                  <Clock className="mx-auto mb-2 text-[#ccc]" size={32} />
                   <p className="text-sm">No recent activity</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="p-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
+          {/* Attention Needed */}
+          <div className="bg-white rounded-xl border border-[#e5e5e5] overflow-hidden">
+            <div className="p-4 border-b border-[#f0f0f0]">
+              <h2 className="text-base font-semibold text-[#0a0a0a]" style={{ letterSpacing: '-0.03em' }}>Attention Needed</h2>
             </div>
-            <div className="p-4 space-y-2">
-              <Link
-                href="/contacts?action=new"
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group"
-              >
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <UserPlus size={18} className="text-blue-600" />
+            <div className="p-4 space-y-3">
+              {/* Outstanding invoices */}
+              {metrics && metrics.outstanding > 0 && (
+                <Link href="/invoices?status=outstanding" className="flex items-center gap-3 p-3 bg-[#f5f5f5] rounded-lg hover:bg-[#eee] transition group">
+                  <div className="p-2 bg-white rounded-lg border border-[#e5e5e5]">
+                    <Clock size={16} className="text-[#FF3300]" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-[#0a0a0a]">{formatCurrency(metrics.outstanding)} outstanding</p>
+                    <p className="text-xs text-[#666]">Unpaid invoices</p>
+                  </div>
+                  <ArrowUpRight size={14} className="text-[#ccc] group-hover:text-[#666]" />
+                </Link>
+              )}
+              {/* New leads */}
+              {metrics && metrics.leadsCount > 0 && (
+                <Link href="/leads" className="flex items-center gap-3 p-3 bg-[#f5f5f5] rounded-lg hover:bg-[#eee] transition group">
+                  <div className="p-2 bg-white rounded-lg border border-[#e5e5e5]">
+                    <Target size={16} className="text-[#0a0a0a]" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-[#0a0a0a]">{metrics.leadsCount} open leads</p>
+                    <p className="text-xs text-[#666]">Waiting for follow-up</p>
+                  </div>
+                  <ArrowUpRight size={14} className="text-[#ccc] group-hover:text-[#666]" />
+                </Link>
+              )}
+              {/* Quick actions */}
+              <Link href="/contacts?action=new" className="flex items-center gap-3 p-3 bg-[#f5f5f5] rounded-lg hover:bg-[#eee] transition group">
+                <div className="p-2 bg-white rounded-lg border border-[#e5e5e5]">
+                  <UserPlus size={16} className="text-[#0a0a0a]" />
                 </div>
-                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Add Contact</span>
-                <ArrowUpRight size={14} className="text-gray-300 ml-auto" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-[#0a0a0a]">Add Contact</p>
+                </div>
+                <ArrowUpRight size={14} className="text-[#ccc] group-hover:text-[#666]" />
               </Link>
-              <Link
-                href="/invoices?action=new"
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group"
-              >
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <DollarSign size={18} className="text-green-600" />
+              <Link href="/invoices?action=new" className="flex items-center gap-3 p-3 bg-[#f5f5f5] rounded-lg hover:bg-[#eee] transition group">
+                <div className="p-2 bg-white rounded-lg border border-[#e5e5e5]">
+                  <DollarSign size={16} className="text-[#0a0a0a]" />
                 </div>
-                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Create Invoice</span>
-                <ArrowUpRight size={14} className="text-gray-300 ml-auto" />
-              </Link>
-              <Link
-                href="/leads"
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group"
-              >
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <Target size={18} className="text-orange-600" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-[#0a0a0a]">Create Invoice</p>
                 </div>
-                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">View Leads</span>
-                <ArrowUpRight size={14} className="text-gray-300 ml-auto" />
-              </Link>
-              <Link
-                href="/campaigns"
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group"
-              >
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Briefcase size={18} className="text-purple-600" />
-                </div>
-                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Email Campaign</span>
-                <ArrowUpRight size={14} className="text-gray-300 ml-auto" />
-              </Link>
-              <Link
-                href="/landing-pages"
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group"
-              >
-                <div className="p-2 bg-red-50 rounded-lg">
-                  <TrendingUp size={18} className="text-[#FF3300]" />
-                </div>
-                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Landing Pages</span>
-                <ArrowUpRight size={14} className="text-gray-300 ml-auto" />
+                <ArrowUpRight size={14} className="text-[#ccc] group-hover:text-[#666]" />
               </Link>
             </div>
           </div>

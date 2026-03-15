@@ -89,6 +89,9 @@ export default function AutomationsPage() {
   const [templates, setTemplates] = useState<any[]>([]);
   const [usingTemplate, setUsingTemplate] = useState<string | null>(null);
   const [templateCategory, setTemplateCategory] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<'automations' | 'history'>('automations');
+  const [runHistory, setRunHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const [formData, setFormData] = useState<{
     name: string;
@@ -122,6 +125,19 @@ export default function AutomationsPage() {
       console.error('Failed to fetch automations:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRunHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      const res = await fetch('/api/automations/runs?limit=50');
+      const data = await res.json();
+      setRunHistory(data.data || []);
+    } catch {
+      // silent
+    } finally {
+      setLoadingHistory(false);
     }
   };
 
@@ -315,8 +331,80 @@ export default function AutomationsPage() {
           </div>
         </div>
 
+        {/* Tabs */}
+        <div className="flex gap-1 border-b border-gray-200 mb-6">
+          {(['automations', 'history'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => {
+                setActiveTab(tab);
+                if (tab === 'history' && runHistory.length === 0) fetchRunHistory();
+              }}
+              className={`px-4 py-2.5 text-sm font-medium capitalize transition border-b-2 -mb-px ${
+                activeTab === tab
+                  ? 'border-[#FF3300] text-[#FF3300]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {tab === 'history' ? 'Run History' : 'Automations'}
+            </button>
+          ))}
+        </div>
+
+        {/* Run History Tab */}
+        {activeTab === 'history' && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-gray-500">{runHistory.length} recent runs</p>
+              <button onClick={fetchRunHistory} className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1">
+                <RefreshCw size={12} className={loadingHistory ? 'animate-spin' : ''} /> Refresh
+              </button>
+            </div>
+            {loadingHistory ? (
+              <div className="flex items-center justify-center py-16 text-gray-400">
+                <Loader2 size={24} className="animate-spin" />
+              </div>
+            ) : runHistory.length === 0 ? (
+              <div className="text-center py-16 bg-gray-50 rounded-xl border border-gray-200">
+                <Hash className="mx-auto text-gray-300 mb-3" size={40} />
+                <p className="text-gray-500 text-sm">No runs yet. Enable an automation and trigger an event.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {runHistory.map((run: any, i: number) => (
+                  <div key={run.id || i} className={`flex items-start gap-3 p-4 rounded-xl border ${
+                    run.status === 'success' ? 'border-green-100 bg-green-50/50' :
+                    run.status === 'failed' ? 'border-red-100 bg-red-50/50' :
+                    'border-yellow-100 bg-yellow-50/50'
+                  }`}>
+                    <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                      run.status === 'success' ? 'bg-green-500' :
+                      run.status === 'failed' ? 'bg-red-500' : 'bg-yellow-500'
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium text-sm text-gray-900 truncate">{run.automationName}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${
+                          run.status === 'success' ? 'bg-green-100 text-green-700' :
+                          run.status === 'failed' ? 'bg-red-100 text-red-700' :
+                          'bg-yellow-100 text-yellow-700'
+                        }`}>{run.status}</span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 flex-wrap">
+                        <span>Trigger: <span className="font-mono">{run.triggerType?.replace(/_/g, ' ')}</span></span>
+                        <span>{run.actionsExecuted?.length || 0} action{run.actionsExecuted?.length !== 1 ? 's' : ''}</span>
+                        <span>{run.executedAt ? new Date(run.executedAt).toLocaleString('en-GB') : '—'}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Automations List */}
-        {automations.length === 0 ? (
+        {activeTab === 'automations' && (automations.length === 0 ? (
           <div className="text-center py-16 bg-gray-50 rounded-xl border border-gray-200">
             <div
               className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center"
@@ -473,7 +561,7 @@ export default function AutomationsPage() {
               );
             })}
           </div>
-        )}
+        ))}
 
         {/* Templates Modal */}
         {showTemplates && (

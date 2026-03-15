@@ -85,7 +85,11 @@ export default function FreeAuditPage() {
         <nav className="fixed top-0 left-0 right-0 z-50">
           <div className="max-w-[1520px] mx-auto flex items-center justify-between px-5 sm:px-10 py-5 sm:py-6">
             <a href="https://www.yarndigital.co.uk" className="flex flex-col">
-              <Image src={IMG.logoWhite} alt="YARN Digital" width={200} height={50} className="h-10 sm:h-12 w-auto" priority />
+              <div className="flex items-baseline gap-0.5">
+                <span className="text-[22px] sm:text-[26px] font-bold text-white tracking-tight">YARN</span>
+                <span className="text-[22px] sm:text-[26px] font-bold text-[#e63312]">.</span>
+                <span className="text-[13px] sm:text-[15px] font-normal text-white/80 ml-1" style={{ letterSpacing: '-0.01em' }}>Digital</span>
+              </div>
               <span className="text-[10px] text-white/40 font-medium mt-0.5" style={{ letterSpacing: '0.02em' }}>
                 Design, Build, Grow
               </span>
@@ -534,7 +538,11 @@ export default function FreeAuditPage() {
         <footer className="bg-white border-t border-[#e5e5e5] py-6">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-4">
-              <Image src={IMG.logoDark} alt="YARN Digital" width={90} height={20} className="opacity-60" />
+              <div className="flex items-baseline gap-0.5 opacity-60">
+                <span className="text-[16px] font-bold text-[#0a0a0a] tracking-tight">YARN</span>
+                <span className="text-[16px] font-bold text-[#e63312]">.</span>
+                <span className="text-[10px] font-normal text-[#0a0a0a]/80 ml-0.5">Digital</span>
+              </div>
               <span className="text-[11px] font-medium text-[#999]">
                 © {new Date().getFullYear()} Belfast, Northern Ireland
               </span>

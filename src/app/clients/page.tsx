@@ -6,751 +6,774 @@ import { useRouter } from 'next/navigation';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { Sidebar } from '@/components/Sidebar';
 import {
-  Search, Plus, X, Building2, Users, FolderOpen,
-  FileText, Edit3, Trash2, Save, ChevronRight,
-  Mail, Phone, Briefcase,
+  Search, Plus, X, FolderOpen, FileText, Edit3, Save, Trash2,
+  ChevronRight, ChevronDown, GitBranch, History,
+  Building2, ArrowLeft, RefreshCw, Users,
 } from 'lucide-react';
 
-interface ClientDocContact {
+interface TreeItem {
+  path: string;
+  type: 'file' | 'dir';
+  sha: string;
+  size?: number;
+}
+
+interface FileContent {
+  content: string;
+  sha: string;
   name: string;
-  role: string;
-  email: string;
-  phone?: string;
 }
 
-interface ClientDocProject {
-  name: string;
-  status: string;
-  description: string;
+interface CommitHistory {
+  sha: string;
+  message: string;
+  date: string;
+  author: string;
 }
-
-interface ClientDoc {
-  id: string;
-  clientName: string;
-  industry: string;
-  status: 'active' | 'prospect' | 'past';
-  overview: string;
-  contacts: ClientDocContact[];
-  projects: ClientDocProject[];
-  meetingNotes: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  active: { bg: 'rgba(34,197,94,0.15)', text: '#4ade80', border: 'rgba(34,197,94,0.3)' },
-  prospect: { bg: 'rgba(59,130,246,0.15)', text: '#60a5fa', border: 'rgba(59,130,246,0.3)' },
-  past: { bg: 'rgba(161,161,170,0.15)', text: '#a1a1aa', border: 'rgba(161,161,170,0.3)' },
-};
-
-type TabKey = 'overview' | 'contacts' | 'projects' | 'notes' | 'team';
 
 export default function ClientsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const isMobile = useIsMobile();
 
-  const [clients, setClients] = useState<ClientDoc[]>([]);
-  const [relatedTasks, setRelatedTasks] = useState<any[]>([]);
-  const [relatedAgents, setRelatedAgents] = useState<any[]>([]);
+  const [tree, setTree] = useState<TreeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedClient, setSelectedClient] = useState<ClientDoc | null>(null);
-  const [activeTab, setActiveTab] = useState<TabKey>('overview');
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [fileContent, setFileContent] = useState<FileContent | null>(null);
+  const [fileHistory, setFileHistory] = useState<CommitHistory[]>([]);
   const [isEditing, setIsEditing] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editContent, setEditContent] = useState('');
+  const [commitMessage, setCommitMessage] = useState('');
   const [saving, setSaving] = useState(false);
-
-  // Edit state
-  const [editName, setEditName] = useState('');
-  const [editIndustry, setEditIndustry] = useState('');
-  const [editStatus, setEditStatus] = useState<'active' | 'prospect' | 'past'>('prospect');
-  const [editOverview, setEditOverview] = useState('');
-  const [editContacts, setEditContacts] = useState<ClientDocContact[]>([]);
-  const [editProjects, setEditProjects] = useState<ClientDocProject[]>([]);
-  const [editNotes, setEditNotes] = useState('');
+  const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set());
+  const [showNewFile, setShowNewFile] = useState(false);
+  const [newFilePath, setNewFilePath] = useState('');
+  const [newFileContent, setNewFileContent] = useState('');
+  const [showHistory, setShowHistory] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/login');
   }, [user, authLoading, router]);
 
-  const fetchClients = useCallback(async () => {
+  const fetchTree = useCallback(async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams();
-      if (statusFilter !== 'all') params.set('status', statusFilter);
-      if (searchQuery) params.set('search', searchQuery);
-
-      const res = await fetch(`/api/client-docs?${params.toString()}`);
+      setError('');
+      const res = await fetch('/api/github?type=clients&action=tree');
+      if (!res.ok) throw new Error('Failed to fetch client docs');
       const data = await res.json();
-      if (data.success) setClients(data.data.clients);
+      setTree(data.data?.tree || []);
+      // Auto-expand top-level directories (client folders)
+      const dirSet = new Set<string>(
+        (data.data?.tree || [])
+          .filter((f: TreeItem) => f.type === 'dir' && !f.path.includes('/'))
+          .map((f: TreeItem) => f.path)
+      );
+      setExpandedDirs(dirSet);
     } catch (err) {
-      console.error('Failed to fetch clients:', err);
+      console.error('Error fetching tree:', err);
+      setError('Failed to load client docs from GitHub');
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, searchQuery]);
+  }, []);
 
   useEffect(() => {
-    if (user) fetchClients();
-  }, [user, fetchClients]);
+    if (user) fetchTree();
+  }, [user, fetchTree]);
 
-  const openClient = (client: ClientDoc) => {
-    setSelectedClient(client);
-    loadEditState(client);
-    setActiveTab('overview');
-    setIsEditing(false);
-    // Fetch related tasks and agents
-    fetch(`/api/relationships?type=client&id=${client.id}`)
-      .then(r => r.json())
-      .then(d => {
-        if (d.success) {
-          setRelatedTasks(d.data.tasks || []);
-          setRelatedAgents(d.data.agents || []);
-        }
-      })
-      .catch(() => {});
+  const fetchFileContent = async (path: string) => {
+    try {
+      setSelectedFile(path);
+      setIsEditing(false);
+      setShowHistory(false);
+      setFileContent(null);
+      const res = await fetch(`/api/github?type=clients&action=content&path=${encodeURIComponent(path)}`);
+      if (!res.ok) throw new Error('Failed to fetch file');
+      const data = await res.json();
+      setFileContent(data.data);
+    } catch (err) {
+      console.error('Error fetching file:', err);
+      setError('Failed to load file');
+    }
   };
 
-  const loadEditState = (client: ClientDoc) => {
-    setEditName(client.clientName);
-    setEditIndustry(client.industry);
-    setEditStatus(client.status);
-    setEditOverview(client.overview);
-    setEditContacts([...client.contacts]);
-    setEditProjects([...client.projects]);
-    setEditNotes(client.meetingNotes);
+  const fetchHistory = async (path: string) => {
+    try {
+      const res = await fetch(`/api/github?type=clients&action=history&path=${encodeURIComponent(path)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setFileHistory(data.data?.history || []);
+      setShowHistory(true);
+    } catch (err) {
+      console.error('Error fetching history:', err);
+    }
   };
 
-  const saveClient = async () => {
-    if (!selectedClient) return;
+  const handleSave = async () => {
+    if (!fileContent || !selectedFile) return;
     setSaving(true);
     try {
-      const res = await fetch(`/api/client-docs/${selectedClient.id}`, {
+      const res = await fetch('/api/github', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          clientName: editName,
-          industry: editIndustry,
-          status: editStatus,
-          overview: editOverview,
-          contacts: editContacts,
-          projects: editProjects,
-          meetingNotes: editNotes,
+          type: 'clients',
+          path: selectedFile,
+          content: editContent,
+          sha: fileContent.sha,
+          message: commitMessage || `Update ${selectedFile}`,
         }),
       });
-      if (res.ok) {
-        setIsEditing(false);
-        fetchClients();
-        setSelectedClient(null);
-      }
+      if (!res.ok) throw new Error('Failed to save');
+      const data = await res.json();
+      setFileContent({ ...fileContent, content: editContent, sha: data.data.sha });
+      setIsEditing(false);
+      setCommitMessage('');
+      await fetchTree();
     } catch (err) {
-      console.error('Failed to save:', err);
+      console.error('Save error:', err);
+      setError('Failed to save file');
     } finally {
       setSaving(false);
     }
   };
 
-  const createClient = async () => {
+  const handleCreateFile = async () => {
+    if (!newFilePath) return;
     setSaving(true);
     try {
-      const res = await fetch('/api/client-docs', {
+      const path = newFilePath.endsWith('.md') ? newFilePath : `${newFilePath}.md`;
+      const res = await fetch('/api/github', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          clientName: editName,
-          industry: editIndustry,
-          status: editStatus,
-          overview: editOverview,
-          contacts: editContacts,
-          projects: editProjects,
-          meetingNotes: editNotes,
+          type: 'clients',
+          path,
+          content: newFileContent || `# ${path.split('/').pop()?.replace('.md', '')}\n\nNew client document.\n`,
+          message: `Create ${path}`,
         }),
       });
-      if (res.ok) {
-        setShowCreateModal(false);
-        resetForm();
-        fetchClients();
-      }
+      if (!res.ok) throw new Error('Failed to create file');
+      setShowNewFile(false);
+      setNewFilePath('');
+      setNewFileContent('');
+      await fetchTree();
+      await fetchFileContent(path);
     } catch (err) {
-      console.error('Failed to create:', err);
+      console.error('Create error:', err);
+      setError('Failed to create file');
     } finally {
       setSaving(false);
     }
   };
 
-  const deleteClient = async (id: string) => {
-    if (!confirm('Delete this client documentation?')) return;
+  const handleDelete = async () => {
+    if (!selectedFile || !fileContent) return;
+    if (!confirm(`Delete ${selectedFile}?`)) return;
     try {
-      await fetch(`/api/client-docs/${id}`, { method: 'DELETE' });
-      setSelectedClient(null);
-      fetchClients();
+      const res = await fetch(
+        `/api/github?type=clients&path=${encodeURIComponent(selectedFile)}&sha=${fileContent.sha}`,
+        { method: 'DELETE' }
+      );
+      if (!res.ok) throw new Error('Failed to delete');
+      setSelectedFile(null);
+      setFileContent(null);
+      await fetchTree();
     } catch (err) {
-      console.error('Failed to delete:', err);
+      console.error('Delete error:', err);
+      setError('Failed to delete file');
     }
   };
 
-  const resetForm = () => {
-    setEditName('');
-    setEditIndustry('');
-    setEditStatus('prospect');
-    setEditOverview('');
-    setEditContacts([]);
-    setEditProjects([]);
-    setEditNotes('');
+  const toggleDir = (path: string) => {
+    setExpandedDirs(prev => {
+      const next = new Set(prev);
+      if (next.has(path)) next.delete(path);
+      else next.add(path);
+      return next;
+    });
   };
 
-  const addContact = () => {
-    setEditContacts([...editContacts, { name: '', role: '', email: '', phone: '' }]);
+  // Build folder structure from flat tree
+  const buildFileTree = () => {
+    const filtered = tree.filter(f =>
+      f.path !== 'README.md' &&
+      !f.path.startsWith('_template') &&
+      (!searchQuery || f.path.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+
+    // Get unique top-level dirs (client folders)
+    const topDirs = new Set<string>();
+    filtered.forEach(f => {
+      const parts = f.path.split('/');
+      if (parts.length > 1) topDirs.add(parts[0]);
+    });
+
+    return { files: filtered, dirs: Array.from(topDirs).sort() };
   };
 
-  const updateContact = (idx: number, field: keyof ClientDocContact, value: string) => {
-    const updated = [...editContacts];
-    updated[idx] = { ...updated[idx], [field]: value };
-    setEditContacts(updated);
+  const { files, dirs } = buildFileTree();
+
+  // Count docs per client folder
+  const getClientDocCount = (dir: string) =>
+    files.filter(f => f.type === 'file' && f.path.startsWith(dir + '/')).length;
+
+  // Get all subdirectories under a path
+  const getSubDirs = (parentPath: string) => {
+    const subDirs = new Set<string>();
+    files.forEach(f => {
+      if (f.path.startsWith(parentPath + '/')) {
+        const rest = f.path.slice(parentPath.length + 1);
+        const parts = rest.split('/');
+        if (parts.length > 1) subDirs.add(parentPath + '/' + parts[0]);
+      }
+    });
+    return Array.from(subDirs).sort();
   };
 
-  const removeContact = (idx: number) => {
-    setEditContacts(editContacts.filter((_, i) => i !== idx));
+  // Get files directly in a directory (not in subdirs)
+  const getDirectFiles = (dirPath: string) =>
+    files.filter(f => {
+      if (f.type !== 'file') return false;
+      const rest = f.path.slice(dirPath.length + 1);
+      return f.path.startsWith(dirPath + '/') && !rest.includes('/');
+    });
+
+  // Render markdown as simple HTML
+  const renderMarkdown = (md: string) => {
+    let html = md
+      .replace(/^### (.+)$/gm, '<h3 style="font-size:1rem;font-weight:600;color:#fafafa;margin:1.25rem 0 0.5rem">$1</h3>')
+      .replace(/^## (.+)$/gm, '<h2 style="font-size:1.125rem;font-weight:600;color:#fafafa;margin:1.5rem 0 0.5rem">$1</h2>')
+      .replace(/^# (.+)$/gm, '<h1 style="font-size:1.25rem;font-weight:700;color:#fafafa;margin:0 0 0.75rem">$1</h1>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/`(.+?)`/g, '<code style="background:#27272a;padding:0.125rem 0.25rem;border-radius:0.25rem;font-size:0.8125rem;color:#a78bfa">$1</code>')
+      .replace(/^- \[x\] (.+)$/gm, '<div style="display:flex;gap:0.375rem;margin:0.25rem 0"><span>☑️</span><span>$1</span></div>')
+      .replace(/^- \[ \] (.+)$/gm, '<div style="display:flex;gap:0.375rem;margin:0.25rem 0"><span>⬜</span><span>$1</span></div>')
+      .replace(/^- (.+)$/gm, '<div style="display:flex;gap:0.375rem;margin:0.25rem 0 0.25rem 0.5rem"><span style="color:#71717a">•</span><span>$1</span></div>')
+      .replace(/^\d+\. (.+)$/gm, '<div style="margin:0.25rem 0 0.25rem 0.5rem">$1</div>')
+      .replace(/\n\n/g, '<br/><br/>')
+      .replace(/\n/g, '<br/>');
+    return html;
   };
 
-  const addProject = () => {
-    setEditProjects([...editProjects, { name: '', status: '', description: '' }]);
+  // Format client folder name for display
+  const formatClientName = (dir: string) =>
+    dir.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+  if (!user) return null;
+
+  const panelStyle: React.CSSProperties = {
+    backgroundColor: '#18181b',
+    borderRadius: '0.75rem',
+    border: '1px solid #27272a',
+    overflow: 'hidden',
   };
 
-  const updateProject = (idx: number, field: keyof ClientDocProject, value: string) => {
-    const updated = [...editProjects];
-    updated[idx] = { ...updated[idx], [field]: value };
-    setEditProjects(updated);
-  };
+  const fileItemStyle = (isSelected: boolean): React.CSSProperties => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.5rem 0.75rem',
+    cursor: 'pointer',
+    backgroundColor: isSelected ? 'rgba(59,130,246,0.15)' : 'transparent',
+    borderLeft: isSelected ? '3px solid #3b82f6' : '3px solid transparent',
+    fontSize: '0.8125rem',
+    color: isSelected ? '#60a5fa' : '#d4d4d8',
+    transition: 'all 0.15s',
+  });
 
-  const removeProject = (idx: number) => {
-    setEditProjects(editProjects.filter((_, i) => i !== idx));
-  };
+  // Recursive directory renderer
+  const renderDirectory = (dirPath: string, depth: number) => {
+    const subDirs = getSubDirs(dirPath);
+    const directFiles = getDirectFiles(dirPath);
+    const isExpanded = expandedDirs.has(dirPath);
+    const dirName = dirPath.includes('/') ? dirPath.split('/').pop()! : dirPath;
+    const isTopLevel = !dirPath.includes('/');
 
-  if (authLoading || !user) return null;
-
-  const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
-    { key: 'overview', label: 'Overview', icon: <FileText size={14} /> },
-    { key: 'contacts', label: 'Contacts', icon: <Users size={14} /> },
-    { key: 'projects', label: 'Projects', icon: <FolderOpen size={14} /> },
-    { key: 'notes', label: 'Meeting Notes', icon: <FileText size={14} /> },
-    { key: 'team', label: 'Team & Tasks', icon: <Briefcase size={14} /> },
-  ];
-
-  const inputStyle: React.CSSProperties = {
-    padding: '10px 12px', borderRadius: 8,
-    background: '#09090b', border: '1px solid #3f3f46',
-    color: '#fafafa', fontSize: 14, width: '100%',
+    return (
+      <div key={dirPath}>
+        <div
+          onClick={() => toggleDir(dirPath)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.375rem',
+            padding: `0.5rem 0.75rem 0.5rem ${0.75 + depth * 1}rem`,
+            cursor: 'pointer',
+            fontSize: '0.8125rem',
+            fontWeight: isTopLevel ? 600 : 500,
+            color: isTopLevel ? '#fafafa' : '#d4d4d8',
+            backgroundColor: isTopLevel ? '#09090b' : 'transparent',
+          }}
+        >
+          {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          {isTopLevel ? (
+            <Building2 size={14} style={{ color: '#3b82f6' }} />
+          ) : (
+            <FolderOpen size={14} style={{ color: '#f59e0b' }} />
+          )}
+          <span style={{ flex: 1 }}>{isTopLevel ? formatClientName(dirName) : dirName}</span>
+          {isTopLevel && (
+            <span style={{ fontSize: '0.6875rem', color: '#71717a', fontWeight: 400 }}>
+              {getClientDocCount(dirPath)} docs
+            </span>
+          )}
+        </div>
+        {isExpanded && (
+          <>
+            {subDirs.map(sd => renderDirectory(sd, depth + 1))}
+            {directFiles.map(f => (
+              <div
+                key={f.path}
+                onClick={() => fetchFileContent(f.path)}
+                style={{
+                  ...fileItemStyle(selectedFile === f.path),
+                  paddingLeft: `${1.75 + depth * 1}rem`,
+                }}
+              >
+                <FileText size={14} style={{ color: '#71717a', flexShrink: 0 }} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {f.path.split('/').pop()?.replace('.md', '')}
+                </span>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+    );
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#09090b' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#09090b' }}>
       <Sidebar />
-      <main style={{ flex: 1, padding: isMobile ? '16px' : '32px', overflowY: 'auto' }}>
+      <main style={{
+        flex: 1,
+        padding: isMobile ? '1rem' : '2rem',
+        paddingTop: isMobile ? '4rem' : '2rem',
+        maxWidth: '100%',
+        overflow: 'auto',
+      }}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem',
+        }}>
           <div>
-            <h1 style={{ fontSize: 28, fontWeight: 700, color: '#fafafa', margin: 0 }}>Client Knowledge Base</h1>
-            <p style={{ color: '#a1a1aa', margin: '4px 0 0', fontSize: 14 }}>
-              {clients.length} client{clients.length !== 1 ? 's' : ''} documented
+            <h1 style={{
+              fontSize: '1.5rem', fontWeight: 700, color: '#fafafa',
+              display: 'flex', alignItems: 'center', gap: '0.5rem',
+            }}>
+              <Building2 size={24} /> Client Knowledge Base
+            </h1>
+            <p style={{
+              fontSize: '0.875rem', color: '#71717a',
+              display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.25rem',
+            }}>
+              <GitBranch size={14} /> yarn-digital/yd-clients
+              <span style={{ color: '#3f3f46' }}>•</span>
+              {dirs.length} client{dirs.length !== 1 ? 's' : ''}
+              <span style={{ color: '#3f3f46' }}>•</span>
+              {files.filter(f => f.type === 'file').length} docs
             </p>
           </div>
-          <button
-            onClick={() => { resetForm(); setShowCreateModal(true); }}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '10px 20px', borderRadius: 8,
-              background: '#3b82f6', color: '#fff', border: 'none',
-              cursor: 'pointer', fontWeight: 600, fontSize: 14,
-            }}
-          >
-            <Plus size={18} /> Add Client
-          </button>
-        </div>
-
-        {/* Search + Filter */}
-        <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', flex: 1, minWidth: 200, maxWidth: 400 }}>
-            <Search size={18} style={{ position: 'absolute', left: 12, top: 11, color: '#71717a' }} />
-            <input
-              type="text"
-              placeholder="Search clients..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              onClick={() => fetchTree()}
               style={{
-                width: '100%', padding: '10px 12px 10px 40px',
-                background: '#18181b', border: '1px solid #27272a',
-                borderRadius: 8, color: '#fafafa', fontSize: 14, outline: 'none',
+                display: 'flex', alignItems: 'center', gap: '0.375rem',
+                padding: '0.5rem 0.75rem', backgroundColor: '#18181b', color: '#d4d4d8',
+                border: '1px solid #27272a', borderRadius: '0.375rem',
+                fontSize: '0.8125rem', cursor: 'pointer',
               }}
-            />
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {['all', 'active', 'prospect', 'past'].map((s) => (
-              <button
-                key={s}
-                onClick={() => setStatusFilter(s)}
-                style={{
-                  padding: '6px 16px', borderRadius: 20, border: '1px solid',
-                  borderColor: statusFilter === s ? '#3b82f6' : '#27272a',
-                  background: statusFilter === s ? '#3b82f6' : 'transparent',
-                  color: statusFilter === s ? '#fff' : '#a1a1aa',
-                  cursor: 'pointer', fontSize: 13, fontWeight: 500,
-                  textTransform: 'capitalize',
-                }}
-              >
-                {s}
-              </button>
-            ))}
+            >
+              <RefreshCw size={14} /> Refresh
+            </button>
+            <button
+              onClick={() => setShowNewFile(true)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.375rem',
+                padding: '0.5rem 0.75rem', backgroundColor: '#3b82f6', color: '#ffffff',
+                border: 'none', borderRadius: '0.375rem', fontWeight: 500,
+                fontSize: '0.8125rem', cursor: 'pointer',
+              }}
+            >
+              <Plus size={14} /> New Document
+            </button>
           </div>
         </div>
 
-        {/* Client Grid */}
+        {/* Search */}
+        <div style={{ position: 'relative', marginBottom: '1rem', maxWidth: '400px' }}>
+          <Search size={16} style={{
+            position: 'absolute', left: '0.75rem', top: '50%',
+            transform: 'translateY(-50%)', color: '#71717a',
+          }} />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search client docs..."
+            style={{
+              width: '100%', padding: '0.5rem 0.75rem 0.5rem 2.25rem',
+              border: '1px solid #27272a', borderRadius: '0.375rem',
+              fontSize: '0.875rem', outline: 'none',
+              backgroundColor: '#18181b', color: '#fafafa',
+            }}
+          />
+        </div>
+
+        {error && (
+          <div style={{
+            padding: '0.75rem 1rem', backgroundColor: 'rgba(239,68,68,0.1)',
+            color: '#ef4444', borderRadius: '0.375rem', marginBottom: '1rem',
+            fontSize: '0.875rem', border: '1px solid rgba(239,68,68,0.2)',
+          }}>
+            {error}
+            <button
+              onClick={() => setError('')}
+              style={{
+                marginLeft: '0.5rem', cursor: 'pointer', background: 'none',
+                border: 'none', color: '#ef4444', fontSize: '1rem',
+              }}
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         {loading ? (
-          <div style={{ color: '#71717a', textAlign: 'center', padding: 60 }}>Loading clients...</div>
-        ) : clients.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 60, color: '#71717a' }}>
-            <Building2 size={48} style={{ margin: '0 auto 16px', opacity: 0.5 }} />
-            <p style={{ fontSize: 16, margin: '0 0 8px' }}>No clients found</p>
-            <p style={{ fontSize: 13 }}>Add your first client to start building your knowledge base</p>
+          <div style={{ textAlign: 'center', padding: '4rem', color: '#71717a' }}>
+            Loading client docs from GitHub...
           </div>
         ) : (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(320px, 1fr))',
-            gap: 16,
+            gridTemplateColumns: isMobile ? '1fr' : '280px 1fr',
+            gap: '1rem',
           }}>
-            {clients.map((client) => {
-              const sc = STATUS_COLORS[client.status] || STATUS_COLORS.prospect;
-              return (
-                <div
-                  key={client.id}
-                  onClick={() => openClient(client)}
-                  style={{
-                    background: '#18181b', border: '1px solid #27272a',
-                    borderRadius: 12, padding: 20, cursor: 'pointer',
-                    transition: 'border-color 0.2s',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#3f3f46')}
-                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#27272a')}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                    <h3 style={{ color: '#fafafa', fontSize: 16, fontWeight: 600, margin: 0 }}>{client.clientName}</h3>
-                    <span style={{
-                      padding: '3px 10px', borderRadius: 12, fontSize: 11,
-                      fontWeight: 600, border: '1px solid',
-                      background: sc.bg, color: sc.text, borderColor: sc.border,
-                      textTransform: 'capitalize',
-                    }}>
-                      {client.status}
-                    </span>
-                  </div>
-                  <p style={{ color: '#71717a', fontSize: 13, margin: '0 0 12px' }}>{client.industry}</p>
-                  <div style={{ display: 'flex', gap: 16, color: '#a1a1aa', fontSize: 12 }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <Users size={12} /> {client.contacts.length} contact{client.contacts.length !== 1 ? 's' : ''}
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <FolderOpen size={12} /> {client.projects.length} project{client.projects.length !== 1 ? 's' : ''}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Client Detail Modal */}
-        {selectedClient && (
-          <div
-            style={{
-              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              zIndex: 50, padding: 16,
-            }}
-            onClick={() => setSelectedClient(null)}
-          >
-            <div
-              style={{
-                background: '#18181b', border: '1px solid #27272a',
-                borderRadius: 16, width: '100%', maxWidth: 800,
-                maxHeight: '90vh', overflow: 'auto', padding: 28,
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Header */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                {isEditing ? (
-                  <div style={{ display: 'flex', gap: 12, flex: 1, marginRight: 12 }}>
-                    <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Client name" style={{ ...inputStyle, flex: 1 }} />
-                    <input value={editIndustry} onChange={(e) => setEditIndustry(e.target.value)} placeholder="Industry" style={{ ...inputStyle, width: 160 }} />
-                    <select value={editStatus} onChange={(e) => setEditStatus(e.target.value as any)} style={{ ...inputStyle, width: 120 }}>
-                      <option value="active">Active</option>
-                      <option value="prospect">Prospect</option>
-                      <option value="past">Past</option>
-                    </select>
-                  </div>
-                ) : (
-                  <div>
-                    <h2 style={{ fontSize: 22, fontWeight: 700, color: '#fafafa', margin: 0 }}>{selectedClient.clientName}</h2>
-                    <p style={{ color: '#71717a', fontSize: 13, margin: '4px 0 0' }}>{selectedClient.industry}</p>
+            {/* File Tree */}
+            <div style={panelStyle}>
+              <div style={{
+                padding: '0.75rem 1rem', borderBottom: '1px solid #27272a',
+                fontSize: '0.8125rem', fontWeight: 600, color: '#d4d4d8',
+                display: 'flex', alignItems: 'center', gap: '0.375rem',
+              }}>
+                <Users size={14} /> Clients
+              </div>
+              <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                {dirs.length === 0 && (
+                  <div style={{
+                    padding: '2rem', textAlign: 'center', color: '#71717a', fontSize: '0.8125rem',
+                  }}>
+                    No client folders found. Create a new document to get started.
                   </div>
                 )}
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {isEditing ? (
-                    <button onClick={saveClient} disabled={saving} style={{
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      padding: '8px 16px', borderRadius: 8,
-                      background: '#22c55e', color: '#fff', border: 'none',
-                      cursor: 'pointer', fontWeight: 600, fontSize: 13,
-                      opacity: saving ? 0.6 : 1,
-                    }}>
-                      <Save size={14} /> {saving ? 'Saving...' : 'Save'}
-                    </button>
-                  ) : (
-                    <button onClick={() => setIsEditing(true)} style={{
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      padding: '8px 16px', borderRadius: 8,
-                      background: '#27272a', color: '#fafafa', border: 'none',
-                      cursor: 'pointer', fontWeight: 500, fontSize: 13,
-                    }}>
-                      <Edit3 size={14} /> Edit
-                    </button>
-                  )}
-                  <button onClick={() => deleteClient(selectedClient.id)} style={{
-                    padding: '8px 12px', borderRadius: 8,
-                    background: '#27272a', color: '#ef4444', border: 'none', cursor: 'pointer',
-                  }}>
-                    <Trash2 size={14} />
-                  </button>
-                  <button onClick={() => setSelectedClient(null)} style={{
-                    padding: 8, borderRadius: 8,
-                    background: '#27272a', color: '#a1a1aa', border: 'none', cursor: 'pointer',
-                  }}>
-                    <X size={18} />
-                  </button>
+                {dirs.map(dir => renderDirectory(dir, 0))}
+                {/* Root-level files */}
+                {files
+                  .filter(f => f.type === 'file' && !f.path.includes('/'))
+                  .map(f => (
+                    <div
+                      key={f.path}
+                      onClick={() => fetchFileContent(f.path)}
+                      style={fileItemStyle(selectedFile === f.path)}
+                    >
+                      <FileText size={14} style={{ color: '#71717a' }} />
+                      {f.path.replace('.md', '')}
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {/* Content Panel */}
+            <div style={panelStyle}>
+              {!selectedFile ? (
+                <div style={{ textAlign: 'center', padding: '4rem', color: '#71717a' }}>
+                  <Building2 size={40} style={{ marginBottom: '0.75rem', color: '#3f3f46' }} />
+                  <p style={{ fontSize: '0.875rem' }}>Select a client document to view</p>
+                  <p style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: '#52525b' }}>
+                    Browse client folders on the left, or create a new document
+                  </p>
                 </div>
-              </div>
-
-              {/* Tabs */}
-              <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid #27272a', paddingBottom: 0 }}>
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      padding: '10px 16px', border: 'none', cursor: 'pointer',
-                      background: 'transparent', fontSize: 13, fontWeight: 500,
-                      color: activeTab === tab.key ? '#fafafa' : '#71717a',
-                      borderBottom: `2px solid ${activeTab === tab.key ? '#3b82f6' : 'transparent'}`,
-                      marginBottom: -1,
-                    }}
-                  >
-                    {tab.icon} {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Tab Content */}
-              {activeTab === 'overview' && (
-                isEditing ? (
-                  <textarea
-                    value={editOverview}
-                    onChange={(e) => setEditOverview(e.target.value)}
-                    placeholder="Client overview (markdown)..."
-                    rows={14}
-                    style={{
-                      ...inputStyle, fontFamily: 'monospace', resize: 'vertical', lineHeight: 1.6,
-                    }}
-                  />
-                ) : (
-                  <div style={{
-                    background: '#09090b', border: '1px solid #27272a',
-                    borderRadius: 8, padding: 20,
-                    color: '#d4d4d8', fontSize: 14, lineHeight: 1.7,
-                    whiteSpace: 'pre-wrap', minHeight: 200,
-                  }}>
-                    {selectedClient.overview || 'No overview yet.'}
-                  </div>
-                )
-              )}
-
-              {activeTab === 'contacts' && (
+              ) : fileContent ? (
                 <div>
+                  {/* File header */}
+                  <div style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '0.75rem 1rem', borderBottom: '1px solid #27272a',
+                    flexWrap: 'wrap', gap: '0.5rem',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <button
+                        onClick={() => { setSelectedFile(null); setFileContent(null); }}
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer',
+                          color: '#71717a', display: 'flex', alignItems: 'center',
+                          padding: 0,
+                        }}
+                      >
+                        <ArrowLeft size={16} />
+                      </button>
+                      <FileText size={16} style={{ color: '#3b82f6' }} />
+                      <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fafafa' }}>
+                        {selectedFile}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                      <button
+                        onClick={() => fetchHistory(selectedFile)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '0.25rem',
+                          padding: '0.25rem 0.5rem', background: 'none',
+                          border: '1px solid #27272a', borderRadius: '0.25rem',
+                          fontSize: '0.75rem', cursor: 'pointer', color: '#a1a1aa',
+                        }}
+                      >
+                        <History size={12} /> History
+                      </button>
+                      {!isEditing ? (
+                        <button
+                          onClick={() => {
+                            setIsEditing(true);
+                            setEditContent(fileContent.content);
+                            setShowHistory(false);
+                          }}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: '0.25rem',
+                            padding: '0.25rem 0.5rem', background: 'none',
+                            border: '1px solid #27272a', borderRadius: '0.25rem',
+                            fontSize: '0.75rem', cursor: 'pointer', color: '#a1a1aa',
+                          }}
+                        >
+                          <Edit3 size={12} /> Edit
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => setIsEditing(false)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '0.25rem',
+                              padding: '0.25rem 0.5rem', background: 'none',
+                              border: '1px solid #27272a', borderRadius: '0.25rem',
+                              fontSize: '0.75rem', cursor: 'pointer', color: '#a1a1aa',
+                            }}
+                          >
+                            <X size={12} /> Cancel
+                          </button>
+                          <button
+                            onClick={handleSave}
+                            disabled={saving}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '0.25rem',
+                              padding: '0.25rem 0.5rem', backgroundColor: '#22c55e',
+                              color: '#ffffff', border: 'none', borderRadius: '0.25rem',
+                              fontSize: '0.75rem', cursor: 'pointer',
+                              opacity: saving ? 0.6 : 1,
+                            }}
+                          >
+                            <Save size={12} /> {saving ? 'Saving...' : 'Save & Commit'}
+                          </button>
+                        </>
+                      )}
+                      <button
+                        onClick={handleDelete}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '0.25rem',
+                          padding: '0.25rem 0.5rem', background: 'none',
+                          border: '1px solid rgba(239,68,68,0.3)', borderRadius: '0.25rem',
+                          fontSize: '0.75rem', cursor: 'pointer', color: '#ef4444',
+                        }}
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Commit message input when editing */}
                   {isEditing && (
-                    <button onClick={addContact} style={{
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      padding: '8px 16px', borderRadius: 8, marginBottom: 12,
-                      background: '#27272a', color: '#fafafa', border: 'none',
-                      cursor: 'pointer', fontSize: 13,
+                    <div style={{
+                      padding: '0.5rem 1rem', borderBottom: '1px solid #27272a',
+                      backgroundColor: '#09090b',
                     }}>
-                      <Plus size={14} /> Add Contact
-                    </button>
+                      <input
+                        value={commitMessage}
+                        onChange={(e) => setCommitMessage(e.target.value)}
+                        placeholder={`Commit message (default: Update ${selectedFile})`}
+                        style={{
+                          width: '100%', padding: '0.375rem 0.5rem',
+                          border: '1px solid #27272a', borderRadius: '0.25rem',
+                          fontSize: '0.8125rem', outline: 'none',
+                          backgroundColor: '#18181b', color: '#fafafa',
+                        }}
+                      />
+                    </div>
                   )}
-                  {(isEditing ? editContacts : selectedClient.contacts).length === 0 ? (
-                    <p style={{ color: '#71717a', fontSize: 14, textAlign: 'center', padding: 40 }}>No contacts yet</p>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      {(isEditing ? editContacts : selectedClient.contacts).map((contact, idx) => (
-                        <div key={idx} style={{
-                          background: '#09090b', border: '1px solid #27272a',
-                          borderRadius: 8, padding: 16,
-                        }}>
-                          {isEditing ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                              <div style={{ display: 'flex', gap: 8 }}>
-                                <input value={contact.name} onChange={(e) => updateContact(idx, 'name', e.target.value)} placeholder="Name" style={{ ...inputStyle, flex: 1 }} />
-                                <input value={contact.role} onChange={(e) => updateContact(idx, 'role', e.target.value)} placeholder="Role" style={{ ...inputStyle, flex: 1 }} />
-                              </div>
-                              <div style={{ display: 'flex', gap: 8 }}>
-                                <input value={contact.email} onChange={(e) => updateContact(idx, 'email', e.target.value)} placeholder="Email" style={{ ...inputStyle, flex: 1 }} />
-                                <input value={contact.phone || ''} onChange={(e) => updateContact(idx, 'phone', e.target.value)} placeholder="Phone" style={{ ...inputStyle, width: 160 }} />
-                                <button onClick={() => removeContact(idx)} style={{
-                                  padding: '8px 12px', borderRadius: 8,
-                                  background: '#27272a', color: '#ef4444', border: 'none', cursor: 'pointer',
-                                }}>
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                                <span style={{ color: '#fafafa', fontWeight: 600, fontSize: 14 }}>{contact.name}</span>
-                                <span style={{ color: '#a1a1aa', fontSize: 12 }}>{contact.role}</span>
-                              </div>
-                              <div style={{ display: 'flex', gap: 16, color: '#71717a', fontSize: 13 }}>
-                                {contact.email && (
-                                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                    <Mail size={12} /> {contact.email}
-                                  </span>
-                                )}
-                                {contact.phone && (
-                                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                    <Phone size={12} /> {contact.phone}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          )}
+
+                  {/* History panel */}
+                  {showHistory && fileHistory.length > 0 && (
+                    <div style={{
+                      padding: '0.75rem 1rem', borderBottom: '1px solid #27272a',
+                      backgroundColor: 'rgba(59,130,246,0.05)', maxHeight: '200px', overflowY: 'auto',
+                    }}>
+                      <div style={{
+                        fontSize: '0.75rem', fontWeight: 600, color: '#60a5fa',
+                        marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.375rem',
+                      }}>
+                        <History size={12} /> Commit History
+                      </div>
+                      {fileHistory.map((h, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            display: 'flex', justifyContent: 'space-between',
+                            padding: '0.25rem 0', fontSize: '0.75rem',
+                            borderBottom: i < fileHistory.length - 1 ? '1px solid #27272a' : 'none',
+                          }}
+                        >
+                          <span style={{ color: '#d4d4d8', fontWeight: 500 }}>{h.message}</span>
+                          <span style={{ color: '#71717a', whiteSpace: 'nowrap', marginLeft: '0.5rem' }}>
+                            {new Date(h.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                          </span>
                         </div>
                       ))}
                     </div>
                   )}
-                </div>
-              )}
 
-              {activeTab === 'projects' && (
-                <div>
-                  {isEditing && (
-                    <button onClick={addProject} style={{
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      padding: '8px 16px', borderRadius: 8, marginBottom: 12,
-                      background: '#27272a', color: '#fafafa', border: 'none',
-                      cursor: 'pointer', fontSize: 13,
-                    }}>
-                      <Plus size={14} /> Add Project
-                    </button>
-                  )}
-                  {(isEditing ? editProjects : selectedClient.projects).length === 0 ? (
-                    <p style={{ color: '#71717a', fontSize: 14, textAlign: 'center', padding: 40 }}>No projects yet</p>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      {(isEditing ? editProjects : selectedClient.projects).map((project, idx) => (
-                        <div key={idx} style={{
-                          background: '#09090b', border: '1px solid #27272a',
-                          borderRadius: 8, padding: 16,
-                        }}>
-                          {isEditing ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                              <div style={{ display: 'flex', gap: 8 }}>
-                                <input value={project.name} onChange={(e) => updateProject(idx, 'name', e.target.value)} placeholder="Project name" style={{ ...inputStyle, flex: 1 }} />
-                                <input value={project.status} onChange={(e) => updateProject(idx, 'status', e.target.value)} placeholder="Status" style={{ ...inputStyle, width: 140 }} />
-                                <button onClick={() => removeProject(idx)} style={{
-                                  padding: '8px 12px', borderRadius: 8,
-                                  background: '#27272a', color: '#ef4444', border: 'none', cursor: 'pointer',
-                                }}>
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-                              <textarea value={project.description} onChange={(e) => updateProject(idx, 'description', e.target.value)} placeholder="Description" rows={2} style={{ ...inputStyle, fontFamily: 'inherit', resize: 'vertical' }} />
-                            </div>
-                          ) : (
-                            <div>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                                <span style={{ color: '#fafafa', fontWeight: 600, fontSize: 14 }}>{project.name}</span>
-                                <span style={{
-                                  padding: '2px 8px', borderRadius: 6, fontSize: 11,
-                                  background: '#27272a', color: '#a1a1aa',
-                                }}>
-                                  {project.status}
-                                </span>
-                              </div>
-                              <p style={{ color: '#a1a1aa', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{project.description}</p>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activeTab === 'notes' && (
-                isEditing ? (
-                  <textarea
-                    value={editNotes}
-                    onChange={(e) => setEditNotes(e.target.value)}
-                    placeholder="Meeting notes (markdown)..."
-                    rows={14}
-                    style={{
-                      ...inputStyle, fontFamily: 'monospace', resize: 'vertical', lineHeight: 1.6,
-                    }}
-                  />
-                ) : (
-                  <div style={{
-                    background: '#09090b', border: '1px solid #27272a',
-                    borderRadius: 8, padding: 20,
-                    color: '#d4d4d8', fontSize: 14, lineHeight: 1.7,
-                    whiteSpace: 'pre-wrap', minHeight: 200,
-                  }}>
-                    {selectedClient.meetingNotes || 'No meeting notes yet.'}
-                  </div>
-                )
-              )}
-
-              {activeTab === 'team' && (
-                <div>
-                  {/* Assigned Agents */}
-                  <div style={{ marginBottom: 24 }}>
-                    <h3 style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>
-                      Agents Working on This Client ({relatedAgents.length})
-                    </h3>
-                    {relatedAgents.length === 0 ? (
-                      <p style={{ color: '#71717a', fontSize: 14 }}>No agents assigned yet. Assign tasks to this client to link agents.</p>
+                  {/* Content */}
+                  <div style={{ padding: '1.25rem', minHeight: '400px' }}>
+                    {isEditing ? (
+                      <textarea
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        style={{
+                          width: '100%', minHeight: '500px', padding: '0.75rem',
+                          border: '1px solid #27272a', borderRadius: '0.375rem',
+                          fontFamily: 'monospace', fontSize: '0.8125rem', lineHeight: '1.6',
+                          outline: 'none', resize: 'vertical',
+                          backgroundColor: '#09090b', color: '#fafafa',
+                        }}
+                      />
                     ) : (
-                      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                        {relatedAgents.map((agent: any) => (
-                          <div key={agent.id} style={{
-                            display: 'flex', alignItems: 'center', gap: 8,
-                            padding: '10px 16px', borderRadius: 10,
-                            background: '#09090b', border: '1px solid #27272a',
-                          }}>
-                            <span style={{ fontSize: 20 }}>{agent.avatar}</span>
-                            <div>
-                              <div style={{ color: '#fafafa', fontSize: 14, fontWeight: 600 }}>{agent.name}</div>
-                              <div style={{ color: '#71717a', fontSize: 12 }}>{agent.role}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <div
+                        style={{ fontSize: '0.875rem', color: '#d4d4d8', lineHeight: '1.7' }}
+                        dangerouslySetInnerHTML={{ __html: renderMarkdown(fileContent.content) }}
+                      />
                     )}
                   </div>
-
-                  {/* Related Tasks */}
-                  <div>
-                    <h3 style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>
-                      Tasks ({relatedTasks.length})
-                    </h3>
-                    {relatedTasks.length === 0 ? (
-                      <p style={{ color: '#71717a', fontSize: 14 }}>No tasks linked to this client yet.</p>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        {relatedTasks.map((task: any) => (
-                          <div key={task.id} style={{
-                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                            padding: '10px 14px', borderRadius: 8,
-                            background: '#09090b', border: '1px solid #27272a',
-                          }}>
-                            <div>
-                              <div style={{ color: '#fafafa', fontSize: 14, fontWeight: 500 }}>{task.title}</div>
-                              <div style={{ color: '#71717a', fontSize: 12 }}>{task.assignedToName || 'Unassigned'}</div>
-                            </div>
-                            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                              <span style={{
-                                padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600,
-                                textTransform: 'capitalize',
-                                color: task.status === 'done' ? '#4ade80' : task.status === 'in-progress' ? '#60a5fa' : task.status === 'review' ? '#c084fc' : '#a1a1aa',
-                                background: task.status === 'done' ? 'rgba(34,197,94,0.15)' : task.status === 'in-progress' ? 'rgba(59,130,246,0.15)' : task.status === 'review' ? 'rgba(168,85,247,0.15)' : 'rgba(161,161,170,0.1)',
-                              }}>
-                                {task.status}
-                              </span>
-                              <span style={{
-                                padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600,
-                                textTransform: 'capitalize',
-                                color: task.priority === 'urgent' ? '#ef4444' : task.priority === 'high' ? '#f97316' : task.priority === 'medium' ? '#eab308' : '#71717a',
-                              }}>
-                                {task.priority}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '4rem', color: '#71717a' }}>
+                  Loading...
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* Create Modal */}
-        {showCreateModal && (
-          <div
-            style={{
-              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              zIndex: 50, padding: 16,
-            }}
-            onClick={() => setShowCreateModal(false)}
-          >
-            <div
-              style={{
-                background: '#18181b', border: '1px solid #27272a',
-                borderRadius: 16, width: '100%', maxWidth: 600,
-                maxHeight: '85vh', overflow: 'auto', padding: 28,
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: '#fafafa', margin: 0 }}>New Client</h2>
-                <button onClick={() => setShowCreateModal(false)} style={{
-                  padding: 8, borderRadius: 8, background: '#27272a', color: '#a1a1aa', border: 'none', cursor: 'pointer',
+        {/* New File Modal */}
+        {showNewFile && (
+          <div style={{
+            position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 100, padding: '1rem',
+          }}>
+            <div style={{
+              backgroundColor: '#18181b', borderRadius: '0.75rem', width: '100%',
+              maxWidth: '520px', padding: '1.5rem', border: '1px solid #27272a',
+            }}>
+              <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                marginBottom: '1.25rem',
+              }}>
+                <h2 style={{
+                  fontSize: '1.125rem', fontWeight: 600, color: '#fafafa',
+                  display: 'flex', alignItems: 'center', gap: '0.5rem',
                 }}>
-                  <X size={18} />
+                  <Plus size={20} /> New Client Document
+                </h2>
+                <button
+                  onClick={() => setShowNewFile(false)}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer', color: '#71717a',
+                  }}
+                >
+                  <X size={20} />
                 </button>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Client name" style={inputStyle} />
-                <div style={{ display: 'flex', gap: 12 }}>
-                  <input value={editIndustry} onChange={(e) => setEditIndustry(e.target.value)} placeholder="Industry" style={{ ...inputStyle, flex: 1 }} />
-                  <select value={editStatus} onChange={(e) => setEditStatus(e.target.value as any)} style={{ ...inputStyle, width: 140 }}>
-                    <option value="prospect">Prospect</option>
-                    <option value="active">Active</option>
-                    <option value="past">Past</option>
-                  </select>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{
+                    fontSize: '0.8125rem', fontWeight: 500, color: '#d4d4d8',
+                    display: 'block', marginBottom: '0.25rem',
+                  }}>
+                    File Path *
+                  </label>
+                  <input
+                    value={newFilePath}
+                    onChange={(e) => setNewFilePath(e.target.value)}
+                    placeholder="e.g. stonebridge-farm/overview.md or krumb-bakery/contacts.md"
+                    style={{
+                      width: '100%', padding: '0.5rem 0.75rem',
+                      border: '1px solid #27272a', borderRadius: '0.375rem',
+                      fontSize: '0.875rem', outline: 'none',
+                      backgroundColor: '#09090b', color: '#fafafa',
+                    }}
+                  />
+                  <p style={{ fontSize: '0.75rem', color: '#71717a', marginTop: '0.25rem' }}>
+                    Use client-folder/filename.md format. The folder name is the client name.
+                  </p>
                 </div>
-                <textarea
-                  value={editOverview}
-                  onChange={(e) => setEditOverview(e.target.value)}
-                  placeholder="Overview (markdown)..."
-                  rows={6}
-                  style={{ ...inputStyle, fontFamily: 'monospace', resize: 'vertical' }}
-                />
+
+                <div>
+                  <label style={{
+                    fontSize: '0.8125rem', fontWeight: 500, color: '#d4d4d8',
+                    display: 'block', marginBottom: '0.25rem',
+                  }}>
+                    Initial Content
+                  </label>
+                  <textarea
+                    value={newFileContent}
+                    onChange={(e) => setNewFileContent(e.target.value)}
+                    placeholder="# Document Title&#10;&#10;Write your content in Markdown..."
+                    rows={8}
+                    style={{
+                      width: '100%', padding: '0.75rem',
+                      border: '1px solid #27272a', borderRadius: '0.375rem',
+                      fontFamily: 'monospace', fontSize: '0.8125rem',
+                      outline: 'none', resize: 'vertical',
+                      backgroundColor: '#09090b', color: '#fafafa',
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{
+                display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem',
+              }}>
                 <button
-                  onClick={createClient}
-                  disabled={saving || !editName || !editIndustry}
+                  onClick={() => setShowNewFile(false)}
                   style={{
-                    padding: '12px 20px', borderRadius: 8,
-                    background: '#3b82f6', color: '#fff', border: 'none',
-                    cursor: 'pointer', fontWeight: 600, fontSize: 14,
-                    opacity: saving || !editName || !editIndustry ? 0.5 : 1,
+                    padding: '0.5rem 1rem', backgroundColor: '#27272a', color: '#d4d4d8',
+                    border: 'none', borderRadius: '0.375rem', fontSize: '0.875rem', cursor: 'pointer',
                   }}
                 >
-                  {saving ? 'Creating...' : 'Create Client'}
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateFile}
+                  disabled={!newFilePath || saving}
+                  style={{
+                    padding: '0.5rem 1rem', backgroundColor: '#3b82f6', color: '#ffffff',
+                    border: 'none', borderRadius: '0.375rem', fontWeight: 500,
+                    fontSize: '0.875rem', cursor: 'pointer',
+                    opacity: !newFilePath || saving ? 0.6 : 1,
+                  }}
+                >
+                  {saving ? 'Creating...' : 'Create & Commit'}
                 </button>
               </div>
             </div>

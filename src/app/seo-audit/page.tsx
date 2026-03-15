@@ -40,7 +40,7 @@ const IMG = {
 // ============================================
 // Main Page
 // ============================================
-export default function FreeAuditPage() {
+export default function SeoAuditPage() {
   const [formData, setFormData] = useState({
     name: '', company: '', website: '', email: '', phone: '',
   });
@@ -56,7 +56,7 @@ export default function FreeAuditPage() {
       const res = await fetch('/api/public/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, source: 'landing-page-free-audit', ...utm }),
+        body: JSON.stringify({ ...formData, source: 'landing-page-seo-audit', ...utm }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Something went wrong');
@@ -69,7 +69,7 @@ export default function FreeAuditPage() {
   };
 
   const scrollToForm = () => {
-    document.getElementById('audit-form')?.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('seo-form')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const inputClass = 'w-full bg-transparent border-b border-[#333] text-white placeholder-[#555] px-0 py-3 text-[15px] font-medium focus:outline-none focus:border-white transition-colors';
@@ -99,7 +99,7 @@ export default function FreeAuditPage() {
               className="bg-white/10 backdrop-blur-md text-white text-sm font-medium px-6 py-2.5 rounded-full border border-white/20 hover:bg-white/20 transition-all"
               style={{ letterSpacing: '-0.02em' }}
             >
-              Get Your Free Audit
+              Get Free SEO Review
             </button>
           </div>
         </nav>
@@ -130,17 +130,16 @@ export default function FreeAuditPage() {
                 className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-medium text-white leading-[1.02] mb-6"
                 style={{ letterSpacing: '-0.03em' }}
               >
-                Your Website<br />
-                Should Be Winning<br />
-                You Customers.
+                Your Customers Are<br />
+                Searching. Are They<br />
+                Finding You?
               </h1>
               <p
                 className="text-base sm:text-lg text-white/60 leading-relaxed mb-6 max-w-lg"
                 style={{ letterSpacing: '-0.01em', fontWeight: 400 }}
               >
-                Design → Build → Grow<br />
-                A free audit of your site — performance, SEO,<br className="hidden sm:block" />
-                design, and conversion. No pitch. No strings.
+                70% of clicks go to the top 3 Google results.<br />
+                If you&apos;re not there, your competitors are. We fix that.
               </p>
 
               {/* CTA — white pill like "Start a Project" on main site */}
@@ -149,7 +148,7 @@ export default function FreeAuditPage() {
                 className="bg-white text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-white/90 transition-all inline-flex items-center gap-2"
                 style={{ letterSpacing: '-0.02em' }}
               >
-                Get Your Free Audit
+                Get Free SEO Review
               </button>
             </div>
           </div>
@@ -179,13 +178,13 @@ export default function FreeAuditPage() {
               {/* Left — heading + trust */}
               <div>
                 <span className="text-[11px] font-semibold text-[#555] uppercase block mb-6" style={{ letterSpacing: '0.08em' }}>
-                  Free Website Audit
+                  Free SEO Review
                 </span>
                 <h2
                   className="text-3xl sm:text-4xl font-medium text-white leading-[1.1] mb-6"
                   style={{ letterSpacing: '-0.04em' }}
                 >
-                  Get your free audit
+                  Get your free SEO review
                 </h2>
                 <p className="text-sm text-[#555] leading-relaxed mb-8" style={{ letterSpacing: '-0.01em', fontWeight: 500 }}>
                   Takes 30 seconds. We&apos;ll do the rest.<br />
@@ -221,7 +220,7 @@ export default function FreeAuditPage() {
                       We&apos;ve got your details.
                     </h3>
                     <p className="text-sm text-[#666] font-medium" style={{ letterSpacing: '-0.02em' }}>
-                      We&apos;ll be in touch within 1 business day with your free audit.
+                      We&apos;ll be in touch within 1 business day with your free SEO review.
                     </p>
                   </div>
                 ) : (
@@ -520,7 +519,7 @@ export default function FreeAuditPage() {
                 className="bg-white text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-white/90 transition-all inline-flex items-center gap-2"
                 style={{ letterSpacing: '-0.02em' }}
               >
-                Get My Free Audit <ArrowRight size={15} />
+                Get My Free SEO Review <ArrowRight size={15} />
               </button>
               <a
                 href="mailto:hello@yarndigital.co.uk"

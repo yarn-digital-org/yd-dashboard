@@ -75,7 +75,11 @@ export async function GET(request: NextRequest) {
     const range = searchParams.get('range') || '7d';
 
     const accessToken = (process.env.META_ACCESS_TOKEN || '').trim();
-    const adAccountId = (process.env.META_AD_ACCOUNT_ID || 'act_1118539906224369').trim();
+    let adAccountId = (process.env.META_AD_ACCOUNT_ID || 'act_1118539906224369').trim();
+    // Ensure act_ prefix
+    if (!adAccountId.startsWith('act_')) {
+      adAccountId = `act_${adAccountId}`;
+    }
 
     if (!accessToken || accessToken.length === 0) {
       // Return mock/empty data when not configured

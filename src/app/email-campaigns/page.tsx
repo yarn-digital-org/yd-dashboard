@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Sidebar } from '@/components/Sidebar';
@@ -18,6 +18,10 @@ import {
   Loader2,
   X,
   Eye,
+  Code,
+  Columns,
+  LayoutTemplate,
+  Tag,
 } from 'lucide-react';
 
 interface CampaignStats {
@@ -84,6 +88,121 @@ const DEFAULT_TEMPLATE = `<!DOCTYPE html>
 </body>
 </html>`;
 
+// ─── Email template library ───────────────────────────────────────────────────
+const YD_HEADER = `<tr><td style="background:#0A0A0A;padding:24px 32px;">
+          <h1 style="margin:0;font-size:22px;font-weight:700;color:#fff;">YARN<span style="color:#FF3300;">.</span> Digital</h1>
+        </td></tr>`;
+
+const YD_FOOTER = `<tr><td style="background:#F5F5F5;padding:20px 32px;border-top:1px solid #E5E5E5;">
+          <p style="margin:0;font-size:12px;color:#9CA3AF;">© 2026 Yarn Digital · Belfast, Northern Ireland · <a href="{{unsubscribeUrl}}" style="color:#9CA3AF;">Unsubscribe</a></p>
+        </td></tr>`;
+
+const WRAP = (body: string) => `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center" style="padding:40px 20px;">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:12px;overflow:hidden;">
+        ${YD_HEADER}
+        ${body}
+        ${YD_FOOTER}
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+interface EmailTemplateOption {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  html: string;
+}
+
+const EMAIL_TEMPLATES: EmailTemplateOption[] = [
+  {
+    id: 'newsletter',
+    name: 'Newsletter',
+    description: 'Updates, news, and insights',
+    icon: '📰',
+    html: WRAP(`<tr><td style="padding:32px;">
+          <h2 style="font-size:24px;font-weight:700;color:#0A0A0A;margin:0 0 8px;">Hey {{firstName}} 👋</h2>
+          <p style="font-size:15px;color:#4A4A4A;line-height:1.7;margin:0 0 24px;">Here's what's been happening at Yarn Digital this month.</p>
+          <hr style="border:none;border-top:1px solid #E5E7EB;margin:0 0 24px;">
+          <h3 style="font-size:18px;font-weight:600;color:#0A0A0A;margin:0 0 8px;">Section Heading</h3>
+          <p style="font-size:15px;color:#4A4A4A;line-height:1.7;margin:0 0 24px;">Your content goes here. Keep it short and valuable.</p>
+          <a href="#" style="display:inline-block;background:#FF3300;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">Read More →</a>
+        </td></tr>`),
+  },
+  {
+    id: 'promo',
+    name: 'Promotional',
+    description: 'Offer, discount, or campaign',
+    icon: '🎯',
+    html: WRAP(`<tr><td style="padding:32px;text-align:center;">
+          <p style="font-size:13px;font-weight:600;letter-spacing:0.1em;color:#FF3300;text-transform:uppercase;margin:0 0 12px;">Limited Time Offer</p>
+          <h2 style="font-size:28px;font-weight:700;color:#0A0A0A;margin:0 0 16px;line-height:1.2;">Your Headline Here</h2>
+          <p style="font-size:16px;color:#4A4A4A;line-height:1.7;margin:0 0 28px;max-width:460px;margin-left:auto;margin-right:auto;">Tell {{firstName}} about your offer. Be clear, concise, and give them a reason to click.</p>
+          <a href="#" style="display:inline-block;background:#FF3300;color:#fff;text-decoration:none;padding:16px 36px;border-radius:8px;font-size:16px;font-weight:700;">Claim Your Offer</a>
+          <p style="font-size:12px;color:#9CA3AF;margin:16px 0 0;">Offer expires [date]. T&amp;Cs apply.</p>
+        </td></tr>`),
+  },
+  {
+    id: 'followup',
+    name: 'Follow-up',
+    description: 'Personal outreach or check-in',
+    icon: '🤝',
+    html: WRAP(`<tr><td style="padding:32px;">
+          <p style="font-size:16px;color:#0A0A0A;margin:0 0 16px;">Hi {{firstName}},</p>
+          <p style="font-size:16px;color:#4A4A4A;line-height:1.7;margin:0 0 16px;">I wanted to follow up and see if you'd had a chance to think about [topic].</p>
+          <p style="font-size:16px;color:#4A4A4A;line-height:1.7;margin:0 0 24px;">We've helped businesses like {{company}} with [result]. I'd love to explore whether we can do the same for you.</p>
+          <a href="#" style="display:inline-block;background:#0A0A0A;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">Book a Quick Call</a>
+          <p style="font-size:15px;color:#4A4A4A;margin:24px 0 0;">Best,<br><strong>The Yarn Digital Team</strong></p>
+        </td></tr>`),
+  },
+  {
+    id: 'announcement',
+    name: 'Announcement',
+    description: 'Launch, update, or event',
+    icon: '📣',
+    html: WRAP(`<tr><td style="padding:0;">
+          <div style="background:#0A0A0A;padding:40px 32px;text-align:center;">
+            <p style="font-size:13px;font-weight:600;letter-spacing:0.1em;color:#FF3300;text-transform:uppercase;margin:0 0 12px;">Announcement</p>
+            <h2 style="font-size:32px;font-weight:700;color:#fff;margin:0 0 16px;line-height:1.2;">Big News, {{firstName}}!</h2>
+            <p style="font-size:16px;color:#9CA3AF;line-height:1.7;margin:0;">We have something exciting to share with you.</p>
+          </div>
+          <div style="padding:32px;">
+            <p style="font-size:16px;color:#4A4A4A;line-height:1.7;margin:0 0 24px;">Your announcement details go here. Tell them what's happening, why it matters, and what to do next.</p>
+            <a href="#" style="display:inline-block;background:#FF3300;color:#fff;text-decoration:none;padding:14px 28px;border-radius:8px;font-size:15px;font-weight:600;">Find Out More</a>
+          </div>
+        </td></tr>`),
+  },
+  {
+    id: 'plain',
+    name: 'Plain Text',
+    description: 'Simple, personal email',
+    icon: '✉️',
+    html: WRAP(`<tr><td style="padding:32px;">
+          <p style="font-size:16px;color:#0A0A0A;margin:0 0 16px;">Hi {{firstName}},</p>
+          <p style="font-size:16px;color:#4A4A4A;line-height:1.7;margin:0 0 16px;">Write your message here. Keep it conversational and focused on one thing.</p>
+          <p style="font-size:16px;color:#4A4A4A;line-height:1.7;margin:0 0 16px;">What do you want {{firstName}} to do after reading this?</p>
+          <p style="font-size:16px;color:#4A4A4A;margin:0;">Best,<br><strong>The Yarn Digital Team</strong></p>
+        </td></tr>`),
+  },
+];
+
+// Merge tags available for insertion
+const MERGE_TAGS = [
+  { label: 'First Name', tag: '{{firstName}}' },
+  { label: 'Last Name', tag: '{{lastName}}' },
+  { label: 'Full Name', tag: '{{name}}' },
+  { label: 'Email', tag: '{{email}}' },
+  { label: 'Company', tag: '{{company}}' },
+  { label: 'Unsubscribe', tag: '{{unsubscribeUrl}}' },
+];
+
 export default function EmailCampaignsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -96,6 +215,22 @@ export default function EmailCampaignsPage() {
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [emailLists, setEmailLists] = useState<{ id: string; name: string; memberCount: number; type: string }[]>([]);
+  const [editorTab, setEditorTab] = useState<'templates' | 'editor' | 'preview'>('templates');
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+
+  const insertMergeTag = useCallback((tag: string) => {
+    const el = bodyRef.current;
+    if (!el) return;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const currentVal = el.value;
+    const newVal = currentVal.slice(0, start) + tag + currentVal.slice(end);
+    setFormData(prev => ({ ...prev, htmlBody: newVal }));
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(start + tag.length, start + tag.length);
+    });
+  }, []);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -132,6 +267,7 @@ export default function EmailCampaignsPage() {
   const openNew = () => {
     setEditingId(null);
     setFormData({ name: '', subject: '', previewText: '', htmlBody: DEFAULT_TEMPLATE, recipientList: 'all', scheduledAt: '' });
+    setEditorTab('templates'); // Start on template picker for new campaigns
     setShowModal(true);
   };
 
@@ -145,6 +281,7 @@ export default function EmailCampaignsPage() {
       recipientList: c.recipientList,
       scheduledAt: c.scheduledAt || '',
     });
+    setEditorTab('editor'); // Go straight to editor when editing existing campaign
     setShowModal(true);
     setActiveMenu(null);
   };
@@ -448,18 +585,92 @@ export default function EmailCampaignsPage() {
                 />
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-sm font-medium text-gray-700">HTML Body *</label>
-                  <span className="text-xs text-gray-400">Use {`{{firstName}}`}, {`{{name}}`}, {`{{email}}`} for personalisation</span>
+              {/* Template Builder */}
+              <div className="border border-gray-200 rounded-xl overflow-hidden">
+                {/* Tab bar */}
+                <div className="flex border-b border-gray-200 bg-gray-50">
+                  {([
+                    { key: 'templates', label: 'Templates', icon: <LayoutTemplate size={14} /> },
+                    { key: 'editor', label: 'HTML Editor', icon: <Code size={14} /> },
+                    { key: 'preview', label: 'Preview', icon: <Eye size={14} /> },
+                  ] as const).map(tab => (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => setEditorTab(tab.key)}
+                      className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium transition border-b-2 ${
+                        editorTab === tab.key
+                          ? 'border-[#FF3300] text-[#FF3300] bg-white'
+                          : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      {tab.icon}{tab.label}
+                    </button>
+                  ))}
                 </div>
-                <textarea
-                  value={formData.htmlBody}
-                  onChange={e => setFormData({ ...formData, htmlBody: e.target.value })}
-                  required
-                  rows={12}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300] text-sm font-mono text-xs"
-                />
+
+                {/* Templates tab */}
+                {editorTab === 'templates' && (
+                  <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {EMAIL_TEMPLATES.map(tpl => (
+                      <button
+                        key={tpl.id}
+                        type="button"
+                        onClick={() => { setFormData(p => ({ ...p, htmlBody: tpl.html })); setEditorTab('editor'); }}
+                        className="p-3 border-2 border-gray-200 rounded-xl text-left hover:border-[#FF3300] hover:bg-orange-50/30 transition group"
+                      >
+                        <div className="text-2xl mb-1">{tpl.icon}</div>
+                        <div className="text-sm font-semibold text-gray-900 group-hover:text-[#FF3300]">{tpl.name}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">{tpl.description}</div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Editor tab */}
+                {editorTab === 'editor' && (
+                  <div>
+                    {/* Merge tag toolbar */}
+                    <div className="flex flex-wrap gap-1.5 px-3 py-2 bg-gray-50 border-b border-gray-100">
+                      <span className="flex items-center gap-1 text-xs text-gray-400 mr-1">
+                        <Tag size={12} /> Insert:
+                      </span>
+                      {MERGE_TAGS.map(mt => (
+                        <button
+                          key={mt.tag}
+                          type="button"
+                          onClick={() => insertMergeTag(mt.tag)}
+                          className="px-2 py-0.5 text-xs bg-purple-100 text-purple-700 border border-purple-200 rounded hover:bg-purple-200 font-mono transition"
+                          title={`Insert ${mt.tag}`}
+                        >
+                          {mt.tag}
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      ref={bodyRef}
+                      value={formData.htmlBody}
+                      onChange={e => setFormData({ ...formData, htmlBody: e.target.value })}
+                      required
+                      rows={16}
+                      className="w-full px-3 py-2 border-0 focus:outline-none text-xs font-mono bg-white resize-y"
+                      style={{ minHeight: '320px' }}
+                    />
+                  </div>
+                )}
+
+                {/* Preview tab */}
+                {editorTab === 'preview' && (
+                  <div className="bg-gray-100 p-4">
+                    <iframe
+                      srcDoc={formData.htmlBody}
+                      className="w-full rounded-lg border border-gray-200 bg-white"
+                      style={{ height: '480px' }}
+                      sandbox="allow-same-origin"
+                      title="Email preview"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 pt-2">

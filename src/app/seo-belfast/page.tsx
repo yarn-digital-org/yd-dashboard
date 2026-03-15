@@ -58,7 +58,7 @@ export default function SEOBelfastPage() {
       const res = await fetch('/api/public/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, source: 'landing-page-web-design-belfast', ...utm }),
+        body: JSON.stringify({ ...formData, source: 'landing-page-seo-belfast', ...utm }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Something went wrong');
@@ -80,7 +80,7 @@ export default function SEOBelfastPage() {
   return (
     <>
       <ForceLightTheme />
-      <PageViewTracker page="web-design-belfast" />
+      <PageViewTracker page="seo-belfast" />
       <MetaPixelScript />
 
       <main className="min-h-screen bg-[#0a0a0a] font-sans antialiased landing-page" style={{ letterSpacing: '-0.02em' }}>
@@ -134,17 +134,17 @@ export default function SEOBelfastPage() {
                 className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-medium text-white leading-[1.02] mb-6"
                 style={{ letterSpacing: '-0.03em' }}
               >
-                Your Website<br />
-                Should Be Winning<br />
-                You Customers.
+                Get Found.<br />
+                Get Leads.<br />
+                Get Growing.
               </h1>
               <p
                 className="text-base sm:text-lg text-white/60 leading-relaxed mb-6 max-w-lg"
                 style={{ letterSpacing: '-0.01em', fontWeight: 400 }}
               >
-                Design → Build → Grow<br />
-                A free audit of your site — performance, SEO,<br className="hidden sm:block" />
-                design, and conversion. No pitch. No strings.
+                Belfast&apos;s full-service digital studio.<br />
+                Free SEO audit — we&apos;ll tell you exactly why<br className="hidden sm:block" />
+                you&apos;re not ranking. No pitch. No strings.
               </p>
 
               {/* CTA — white pill like "Start a Project" on main site */}
@@ -208,9 +208,9 @@ export default function SEOBelfastPage() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 text-xs text-[#444] font-medium">
-                  <span>Belfast-based studio</span>
-                  <span>Free consultation</span>
-                  <span>Real results, real clients</span>
+                  <span>Belfast-based SEO specialists</span>
+                  <span>Audit delivered within 48 hours</span>
+                  <span>No sales pitch. Ever.</span>
                 </div>
               </div>
 
@@ -256,8 +256,8 @@ export default function SEOBelfastPage() {
                           value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
                       </div>
                       <div>
-                        <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Phone *</label>
-                        <input type="tel" required placeholder="Phone number" className={inputClass}
+                        <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Phone (optional)</label>
+                        <input type="tel" placeholder="Phone number" className={inputClass}
                           value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
                       </div>
                     </div>
@@ -307,12 +307,12 @@ export default function SEOBelfastPage() {
                 {/* List-style like YD services section */}
                 <div className="border-t border-[#e5e5e5]">
                   {[
-                    { title: 'Local SEO Strategy', desc: 'Data-driven SEO strategy tailored to your Belfast market — not generic advice.' },
-                    { title: 'SEO Built In', desc: 'Every site we build is optimised for Google from day one — structure, speed, and content.' },
-                    { title: 'Mobile-First Development', desc: 'Responsive design that looks and works perfectly on every device.' },
-                    { title: 'Conversion Focused', desc: 'Strategic layouts and CTAs designed to turn visitors into paying customers.' },
-                    { title: 'Ongoing Support', desc: 'We don\'t disappear after launch. Hosting, maintenance, and growth — we\'re here.' },
-                    { title: 'Fast Turnaround', desc: 'Most projects launch in 4-8 weeks. No endless timelines.' },
+                    { title: 'Local SEO Strategy', desc: 'Data-driven SEO strategy tailored to your Belfast market and target audience — not generic advice.' },
+                    { title: 'Technical SEO Audit', desc: 'We dig into your site structure, page speed, crawlability, and Core Web Vitals. Fix what Google can\'t ignore.' },
+                    { title: 'On-Page Optimisation', desc: 'Keywords, meta tags, headings, internal linking — every element optimised to rank.' },
+                    { title: 'Content Strategy', desc: 'The right content, targeting the right searches. Built to drive qualified traffic, not just impressions.' },
+                    { title: 'Link Building', desc: 'High-quality backlinks from relevant sources. The kind that actually move the needle.' },
+                    { title: 'Monthly Reporting', desc: 'Clear, honest reporting every month. Rankings, traffic, leads — all in one place.' },
                   ].map((item, i) => (
                     <div key={i} className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-10 py-5 border-b border-[#e5e5e5] hover:border-[#999] transition-colors">
                       <div className="text-[15px] font-semibold text-[#0a0a0a]" style={{ letterSpacing: '-0.02em' }}>
@@ -443,11 +443,11 @@ export default function SEOBelfastPage() {
 
             <div className="border-t border-[#1a1a1a]">
               {[
-                { title: 'Brand Strategy & Identity', desc: 'Research-driven brand positioning that makes you impossible to ignore.' },
-                { title: 'SEO & Development', desc: 'Shopify, WordPress, or custom — fast, responsive, built to convert.' },
-                { title: 'UX / UI Design', desc: 'Interfaces that feel intuitive and look exceptional.' },
-                { title: 'SEO & Content', desc: 'Get found by the right people. Sustainable organic growth.' },
-                { title: 'Digital Marketing', desc: 'Paid media and campaigns that actually move the needle.' },
+                { title: 'SEO Strategy & Consulting', desc: 'Research-driven SEO that positions you above your competitors on Google.' },
+                { title: 'Web Design & Development', desc: 'Shopify, WordPress, or custom — fast, responsive, built to convert and rank.' },
+                { title: 'Content Marketing', desc: 'Targeted content that drives qualified traffic and builds domain authority.' },
+                { title: 'Paid Search (PPC)', desc: 'Google Ads that complement your organic strategy. More visibility, more leads.' },
+                { title: 'Brand & Identity', desc: 'A brand that earns trust before a word is read.' },
               ].map((s, i) => (
                 <div key={i} className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-20 py-6 border-b border-[#1a1a1a] hover:border-[#333] transition-colors">
                   <div className="text-base sm:text-lg font-medium text-white" style={{ letterSpacing: '-0.03em' }}>

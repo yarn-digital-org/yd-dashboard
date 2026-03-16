@@ -106,18 +106,31 @@ export default function LandingPagesPage() {
 
   const fetchBuiltPageStats = useCallback(async () => {
     try {
+      // Try auth-protected endpoint first, fall back to public analytics
+      let statsMap: Record<string, PageStats> = {};
       const res = await fetch('/api/analytics/landing-pages');
       if (res.ok) {
         const data = await res.json();
         if (data?.pages && Array.isArray(data.pages)) {
-          const statsMap: Record<string, PageStats> = {};
           for (const p of data.pages) {
             statsMap[p.page] = { views: p.views_30d || 0, leads: p.leads || 0 };
           }
-          setBuiltPageStats(statsMap);
         }
       }
-    } catch { /* silent */ }
+      // If no data from protected endpoint, try public analytics
+      if (Object.keys(statsMap).length === 0) {
+        const pubRes = await fetch('/api/public/analytics');
+        if (pubRes.ok) {
+          const pubData = await pubRes.json();
+          if (pubData?.stats) {
+            for (const [page, stat] of Object.entries(pubData.stats as Record<string, { views: number }>)) {
+              statsMap[page] = { views: stat.views || 0, leads: 0 };
+            }
+          }
+        }
+      }
+      setBuiltPageStats(statsMap);
+    } catch (err) { console.error('Failed to fetch built page stats:', err); }
   }, []);
 
   const copyBuiltUrl = (path: string) => {

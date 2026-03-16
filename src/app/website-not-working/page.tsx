@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import { ArrowRight, Loader2, Check, ArrowDown } from 'lucide-react';
+import { ArrowRight, Loader2, Check } from 'lucide-react';
 import Image from 'next/image';
 import { ForceLightTheme } from '@/components/ForceLightTheme';
 import PageViewTracker from '@/components/PageViewTracker';
-
 
 // ============================================
 // Meta Pixel + UTM
@@ -27,7 +26,6 @@ function getUtmParams(): Record<string, string> {
   };
 }
 
-// Self-hosted images
 const IMG = {
   logoDark: '/images/yd/logo-dark.png',
   logoWhite: '/images/yd/logo-white.png',
@@ -39,12 +37,9 @@ const IMG = {
   krumb: '/images/yd/c2ByT5WhAv4Ac8xz0FBRqtJ0DPE.png',
 };
 
-// ============================================
-// Main Page
-// ============================================
-export default function FreeAuditPage() {
+export default function WebsiteNotConvertingPage() {
   const [formData, setFormData] = useState({
-    name: '', company: '', website: '', email: '', phone: '',
+    name: '', email: '', phone: '', company: '',
   });
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -103,228 +98,106 @@ export default function FreeAuditPage() {
               className="bg-[#ffffff]/10 backdrop-blur-md text-white text-sm font-medium px-6 py-2.5 rounded-full border border-white/20 hover:bg-[#ffffff]/20 transition-all"
               style={{ letterSpacing: '-0.02em' }}
             >
-              Get Your Free Website Fix Report
+              Get a Free Review
             </button>
           </div>
         </nav>
 
         {/* ═══════════════════════════════════════════
-            HERO — Full-bleed B&W image (matches yarndigital.co.uk)
+            HERO
             ═══════════════════════════════════════════ */}
         <section className="relative min-h-screen overflow-hidden">
-          {/* Background — full-bleed B&W image */}
           <div className="absolute inset-0 w-full h-full">
-            <Image
-              src={IMG.heroBg}
-              alt=""
-              fill
-              sizes="100vw"
-              className="object-cover object-center grayscale"
-              style={{ opacity: 0.55 }}
-              priority
-            />
+            <Image src={IMG.heroBg} alt="" fill sizes="100vw" className="object-cover object-center grayscale" style={{ opacity: 0.55 }} priority />
           </div>
-          {/* Gradient for text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/80 via-transparent to-transparent" />
 
           <div className="relative z-10 max-w-[1520px] mx-auto px-5 sm:px-10 flex flex-col justify-end min-h-screen pb-16 sm:pb-20 pt-32">
-            {/* Content pinned to bottom-left like main site */}
-            <div className="max-w-2xl">
-              <h1
-                className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-medium text-white leading-[1.02] mb-6"
-                style={{ letterSpacing: '-0.03em' }}
-              >
-                Your Website<br />
-                Should Be Winning<br />
-                You Customers.
+            <div className="max-w-3xl">
+              <h1 className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-medium text-white leading-[1.02] mb-6" style={{ letterSpacing: '-0.03em' }}>
+                Your Website Is Getting<br />Visitors. So Why Aren&apos;t<br />They Calling?
               </h1>
-              <p
-                className="text-base sm:text-lg text-white/60 leading-relaxed mb-6 max-w-lg"
-                style={{ letterSpacing: '-0.01em', fontWeight: 400 }}
-              >
-                Design → Build → Grow<br />
-                A free audit of your site — performance, SEO,<br className="hidden sm:block" />
-                design, and conversion. No pitch. No strings.
+              <p className="text-base sm:text-lg text-white/60 leading-relaxed mb-6 max-w-lg" style={{ letterSpacing: '-0.01em', fontWeight: 400 }}>
+                Most Belfast business websites leak leads. Slow load, weak copy, no clear next step — we find the exact problem and fix it.
               </p>
-
-              {/* CTA — white pill like "Start a Project" on main site */}
-              <button
-                onClick={scrollToForm}
-                className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2"
-                style={{ letterSpacing: '-0.02em' }}
-              >
-                Get Your Free Website Fix Report
+              <button onClick={scrollToForm} className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
+                Get a Free Website Review <ArrowRight size={15} />
               </button>
             </div>
           </div>
         </section>
 
         {/* ═══════════════════════════════════════════
-            ABOUT — Scrolling text section (matches yarndigital.co.uk style)
+            PAIN POINTS STRIP — dark emphasis
             ═══════════════════════════════════════════ */}
-        <section className="py-24 sm:py-36 bg-[#ffffff]">
+        <section className="py-20 sm:py-24 bg-[#0a0a0a] border-y border-[#1a1a1a]">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
-            <p
-              className="text-2xl sm:text-3xl lg:text-[2.5rem] font-medium text-[#0a0a0a] leading-[1.25] max-w-4xl"
-              style={{ letterSpacing: '-0.03em' }}
-            >
-              We help ambitious teams build brands, interfaces, and websites that earn attention. We&apos;ll audit your site and tell you exactly what&apos;s holding it back — for free.
-            </p>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════
-            AUDIT FORM — Clean, editorial (id for scroll)
-            ═══════════════════════════════════════════ */}
-        <section id="audit-form" className="bg-[#0a0a0a] py-24 sm:py-32">
-          <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-20">
-
-              {/* Left — heading + trust */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20 mb-14">
               <div>
-                <span className="text-[11px] font-semibold text-[#555] uppercase block mb-6" style={{ letterSpacing: '0.08em' }}>
-                  Free Website Fix Report
+                <span className="text-[11px] font-semibold text-[#555] uppercase" style={{ letterSpacing: '0.08em' }}>
+                  Sound Familiar?
                 </span>
-                <h2
-                  className="text-3xl sm:text-4xl font-medium text-white leading-[1.1] mb-6"
-                  style={{ letterSpacing: '-0.04em' }}
-                >
-                  Find out what's broken
-                </h2>
-                <p className="text-sm text-[#555] leading-relaxed mb-8" style={{ letterSpacing: '-0.01em', fontWeight: 500 }}>
-                  Takes 30 seconds. We&apos;ll do the rest.<br />
-                  Your audit is delivered within 48 hours.
-                </p>
-
-                {/* Trust signals — monochrome */}
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-3 mb-6">
-                  <div className="flex items-center gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <svg key={i} width="13" height="13" viewBox="0 0 24 24" fill="white">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                      </svg>
-                    ))}
-                    <span className="text-xs text-[#666] ml-1 font-medium">5.0</span>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2 text-xs text-[#444] font-medium">
-                  <span>Belfast-based studio</span>
-                  <span>48-hour turnaround</span>
-                  <span>No sales pitch. Ever.</span>
-                </div>
               </div>
-
-              {/* Right — form (underline inputs, editorial feel) */}
               <div className="lg:col-span-2">
-                {status === 'success' ? (
-                  <div className="py-16 text-center lg:text-left">
-                    <div className="w-14 h-14 rounded-full border border-white/20 flex items-center justify-center mx-auto lg:mx-0 mb-5">
-                      <Check size={24} className="text-white" />
-                    </div>
-                    <h3 className="text-2xl font-medium text-white mb-2" style={{ letterSpacing: '-0.03em' }}>
-                      We&apos;ve got your details.
-                    </h3>
-                    <p className="text-sm text-[#666] font-medium" style={{ letterSpacing: '-0.02em' }}>
-                      We&apos;ll be in touch within 1 business day with your free audit.
-                    </p>
-                  </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="space-y-8 pt-2">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-6">
-                      <div>
-                        <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Name *</label>
-                        <input type="text" required placeholder="Your name" className={inputClass}
-                          value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
-                      </div>
-                      <div>
-                        <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Business *</label>
-                        <input type="text" required placeholder="Business name" className={inputClass}
-                          value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })} />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Website URL *</label>
-                      <input type="text" required placeholder="yourwebsite.co.uk" className={inputClass}
-                        value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-6">
-                      <div>
-                        <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Email *</label>
-                        <input type="email" required placeholder="you@company.co.uk" className={inputClass}
-                          value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
-                      </div>
-                      <div>
-                        <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Phone *</label>
-                        <input type="tel" placeholder="Phone (optional) number" className={inputClass}
-                          value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
-                      </div>
-                    </div>
-
-                    {status === 'error' && (
-                      <p className="text-red-400 text-sm font-medium">{errorMsg}</p>
-                    )}
-
-                    <div className="pt-4">
-                      <button
-                        type="submit" disabled={status === 'submitting'}
-                        className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-10 py-4 rounded-full hover:bg-[#ffffff]/90 transition-all disabled:opacity-50 inline-flex items-center gap-2"
-                        style={{ letterSpacing: '-0.02em' }}
-                      >
-                        {status === 'submitting' ? (
-                          <><Loader2 size={16} className="animate-spin" /> Sending...</>
-                        ) : (
-                          <>Send My Fix Report <ArrowRight size={15} /></>
-                        )}
-                      </button>
-                    </div>
-                  </form>
-                )}
+                <h2 className="text-3xl sm:text-4xl font-medium text-white leading-[1.1]" style={{ letterSpacing: '-0.04em' }}>
+                  The signs your website is losing you money.
+                </h2>
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-[#1a1a1a]">
+              {[
+                { icon: '⚠', text: 'People are clicking your ads — and leaving' },
+                { icon: '⚠', text: "You\u2019re on page 2 while competitors take your customers" },
+                { icon: '⚠', text: "The website looks fine, but the phone isn\u2019t ringing" },
+              ].map((pain, i) => (
+                <div key={i} className={`py-8 md:px-8 ${i === 0 ? 'md:pl-0' : ''} ${i < 2 ? 'border-b md:border-b-0 md:border-r border-[#1a1a1a]' : ''}`}>
+                  <span className="text-2xl block mb-3 text-[#e63312]">{pain.icon}</span>
+                  <p className="text-base sm:text-lg font-medium text-white leading-snug" style={{ letterSpacing: '-0.02em' }}>
+                    {pain.text}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
         {/* ═══════════════════════════════════════════
-            WHAT YOU GET — 1/3 + 2/3 grid (matches YD layout)
+            THE FIX — 3 steps, white section
             ═══════════════════════════════════════════ */}
         <section className="py-24 sm:py-32 bg-[#ffffff]">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20 mb-14">
               <div>
                 <span className="text-[11px] font-semibold text-[#999] uppercase" style={{ letterSpacing: '0.08em' }}>
-                  What You Get
+                  The Fix
                 </span>
               </div>
               <div className="lg:col-span-2">
-                <h2
-                  className="text-3xl sm:text-4xl lg:text-[3.25rem] font-medium text-[#0a0a0a] leading-[1.1] mb-12"
-                  style={{ letterSpacing: '-0.04em' }}
-                >
-                  We'll find every problem and give you a clear fix plan — in 48 hours.
+                <h2 className="text-3xl sm:text-4xl font-medium text-[#0a0a0a] leading-[1.1]" style={{ letterSpacing: '-0.04em' }}>
+                  Here&apos;s how we turn it around.
                 </h2>
-                {/* List-style like YD services section */}
-                <div className="border-t border-[#e5e5e5]">
-                  {[
-                    { title: 'Speed Diagnosis', desc: 'We\'ll measure your load times and show you exactly what\'s slowing you down.' },
-                    { title: 'Mobile Problems', desc: 'If your site looks broken on phones, you\'re losing half your visitors. We\'ll show you where.' },
-                    { title: 'Why Google Can\'t Find You', desc: 'Technical SEO issues, missing meta data, and content gaps that keep you off page one.' },
-                    { title: 'Where Visitors Drop Off', desc: 'We\'ll map the user journey and show you where people leave without converting.' },
-                    { title: 'Competitor Comparison', desc: 'See how your site stacks up against competitors who are getting the customers you\'re missing.' },
-                    { title: 'Priority Fix List', desc: 'A ranked list of fixes — what to do first for the biggest impact on your bottom line.' },
-                  ].map((item, i) => (
-                    <div key={i} className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-10 py-5 border-b border-[#e5e5e5] hover:border-[#999] transition-colors">
-                      <div className="text-[15px] font-semibold text-[#0a0a0a]" style={{ letterSpacing: '-0.02em' }}>
-                        {item.title}
-                      </div>
-                      <div className="sm:col-span-2 text-sm text-[#666] leading-relaxed" style={{ letterSpacing: '-0.01em' }}>
-                        {item.desc}
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-[#e5e5e5]">
+              {[
+                { num: '01', title: '30-minute review', desc: 'We find exactly where you\'re losing people.' },
+                { num: '02', title: 'Written report', desc: 'Specific issues, not vague recommendations.' },
+                { num: '03', title: 'We fix it', desc: 'Fast, clean, no technical jargon.' },
+              ].map((step, i) => (
+                <div key={i} className={`py-8 md:px-8 ${i === 0 ? 'md:pl-0' : ''} ${i < 2 ? 'border-b md:border-b-0 md:border-r border-[#e5e5e5]' : ''}`}>
+                  <span className="text-[40px] font-medium text-[#eee] leading-none block mb-4" style={{ letterSpacing: '-0.04em' }}>
+                    {step.num}
+                  </span>
+                  <h3 className="text-lg font-semibold text-[#0a0a0a] mb-2" style={{ letterSpacing: '-0.03em' }}>
+                    {step.title}
+                  </h3>
+                  <p className="text-sm text-[#666] leading-relaxed" style={{ letterSpacing: '-0.01em' }}>
+                    {step.desc}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -379,82 +252,37 @@ export default function FreeAuditPage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            THE HILLS — Featured Case Study
+            TESTIMONIALS
             ═══════════════════════════════════════════ */}
-        <section className="py-24 sm:py-32 bg-[#ffffff] overflow-hidden">
-          <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-              <div>
-                <span className="text-[11px] font-semibold text-[#999] uppercase mb-6 block" style={{ letterSpacing: '0.08em' }}>
-                  Case Study
-                </span>
-                <h2 className="text-3xl sm:text-4xl font-medium text-[#0a0a0a] leading-[1.15] mb-4" style={{ letterSpacing: '-0.04em' }}>
-                  The Hills Restaurant
-                </h2>
-                <p className="text-base text-[#666] leading-relaxed mb-8" style={{ letterSpacing: '-0.02em', fontWeight: 500 }}>
-                  A quality restaurant with a website that made it look average. We redesigned everything —
-                  brand, photography direction, and a fully responsive site built to convert.
-                </p>
-                <div className="grid grid-cols-3 gap-6 mb-8">
-                  {[
-                    { stat: '+38%', label: 'Organic traffic' },
-                    { stat: '2×', label: 'Reservations' },
-                    { stat: '−50%', label: 'Bounce rate' },
-                  ].map((s, i) => (
-                    <div key={i}>
-                      <div className="text-2xl sm:text-3xl font-medium text-[#0a0a0a]" style={{ letterSpacing: '-0.03em' }}>
-                        {s.stat}
-                      </div>
-                      <div className="text-xs text-[#999] mt-1" style={{ letterSpacing: '-0.01em' }}>
-                        {s.label}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <Image src={IMG.hillsMockup} alt="The Hills Restaurant — responsive website mockup"
-                  width={700} height={467} className="w-full h-auto rounded-[24px] shadow-2xl" />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════
-            SERVICES — Border-separated list (matches YD exactly)
-            ═══════════════════════════════════════════ */}
-        <section className="bg-[#0a0a0a] py-24 sm:py-32">
+        <section className="bg-[#0a0a0a] py-20 sm:py-24">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20 mb-14">
               <div>
                 <span className="text-[11px] font-semibold text-[#555] uppercase" style={{ letterSpacing: '0.08em' }}>
-                  What We Do
+                  What Clients Say
                 </span>
               </div>
               <div className="lg:col-span-2">
-                <h2 className="text-3xl sm:text-4xl font-medium text-white leading-[1.15] mb-2" style={{ letterSpacing: '-0.04em' }}>
-                  Design, Build, Grow.
+                <h2 className="text-3xl sm:text-4xl font-medium text-white leading-[1.15]" style={{ letterSpacing: '-0.04em' }}>
+                  Don&apos;t take our word for it.
                 </h2>
-                <p className="text-sm text-[#555]" style={{ letterSpacing: '-0.02em', fontWeight: 500 }}>
-                  Full-service digital — from brand strategy to measurable growth.
-                </p>
               </div>
             </div>
 
-            <div className="border-t border-[#1a1a1a]">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { title: 'Brand Strategy & Identity', desc: 'Research-driven brand positioning that makes you impossible to ignore.' },
-                { title: 'Web Design & Development', desc: 'Shopify, WordPress, or custom — fast, responsive, built to convert.' },
-                { title: 'UX / UI Design', desc: 'Interfaces that feel intuitive and look exceptional.' },
-                { title: 'SEO & Content', desc: 'Get found by the right people. Sustainable organic growth.' },
-                { title: 'Digital Marketing', desc: 'Paid media and campaigns that actually move the needle.' },
-              ].map((s, i) => (
-                <div key={i} className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-20 py-6 border-b border-[#1a1a1a] hover:border-[#333] transition-colors">
-                  <div className="text-base sm:text-lg font-medium text-white" style={{ letterSpacing: '-0.03em' }}>
-                    {s.title}
-                  </div>
-                  <div className="lg:col-span-2 text-sm text-[#555] font-medium leading-relaxed" style={{ letterSpacing: '-0.01em' }}>
-                    {s.desc}
+                { quote: 'Yarn Digital rebuilt our website from scratch. Within a month we had more enquiries than the whole previous year.', name: 'Stonebridge Farm', tag: 'Brand & Web Design' },
+                { quote: 'Straightforward, fast, and they delivered exactly what they promised. Our team uses the platform every day.', name: 'React Clarity', tag: 'Web Application' },
+                { quote: 'The new site looks exactly like us. Our customers keep commenting on it.', name: 'Krumb Bakery', tag: 'Brand & E-Commerce' },
+              ].map((t, i) => (
+                <div key={i} className="p-6 sm:p-8 rounded-[24px] border border-[#1a1a1a] bg-[#111]">
+                  <span className="text-4xl text-[#333] leading-none block mb-4">&ldquo;</span>
+                  <p className="text-[15px] text-white/80 leading-relaxed mb-6" style={{ letterSpacing: '-0.02em' }}>
+                    {t.quote}
+                  </p>
+                  <div>
+                    <p className="text-sm font-semibold text-white" style={{ letterSpacing: '-0.02em' }}>{t.name}</p>
+                    <p className="text-xs text-[#666] mt-0.5">{t.tag}</p>
                   </div>
                 </div>
               ))}
@@ -463,48 +291,147 @@ export default function FreeAuditPage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            ABOUT + FOUNDER
+            AUDIT FORM
             ═══════════════════════════════════════════ */}
-        <section className="py-24 sm:py-32 bg-[#ffffff]">
+        <section id="audit-form" className="bg-[#0a0a0a] py-24 sm:py-32">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-20">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-20">
+
               <div>
-                <span className="text-[11px] font-semibold text-[#999] uppercase mb-6 block" style={{ letterSpacing: '0.08em' }}>
-                  About Us
+                <span className="text-[11px] font-semibold text-[#555] uppercase block mb-6" style={{ letterSpacing: '0.08em' }}>
+                  Free Website Review
                 </span>
-                <h2 className="text-3xl sm:text-4xl font-medium text-[#0a0a0a] leading-[1.1] mb-6" style={{ letterSpacing: '-0.04em' }}>
-                  Belfast-based. Built around your business.
+                <h2 className="text-3xl sm:text-4xl font-medium text-white leading-[1.1] mb-6" style={{ letterSpacing: '-0.04em' }}>
+                  Get your free review
                 </h2>
-                <p className="text-base text-[#666] leading-relaxed mb-4" style={{ letterSpacing: '-0.02em', fontWeight: 500 }}>
-                  Yarn Digital is a full-service studio led by Jonny Davison. We work with
-                  ambitious SMEs across Belfast and Northern Ireland — brands, websites, and
-                  digital growth, built properly.
+                <p className="text-sm text-[#555] leading-relaxed mb-8" style={{ letterSpacing: '-0.01em', fontWeight: 500 }}>
+                  Tell us about your business. We&apos;ll find out<br />
+                  exactly why your website isn&apos;t converting.
                 </p>
-                <p className="text-base text-[#666] leading-relaxed" style={{ letterSpacing: '-0.02em', fontWeight: 500 }}>
-                  We&apos;re not a faceless agency. We know your market, we speak your language,
-                  and we&apos;ll tell you the truth about what&apos;s working and what isn&apos;t.
-                </p>
+
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-3 mb-6">
+                  <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <svg key={i} width="13" height="13" viewBox="0 0 24 24" fill="white">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                      </svg>
+                    ))}
+                    <span className="text-xs text-[#666] ml-1 font-medium">5.0</span>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2 text-xs text-[#444] font-medium">
+                  <span>Belfast-based studio</span>
+                  <span>30-minute review + written report</span>
+                  <span>Zero obligation. Completely free.</span>
+                </div>
               </div>
 
-              <div className="flex flex-col items-center lg:items-start gap-6">
-                <div className="relative w-44 h-44 rounded-[24px] overflow-hidden">
-                  <Image src={IMG.founder} alt="Jonny Davison — Founder" fill className="object-cover" />
-                </div>
-                <blockquote className="text-center lg:text-left">
-                  <p className="text-lg text-[#333] font-medium italic leading-relaxed mb-2" style={{ letterSpacing: '-0.02em' }}>
-                    &ldquo;We build what we&apos;d want for our own business — fast, beautiful, and built to last.&rdquo;
-                  </p>
-                  <cite className="text-sm text-[#999] not-italic font-semibold">
-                    Jonny Davison, Founder
-                  </cite>
-                </blockquote>
+              <div className="lg:col-span-2">
+                {status === 'success' ? (
+                  <div className="py-16 text-center lg:text-left">
+                    <div className="w-14 h-14 rounded-full border border-white/20 flex items-center justify-center mx-auto lg:mx-0 mb-5">
+                      <Check size={24} className="text-white" />
+                    </div>
+                    <h3 className="text-2xl font-medium text-white mb-2" style={{ letterSpacing: '-0.03em' }}>
+                      We&apos;ve got your details.
+                    </h3>
+                    <p className="text-sm text-[#666] font-medium" style={{ letterSpacing: '-0.02em' }}>
+                      We&apos;ll review your website and send you a written report with our findings.
+                    </p>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-8 pt-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-6">
+                      <div>
+                        <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Name *</label>
+                        <input type="text" required placeholder="Your name" className={inputClass}
+                          value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+                      </div>
+                      <div>
+                        <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Email *</label>
+                        <input type="email" required placeholder="you@company.co.uk" className={inputClass}
+                          value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-6">
+                      <div>
+                        <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Phone *</label>
+                        <input type="tel" required placeholder="Your phone number" className={inputClass}
+                          value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+                      </div>
+                      <div>
+                        <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Business Name *</label>
+                        <input type="text" required placeholder="Your business name" className={inputClass}
+                          value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })} />
+                      </div>
+                    </div>
+
+                    {status === 'error' && (
+                      <p className="text-red-400 text-sm font-medium">{errorMsg}</p>
+                    )}
+
+                    <div className="pt-4">
+                      <button type="submit" disabled={status === 'submitting'}
+                        className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-10 py-4 rounded-full hover:bg-[#ffffff]/90 transition-all disabled:opacity-50 inline-flex items-center gap-2"
+                        style={{ letterSpacing: '-0.02em' }}>
+                        {status === 'submitting' ? (
+                          <><Loader2 size={16} className="animate-spin" /> Sending...</>
+                        ) : (
+                          <>Get My Free Website Review <ArrowRight size={15} /></>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                )}
               </div>
             </div>
           </div>
         </section>
 
         {/* ═══════════════════════════════════════════
-            BOTTOM CTA — B&W image bg (same editorial feel)
+            FAQs
+            ═══════════════════════════════════════════ */}
+        <section className="py-24 sm:py-32 bg-[#ffffff]">
+          <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20">
+              <div>
+                <span className="text-[11px] font-semibold text-[#999] uppercase" style={{ letterSpacing: '0.08em' }}>
+                  Common Questions
+                </span>
+              </div>
+              <div className="lg:col-span-2">
+                <h2 className="text-3xl sm:text-4xl font-medium text-[#0a0a0a] leading-[1.1] mb-12" style={{ letterSpacing: '-0.04em' }}>
+                  Everything you need to know.
+                </h2>
+                <div className="border-t border-[#e5e5e5]">
+                  {[
+                    { q: 'How do you know what\'s not working?', a: 'Real data — analytics, ad performance, heatmaps. We don\'t guess. We look at where visitors are coming from, what they\'re doing on your site, and exactly where they\'re dropping off.' },
+                    { q: 'What if it\'s just my ads?', a: 'We audit the full funnel: ads, landing page, form, follow-up. Often it\'s not one thing — it\'s a combination. We\'ll tell you exactly what\'s leaking and what to fix first.' },
+                    { q: 'Is it really free?', a: 'Yes. 30 minutes, written summary, zero obligation. We do this because it\'s the best way to show you what we can do — and most people who see the results want to work with us.' },
+                  ].map((faq, i) => (
+                    <details key={i} className="group border-b border-[#e5e5e5]">
+                      <summary className="flex items-center justify-between py-5 cursor-pointer list-none">
+                        <span className="text-[15px] font-semibold text-[#0a0a0a] pr-4" style={{ letterSpacing: '-0.02em' }}>
+                          {faq.q}
+                        </span>
+                        <span className="text-[#999] text-xl flex-shrink-0 transition-transform group-open:rotate-45">+</span>
+                      </summary>
+                      <div className="pb-5 pr-8">
+                        <p className="text-sm text-[#666] leading-relaxed" style={{ letterSpacing: '-0.01em' }}>
+                          {faq.a}
+                        </p>
+                      </div>
+                    </details>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════
+            BOTTOM CTA
             ═══════════════════════════════════════════ */}
         <section className="relative py-28 sm:py-36 overflow-hidden">
           <div className="absolute inset-0">
@@ -513,24 +440,20 @@ export default function FreeAuditPage() {
           <div className="absolute inset-0 bg-[#0a0a0a]/80" />
           <div className="relative z-10 max-w-3xl mx-auto px-5 sm:px-10 text-center">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-medium text-white leading-[1.1] mb-5" style={{ letterSpacing: '-0.04em' }}>
-              Ready to find out what&apos;s<br />holding your website back?
+              Stop losing leads to a<br />website that doesn&apos;t convert.
             </h2>
             <p className="text-base text-white/50 mb-10" style={{ letterSpacing: '-0.02em', fontWeight: 500 }}>
-              It takes 30 seconds. We&apos;ll deliver your audit within 48 hours.
+              Free 30-minute review. Written report. Zero obligation.
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
-              <button
-                onClick={scrollToForm}
+              <button onClick={scrollToForm}
                 className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2"
-                style={{ letterSpacing: '-0.02em' }}
-              >
-                Get My Fix Report <ArrowRight size={15} />
+                style={{ letterSpacing: '-0.02em' }}>
+                Get My Free Website Review <ArrowRight size={15} />
               </button>
-              <a
-                href="mailto:hello@yarndigital.co.uk"
+              <a href="mailto:hello@yarndigital.co.uk"
                 className="border border-white/20 text-white/60 font-medium text-[15px] px-8 py-3.5 rounded-full hover:border-white/40 hover:text-white transition-all"
-                style={{ letterSpacing: '-0.02em' }}
-              >
+                style={{ letterSpacing: '-0.02em' }}>
                 hello@yarndigital.co.uk
               </a>
             </div>

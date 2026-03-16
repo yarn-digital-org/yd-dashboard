@@ -1,5 +1,5 @@
-import { trackGoogleAdsConversion } from '@/components/GoogleAnalytics';
 'use client';
+import { trackGoogleAdsConversion } from '@/components/GoogleAnalytics';
 
 import { useState, useEffect, FormEvent } from 'react';
 import { ArrowRight, ArrowDown, Loader2, Check } from 'lucide-react';
@@ -251,9 +251,9 @@ export default function WebDesignBelfastPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-[#e5e5e5]">
               {[
-                { title: 'Brand & Identity', desc: 'Logo, guidelines, and a brand that sticks.' },
-                { title: 'Web Design Belfast', desc: 'Fast, modern websites built to convert visitors into customers.' },
-                { title: 'SEO Belfast', desc: 'Get found on Google by local customers searching for your services.' },
+                { title: 'Brand & Identity', desc: 'Logo, guidelines, and a brand that sticks. Our web design Belfast projects always start with strong branding.' },
+                { title: 'Web Design Belfast', desc: 'Fast, modern websites built to convert visitors into customers. Every web design in Belfast we deliver is mobile-first and SEO-ready.' },
+                { title: 'SEO Belfast', desc: 'Get found on Google by local customers searching for your services. Paired with our web design Belfast builds for maximum impact.' },
               ].map((service, i) => (
                 <div key={i} className={`py-8 md:px-8 ${i === 0 ? 'md:pl-0' : ''} ${i < 2 ? 'border-b md:border-b-0 md:border-r border-[#e5e5e5]' : ''}`}>
                   <h3 className="text-lg font-semibold text-[#0a0a0a] mb-2" style={{ letterSpacing: '-0.03em' }}>
@@ -426,7 +426,7 @@ export default function WebDesignBelfastPage() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 text-xs text-[#444] font-medium">
-                  <span>Belfast-based studio</span>
+                  <span>Belfast-based · No outsourcing · Fast turnaround · Results you can measure</span>
                   <span>Free 30-minute consultation</span>
                   <span>No obligation. No hidden fees.</span>
                 </div>
@@ -512,9 +512,9 @@ export default function WebDesignBelfastPage() {
                 </h2>
                 <div className="border-t border-[#e5e5e5]">
                   {[
-                    { q: 'How long does a website take?', a: '2–4 weeks for most projects. We move fast without cutting corners — you\'ll have a site that\'s ready to launch and built to last.' },
-                    { q: 'Do you work with small businesses?', a: 'Yes — Belfast SMEs are who we\'re built for. Whether you\'re a restaurant, tradesperson, or tech startup, we understand your market and your customers.' },
-                    { q: 'What does it cost?', a: 'We\'ll give you a clear quote on the call. No hidden fees, no surprise invoices. Every project is scoped properly before we start.' },
+                    { q: 'How long does a website take?', a: 'Most web design Belfast projects take 2–4 weeks. We move fast without cutting corners — you\'ll have a site that\'s ready to launch and built to last.' },
+                    { q: 'Do you work with small businesses?', a: 'Yes — Belfast SMEs are who we\'re built for. Our web design in Belfast is tailored to local businesses. Whether you\'re a restaurant, tradesperson, or tech startup, we understand your market and your customers.' },
+                    { q: 'What does it cost?', a: 'We\'ll give you a clear quote on the call. No hidden fees, no surprise invoices. Every web design Belfast project is scoped properly before we start.' },
                   ].map((faq, i) => (
                     <details key={i} className="group border-b border-[#e5e5e5]">
                       <summary className="flex items-center justify-between py-5 cursor-pointer list-none">

@@ -1,5 +1,5 @@
-import { trackGoogleAdsConversion } from "@/components/GoogleAnalytics";
 'use client';
+import { trackGoogleAdsConversion } from "@/components/GoogleAnalytics";
 
 import { useState, FormEvent } from 'react';
 import { ArrowRight, Loader2, Check } from 'lucide-react';
@@ -25,7 +25,7 @@ function getUtmParams(): Record<string, string> {
 
 export default function AuditForm() {
   const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', company: '',
+    name: '', email: '', phone: '', company: '', challenge: '',
   });
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -118,6 +118,21 @@ export default function AuditForm() {
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
           />
         </div>
+      </div>
+
+      <div>
+        <select
+          className={`${inputClass} appearance-none cursor-pointer`}
+          value={formData.challenge}
+          onChange={(e) => setFormData({ ...formData, challenge: e.target.value })}
+        >
+          <option value="" disabled className="text-[#555] bg-[#111]">What&apos;s your biggest challenge?</option>
+          <option value="Website not converting" className="bg-[#111]">Website not converting</option>
+          <option value="Not ranking on Google" className="bg-[#111]">Not ranking on Google</option>
+          <option value="Need a new website" className="bg-[#111]">Need a new website</option>
+          <option value="Running ads but no leads" className="bg-[#111]">Running ads but no leads</option>
+          <option value="Other" className="bg-[#111]">Other</option>
+        </select>
       </div>
 
       {status === 'error' && (

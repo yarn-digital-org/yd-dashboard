@@ -1,5 +1,5 @@
-import { trackGoogleAdsConversion } from '@/components/GoogleAnalytics';
 'use client';
+import { trackGoogleAdsConversion } from '@/components/GoogleAnalytics';
 
 import { useState, useEffect, FormEvent } from 'react';
 import { ArrowRight, Loader2, Check } from 'lucide-react';
@@ -40,7 +40,7 @@ const IMG = {
 
 export default function WebsiteNotConvertingPage() {
   const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', company: '',
+    name: '', email: '', phone: '', company: '', challenge: '',
   });
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -120,6 +120,10 @@ export default function WebsiteNotConvertingPage() {
               </h1>
               <p className="text-base sm:text-lg text-white/60 leading-relaxed mb-6 max-w-lg" style={{ letterSpacing: '-0.01em', fontWeight: 400 }}>
                 Most Belfast business websites leak leads. Slow load, weak copy, no clear next step — we find the exact problem and fix it.
+              </p>
+              <p className="text-sm text-white/50 font-medium mb-6" style={{ letterSpacing: '-0.01em' }}>
+                <a href="tel:+442890994006" className="hover:text-white/70 transition-colors">📞 028 9099 4006</a>{' '}
+                | ★★★★★ 5.0 on Google | Belfast-based studio
               </p>
               <button onClick={scrollToForm} className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
                 Get a Free Website Review <ArrowRight size={15} />
@@ -368,6 +372,22 @@ export default function WebsiteNotConvertingPage() {
                       </div>
                     </div>
 
+                    <div>
+                      <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Biggest Challenge</label>
+                      <select
+                        className={`${inputClass} appearance-none cursor-pointer`}
+                        value={formData.challenge}
+                        onChange={(e) => setFormData({ ...formData, challenge: e.target.value })}
+                      >
+                        <option value="" disabled className="text-[#555] bg-[#111]">What&apos;s your biggest challenge?</option>
+                        <option value="Website not converting" className="bg-[#111]">Website not converting</option>
+                        <option value="Not ranking on Google" className="bg-[#111]">Not ranking on Google</option>
+                        <option value="Need a new website" className="bg-[#111]">Need a new website</option>
+                        <option value="Running ads but no leads" className="bg-[#111]">Running ads but no leads</option>
+                        <option value="Other" className="bg-[#111]">Other</option>
+                      </select>
+                    </div>
+
                     {status === 'error' && (
                       <p className="text-red-400 text-sm font-medium">{errorMsg}</p>
                     )}
@@ -410,6 +430,7 @@ export default function WebsiteNotConvertingPage() {
                     { q: 'How do you know what\'s not working?', a: 'Real data — analytics, ad performance, heatmaps. We don\'t guess. We look at where visitors are coming from, what they\'re doing on your site, and exactly where they\'re dropping off.' },
                     { q: 'What if it\'s just my ads?', a: 'We audit the full funnel: ads, landing page, form, follow-up. Often it\'s not one thing — it\'s a combination. We\'ll tell you exactly what\'s leaking and what to fix first.' },
                     { q: 'Is it really free?', a: 'Yes. 30 minutes, written summary, zero obligation. We do this because it\'s the best way to show you what we can do — and most people who see the results want to work with us.' },
+                    { q: 'Do I need to be technical?', a: 'No. We explain everything in plain English. You don\'t need to know anything about web design or SEO — that\'s our job.' },
                   ].map((faq, i) => (
                     <details key={i} className="group border-b border-[#e5e5e5]">
                       <summary className="flex items-center justify-between py-5 cursor-pointer list-none">

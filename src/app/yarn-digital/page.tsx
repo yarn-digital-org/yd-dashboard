@@ -1,5 +1,5 @@
-import { trackGoogleAdsConversion } from '@/components/GoogleAnalytics';
 'use client';
+import { trackGoogleAdsConversion } from '@/components/GoogleAnalytics';
 
 import { useState, useEffect, FormEvent } from 'react';
 import { ArrowRight, Loader2, Check } from 'lucide-react';

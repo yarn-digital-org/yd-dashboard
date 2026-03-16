@@ -1,5 +1,5 @@
-import { trackGoogleAdsConversion } from '@/components/GoogleAnalytics';
 'use client';
+import { trackGoogleAdsConversion } from '@/components/GoogleAnalytics';
 
 import { useState, useEffect, useRef, FormEvent } from 'react';
 import { Star, CheckCircle, ArrowRight, Loader2, Palette, Eye, Sparkles } from 'lucide-react';

@@ -212,7 +212,7 @@ export default function GrowLandingPage() {
               {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-current" />)}
             </div>
             <p className="text-gray-300 text-sm sm:text-base">
-              &ldquo;+38% organic traffic in 6 weeks. Reservations doubled.&rdquo;
+              &ldquo;Significant increase in organic traffic. Bookings grew substantially.&rdquo;
               <span className="text-gray-500"> — The Hills Restaurant, Belfast</span>
             </p>
           </div>
@@ -221,7 +221,7 @@ export default function GrowLandingPage() {
         {/* STATS */}
         <section className="bg-white py-12">
           <div className="max-w-3xl mx-auto px-6 grid grid-cols-3 gap-6">
-            <StatCard number="+38%" label="Organic Traffic" />
+            <StatCard number="↑" label="More Traffic" />
             <StatCard number="2×" label="Online Bookings" />
             <StatCard number="−50%" label="Bounce Rate" />
           </div>
@@ -282,7 +282,7 @@ export default function GrowLandingPage() {
                 name="The Hills Restaurant"
                 situation="Solid food, loyal regulars, but invisible on Google."
                 work="Technical SEO fix, local optimisation, content strategy targeting 'restaurant Belfast' keywords."
-                result="+38% organic traffic in 6 weeks. Bounce rate halved. Online reservations doubled."
+                result="Significant increase in organic traffic. Bounce rate halved. Online bookings grew substantially."
               />
               <CaseStudy
                 name="Krumb Bakery"

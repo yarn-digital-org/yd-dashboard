@@ -306,9 +306,9 @@ export default function FreeAuditPage() {
                 </p>
                 <div className="grid grid-cols-3 gap-6">
                   {[
-                    { stat: '+38%', label: 'Organic traffic' },
-                    { stat: '2×', label: 'Reservations' },
-                    { stat: '−50%', label: 'Bounce rate' },
+                    { stat: '↑', label: 'More traffic' },
+                    { stat: '↑', label: 'More bookings' },
+                    { stat: '↓', label: 'Lower bounce rate' },
                   ].map((s, i) => (
                     <div key={i}>
                       <div

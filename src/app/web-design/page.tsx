@@ -223,7 +223,7 @@ export default function WebDesignLandingPage() {
         {/* STATS */}
         <section className="bg-white py-12">
           <div className="max-w-3xl mx-auto px-6 grid grid-cols-3 gap-6">
-            <StatCard number="+38%" label="Organic Traffic" />
+            <StatCard number="↑" label="More Traffic" />
             <StatCard number="2×" label="Reservations" />
             <StatCard number="50%" label="Bounce Rate Drop" />
           </div>
@@ -284,7 +284,7 @@ export default function WebDesignLandingPage() {
                 name="The Hills Restaurant"
                 situation="A quality restaurant with a website that made it look average."
                 work="Full website rebuild — conversion-focused design, mobile-first, fast loading."
-                result="+38% organic traffic in 6 weeks. Bounce rate halved. Online reservations doubled."
+                result="Significant increase in organic traffic. Bounce rate halved. Online bookings grew substantially."
               />
               <CaseStudy
                 name="Krumb Bakery"

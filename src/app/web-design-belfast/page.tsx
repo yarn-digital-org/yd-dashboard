@@ -132,7 +132,7 @@ export default function WebDesignBelfastPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-white/80" style={{ letterSpacing: '-0.02em' }}>The Hills Restaurant</p>
-                  <p className="text-xs text-white/40">+38% organic traffic · 2× reservations</p>
+                  <p className="text-xs text-white/40">More traffic · More bookings</p>
                 </div>
               </div>
             </div>
@@ -195,7 +195,7 @@ export default function WebDesignBelfastPage() {
               {[
                 {
                   name: 'The Hills Restaurant',
-                  desc: 'Full rebrand + responsive site. +38% organic traffic, 2x reservations.',
+                  desc: 'Full rebrand + responsive site. More traffic, more bookings.',
                   img: '/images/yd/wtOblvlwQViPkZXQy7otlTIMaMQ.png',
                 },
                 {

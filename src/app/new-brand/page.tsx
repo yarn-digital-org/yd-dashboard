@@ -395,8 +395,8 @@ export default function NewBrandPage() {
                 </p>
                 <div className="grid grid-cols-3 gap-6 mb-8">
                   {[
-                    { stat: '+38%', label: 'Organic traffic' },
-                    { stat: '2×', label: 'Reservations' },
+                    { stat: '↑', label: 'More traffic' },
+                    { stat: '↑', label: 'More bookings' },
                     { stat: '−50%', label: 'Bounce rate' },
                   ].map((s, i) => (
                     <div key={i}>

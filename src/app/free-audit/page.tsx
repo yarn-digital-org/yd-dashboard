@@ -136,6 +136,19 @@ export default function FreeAuditPage() {
                 <p className="text-xs text-[#888] font-medium mt-6 border-t border-[#1a1a1a] pt-5" style={{ letterSpacing: '-0.01em' }}>
                   We only take on 3–4 new projects per month. Book your audit to secure your spot.
                 </p>
+
+                {/* Consultation alternative — bridges ad promise */}
+                <p className="text-sm text-white/50 font-medium mt-4" style={{ letterSpacing: '-0.01em' }}>
+                  Prefer a call?{' '}
+                  <a
+                    href="https://www.yarndigital.co.uk/book"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white underline underline-offset-2 hover:text-white/80 transition-colors"
+                  >
+                    Book a free 30-min consultation →
+                  </a>
+                </p>
               </div>
 
               {/* Right — form */}
@@ -146,8 +159,11 @@ export default function FreeAuditPage() {
                 >
                   Claim your free audit
                 </h2>
-                <p className="text-sm text-[#555] font-medium mb-6">
+                <p className="text-sm text-[#555] font-medium mb-4">
                   Takes 30 seconds. Delivered within 48 hours.
+                </p>
+                <p className="text-xs text-[#e63312]/80 font-medium mb-6" style={{ letterSpacing: '-0.01em' }}>
+                  Limited availability — we review a small number of sites each week
                 </p>
                 <AuditForm />
               </div>

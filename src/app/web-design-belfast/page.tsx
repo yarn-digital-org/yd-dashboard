@@ -123,6 +123,17 @@ export default function WebDesignBelfastPage() {
               <button onClick={scrollToForm} className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
                 Get a Free Audit <ArrowRight size={15} />
               </button>
+
+              {/* Case study preview — above the fold for "See What We Could Build" ads */}
+              <div className="mt-10 flex items-center gap-4">
+                <div className="w-20 h-14 sm:w-24 sm:h-16 rounded-xl overflow-hidden flex-shrink-0 border border-white/10">
+                  <Image src={IMG.hillsMockup} alt="The Hills Restaurant website" width={96} height={64} className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-white/80" style={{ letterSpacing: '-0.02em' }}>The Hills Restaurant</p>
+                  <p className="text-xs text-white/40">+38% organic traffic · 2× reservations</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>

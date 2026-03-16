@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import { BrandProvider } from "@/context/BrandContext";
 import { CookieConsent } from "@/components/CookieConsent";
 import { BottomNav } from "@/components/BottomNav";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -34,6 +35,7 @@ export default function RootLayout({
         `}} />
       </head>
       <body className={inter.className} style={{ margin: 0, padding: 0, minHeight: '100vh' }}>
+        <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'G-ZEFG1FNZ2T'} />
         <ThemeProvider>
           <AuthProvider>
             <BrandProvider>

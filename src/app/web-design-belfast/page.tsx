@@ -115,10 +115,10 @@ export default function WebDesignBelfastPage() {
           <div className="relative z-10 max-w-[1520px] mx-auto px-5 sm:px-10 flex flex-col justify-end min-h-screen pb-16 sm:pb-20 pt-32">
             <div className="max-w-2xl">
               <h1 className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-medium text-white leading-[1.02] mb-6" style={{ letterSpacing: '-0.03em' }}>
-                Everything Your Brand Needs,<br />Under One Roof.
+                Web Design Belfast<br />That Wins You Customers.
               </h1>
               <p className="text-base sm:text-lg text-white/60 leading-relaxed mb-6 max-w-lg" style={{ letterSpacing: '-0.01em', fontWeight: 400 }}>
-                Brand strategy, web design, SEO, and digital marketing — all from one Belfast team. No juggling agencies, no mixed messages.
+                Belfast web design, SEO, and digital marketing — all from one local team. Fast turnaround, real results, no juggling agencies.
               </p>
               <button onClick={scrollToForm} className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
                 Get a Free Audit <ArrowRight size={15} />
@@ -251,8 +251,8 @@ export default function WebDesignBelfastPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-[#e5e5e5]">
               {[
                 { title: 'Brand & Identity', desc: 'Logo, guidelines, and a brand that sticks.' },
-                { title: 'Web Design & Dev', desc: 'Fast, modern sites built to convert.' },
-                { title: 'SEO & Marketing', desc: 'Get found, get leads, grow revenue.' },
+                { title: 'Web Design Belfast', desc: 'Fast, modern websites built to convert visitors into customers.' },
+                { title: 'SEO Belfast', desc: 'Get found on Google by local customers searching for your services.' },
               ].map((service, i) => (
                 <div key={i} className={`py-8 md:px-8 ${i === 0 ? 'md:pl-0' : ''} ${i < 2 ? 'border-b md:border-b-0 md:border-r border-[#e5e5e5]' : ''}`}>
                   <h3 className="text-lg font-semibold text-[#0a0a0a] mb-2" style={{ letterSpacing: '-0.03em' }}>

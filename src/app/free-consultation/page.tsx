@@ -134,15 +134,15 @@ export default function FreeConsultationPage() {
                 className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-medium text-white leading-[1.02] mb-6"
                 style={{ letterSpacing: '-0.03em' }}
               >
-                Belfast&apos;s Strategy-First<br />
-                Digital Agency.
+                Book Your Free 30-Min<br />
+                Digital Consultation.
               </h1>
               <p
                 className="text-base sm:text-lg text-white/60 leading-relaxed mb-6 max-w-lg"
                 style={{ letterSpacing: '-0.01em', fontWeight: 400 }}
               >
-                Web design, branding, SEO, and marketing that drives{' '}
-                real business results. Trusted by SMEs across NI.
+                Talk through your goals with a strategist — no pitch, no obligation.{' '}
+                Just honest advice on what&apos;s working and what&apos;s not.
               </p>
 
               {/* CTA — white pill like "Start a Project" on main site */}

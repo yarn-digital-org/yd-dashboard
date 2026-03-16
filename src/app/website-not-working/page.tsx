@@ -122,8 +122,7 @@ export default function WebsiteNotConvertingPage() {
                 Most Belfast business websites leak leads. Slow load, weak copy, no clear next step — we find the exact problem and fix it.
               </p>
               <p className="text-sm text-white/50 font-medium mb-6" style={{ letterSpacing: '-0.01em' }}>
-                <a href="tel:+442890994006" className="hover:text-white/70 transition-colors">📞 028 9099 4006</a>{' '}
-                | ★★★★★ 5.0 on Google | Belfast-based studio
+                ★★★★★ 5.0 on Google | Belfast-based studio
               </p>
               <button onClick={scrollToForm} className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
                 Get a Free Website Review <ArrowRight size={15} />

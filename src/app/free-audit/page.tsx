@@ -96,8 +96,7 @@ export default function FreeAuditPage() {
                   className="text-sm text-white/50 font-medium mb-6"
                   style={{ letterSpacing: '-0.01em' }}
                 >
-                  <a href="tel:+442890994006" className="hover:text-white/70 transition-colors">📞 028 9099 4006</a>{' '}
-                  | ★★★★★ 5.0 on Google | Belfast-based studio
+                  ★★★★★ 5.0 on Google | Belfast-based studio
                 </p>
 
                 {/* Trust signals */}

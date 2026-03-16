@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, Firestore } from 'firebase-admin/firestore';
 
-// Initialize Firebase Admin if not already initialized
-if (!getApps().length) {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY || '{}');
-  initializeApp({
-    credential: cert(serviceAccount),
-    projectId: process.env.FIREBASE_PROJECT_ID,
-  });
+// Lazy initialization — avoid running at build time when env vars aren't available
+function getDb(): Firestore {
+  if (!getApps().length) {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY || '{}');
+    initializeApp({
+      credential: cert(serviceAccount),
+      projectId: process.env.FIREBASE_PROJECT_ID,
+    });
+  }
+  return getFirestore();
 }
-
-const db = getFirestore();
 
 export async function GET(request: NextRequest) {
   try {
@@ -121,7 +122,7 @@ async function getCampaignData(startDate: Date, endDate: Date) {
 async function getTaskData(startDate: Date, endDate: Date) {
   try {
     // Query actual task completion data from project management system
-    const tasksSnapshot = await db.collection('tasks')
+    const tasksSnapshot = await getDb().collection('tasks')
       .where('date', '>=', startDate.toISOString())
       .where('date', '<=', endDate.toISOString())
       .get();
@@ -153,7 +154,7 @@ async function getTaskData(startDate: Date, endDate: Date) {
 async function getSystemData(startDate: Date, endDate: Date) {
   try {
     // Query system health metrics
-    const systemSnapshot = await db.collection('system_metrics')
+    const systemSnapshot = await getDb().collection('system_metrics')
       .where('timestamp', '>=', startDate.toISOString())
       .where('timestamp', '<=', endDate.toISOString())
       .orderBy('timestamp', 'desc')
@@ -183,7 +184,7 @@ async function getSystemData(startDate: Date, endDate: Date) {
 
 async function getBaselineMetrics(type: string, date: Date): Promise<Record<string, number>> {
   try {
-    const snapshot = await db.collection('baseline_metrics')
+    const snapshot = await getDb().collection('baseline_metrics')
       .where('type', '==', type)
       .where('date', '<=', date.toISOString())
       .orderBy('date', 'desc')

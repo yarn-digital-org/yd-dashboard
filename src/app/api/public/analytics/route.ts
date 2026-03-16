@@ -74,15 +74,13 @@ export async function GET(request: NextRequest) {
     cutoffDate.setDate(cutoffDate.getDate() - days);
     const cutoff = cutoffDate.toISOString().split('T')[0];
 
-    let query = adminDb.collection('analytics_page_views')
-      .where('date', '>=', cutoff)
-      .orderBy('date', 'desc');
+    let query: FirebaseFirestore.Query = adminDb.collection('analytics_page_views')
+      .where('date', '>=', cutoff);
 
     if (page) {
       query = adminDb.collection('analytics_page_views')
         .where('page', '==', page)
-        .where('date', '>=', cutoff)
-        .orderBy('date', 'desc');
+        .where('date', '>=', cutoff);
     }
 
     const snapshot = await query.get();

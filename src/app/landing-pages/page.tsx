@@ -109,8 +109,12 @@ export default function LandingPagesPage() {
       const res = await fetch('/api/analytics/landing-pages');
       if (res.ok) {
         const data = await res.json();
-        if (data && typeof data === 'object') {
-          setBuiltPageStats(data.data || data);
+        if (data?.pages && Array.isArray(data.pages)) {
+          const statsMap: Record<string, PageStats> = {};
+          for (const p of data.pages) {
+            statsMap[p.page] = { views: p.views_30d || 0, leads: p.leads || 0 };
+          }
+          setBuiltPageStats(statsMap);
         }
       }
     } catch { /* silent */ }
@@ -298,7 +302,8 @@ export default function LandingPagesPage() {
               </thead>
               <tbody>
                 {BUILT_PAGES.map((bp) => {
-                  const stats = builtPageStats[bp.path] || builtPageStats[bp.source] || {};
+                  const pageKey = bp.path.replace(/^\//, '');
+                  const stats = builtPageStats[pageKey] || builtPageStats[bp.path] || builtPageStats[bp.source] || {};
                   return (
                     <tr key={bp.path} className="border-b border-gray-50 hover:bg-gray-50/50 transition">
                       <td className="px-5 py-3 font-medium text-gray-900 whitespace-nowrap">{bp.name}</td>

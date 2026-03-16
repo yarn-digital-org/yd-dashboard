@@ -100,6 +100,15 @@ export default function FreeAuditPage() {
                   The digital partner Belfast SMEs trust.
                 </p>
 
+                <div className="flex flex-col gap-3 mb-6">
+                  <p className="text-sm text-white/50 font-medium" style={{ letterSpacing: '-0.01em' }}>
+                    Your free audit starts with a 30-minute discovery call.
+                  </p>
+                  <p className="text-sm text-white/40 font-medium" style={{ letterSpacing: '-0.01em' }}>
+                    We take on a limited number of new clients each month — a few spots are usually available.
+                  </p>
+                </div>
+
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
                   <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (

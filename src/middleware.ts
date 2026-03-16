@@ -26,6 +26,7 @@ const publicRoutes = [
   '/seo-belfast',
   '/web-design-belfast',
   '/website-not-working',
+  '/website-not-converting',
   '/yarn-digital',
   '/unsubscribe',
   '/subscribe-confirm',

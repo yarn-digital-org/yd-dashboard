@@ -1,3 +1,4 @@
+import { trackGoogleAdsConversion } from "@/components/GoogleAnalytics";
 'use client';
 
 import { useState, FormEvent } from 'react';
@@ -43,7 +44,7 @@ export default function AuditForm() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Something went wrong');
       setStatus('success');
-      trackLead();
+      trackLead(); trackGoogleAdsConversion();
     } catch (err) {
       setStatus('error');
       setErrorMsg(err instanceof Error ? err.message : 'Something went wrong.');

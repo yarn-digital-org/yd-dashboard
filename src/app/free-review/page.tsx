@@ -1,3 +1,4 @@
+import { trackGoogleAdsConversion } from '@/components/GoogleAnalytics';
 import Image from 'next/image';
 import ReviewForm from './ReviewForm';
 import { ForceLightTheme } from '@/components/ForceLightTheme';

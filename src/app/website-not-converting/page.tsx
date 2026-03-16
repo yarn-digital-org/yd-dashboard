@@ -37,7 +37,7 @@ const IMG = {
   krumb: '/images/yd/c2ByT5WhAv4Ac8xz0FBRqtJ0DPE.png',
 };
 
-export default function WebDesignBelfastPage() {
+export default function WebsiteNotConvertingPage() {
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '', company: '',
   });
@@ -53,7 +53,7 @@ export default function WebDesignBelfastPage() {
       const res = await fetch('/api/public/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, source: 'landing-page-web-design-belfast', ...utm }),
+        body: JSON.stringify({ ...formData, source: 'landing-page-website-not-converting', ...utm }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Something went wrong');
@@ -75,7 +75,7 @@ export default function WebDesignBelfastPage() {
   return (
     <>
       <ForceLightTheme />
-      <PageViewTracker page="web-design-belfast" />
+      <PageViewTracker page="website-not-converting" />
       <MetaPixelScript />
 
       <main className="min-h-screen bg-[#0a0a0a] font-sans antialiased landing-page" style={{ letterSpacing: '-0.02em' }}>
@@ -98,7 +98,7 @@ export default function WebDesignBelfastPage() {
               className="bg-[#ffffff]/10 backdrop-blur-md text-white text-sm font-medium px-6 py-2.5 rounded-full border border-white/20 hover:bg-[#ffffff]/20 transition-all"
               style={{ letterSpacing: '-0.02em' }}
             >
-              Get a Free Audit
+              Get a Free Review
             </button>
           </div>
         </nav>
@@ -113,61 +113,48 @@ export default function WebDesignBelfastPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/80 via-transparent to-transparent" />
 
           <div className="relative z-10 max-w-[1520px] mx-auto px-5 sm:px-10 flex flex-col justify-end min-h-screen pb-16 sm:pb-20 pt-32">
-            <div className="max-w-2xl">
+            <div className="max-w-3xl">
               <h1 className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-medium text-white leading-[1.02] mb-6" style={{ letterSpacing: '-0.03em' }}>
-                Belfast&apos;s Web Design<br />& SEO Agency
+                Your Website Is Getting<br />Visitors. So Why Aren&apos;t<br />They Calling?
               </h1>
               <p className="text-base sm:text-lg text-white/60 leading-relaxed mb-6 max-w-lg" style={{ letterSpacing: '-0.01em', fontWeight: 400 }}>
-                We design, build, and grow — websites that look great and actually bring in leads. Fast turnaround, local team, real results.
+                Most Belfast business websites leak leads. Slow load, weak copy, no clear next step — we find the exact problem and fix it.
               </p>
               <button onClick={scrollToForm} className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
-                Get a Free Audit <ArrowRight size={15} />
+                Get a Free Website Review <ArrowRight size={15} />
               </button>
             </div>
           </div>
         </section>
 
         {/* ═══════════════════════════════════════════
-            TRUST BAR
+            PAIN POINTS STRIP — dark emphasis
             ═══════════════════════════════════════════ */}
-        <section className="py-10 sm:py-14 bg-[#0a0a0a] border-b border-[#1a1a1a]">
-          <div className="max-w-[1520px] mx-auto px-5 sm:px-10 text-center">
-            <p className="text-sm sm:text-base text-white/40 font-medium" style={{ letterSpacing: '-0.01em' }}>
-              Trusted by Belfast businesses including The Hills Restaurant, Krumb Bakery &amp; React Clarity
-            </p>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════
-            SERVICES STRIP — 3 columns, white section
-            ═══════════════════════════════════════════ */}
-        <section className="py-24 sm:py-32 bg-[#ffffff]">
+        <section className="py-20 sm:py-24 bg-[#0a0a0a] border-y border-[#1a1a1a]">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20 mb-14">
               <div>
-                <span className="text-[11px] font-semibold text-[#999] uppercase" style={{ letterSpacing: '0.08em' }}>
-                  Our Services
+                <span className="text-[11px] font-semibold text-[#555] uppercase" style={{ letterSpacing: '0.08em' }}>
+                  Sound Familiar?
                 </span>
               </div>
               <div className="lg:col-span-2">
-                <h2 className="text-3xl sm:text-4xl font-medium text-[#0a0a0a] leading-[1.1]" style={{ letterSpacing: '-0.04em' }}>
-                  Everything you need to grow online.
+                <h2 className="text-3xl sm:text-4xl font-medium text-white leading-[1.1]" style={{ letterSpacing: '-0.04em' }}>
+                  The signs your website is losing you money.
                 </h2>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-[#e5e5e5]">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-[#1a1a1a]">
               {[
-                { title: 'Web Design', desc: 'Fast, modern, built to convert.' },
-                { title: 'SEO Belfast', desc: 'Get found on Google by local customers.' },
-                { title: 'Digital Marketing', desc: 'Ads, content, and strategy that drive leads.' },
-              ].map((service, i) => (
-                <div key={i} className={`py-8 md:px-8 ${i === 0 ? 'md:pl-0' : ''} ${i < 2 ? 'border-b md:border-b-0 md:border-r border-[#e5e5e5]' : ''}`}>
-                  <h3 className="text-lg font-semibold text-[#0a0a0a] mb-2" style={{ letterSpacing: '-0.03em' }}>
-                    {service.title}
-                  </h3>
-                  <p className="text-sm text-[#666] leading-relaxed" style={{ letterSpacing: '-0.01em' }}>
-                    {service.desc}
+                { icon: '⚠', text: 'People are clicking your ads — and leaving' },
+                { icon: '⚠', text: "You\u2019re on page 2 while competitors take your customers" },
+                { icon: '⚠', text: "The website looks fine, but the phone isn\u2019t ringing" },
+              ].map((pain, i) => (
+                <div key={i} className={`py-8 md:px-8 ${i === 0 ? 'md:pl-0' : ''} ${i < 2 ? 'border-b md:border-b-0 md:border-r border-[#1a1a1a]' : ''}`}>
+                  <span className="text-2xl block mb-3 text-[#e63312]">{pain.icon}</span>
+                  <p className="text-base sm:text-lg font-medium text-white leading-snug" style={{ letterSpacing: '-0.02em' }}>
+                    {pain.text}
                   </p>
                 </div>
               ))}
@@ -176,28 +163,28 @@ export default function WebDesignBelfastPage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            HOW IT WORKS — 3-step process
+            THE FIX — 3 steps, white section
             ═══════════════════════════════════════════ */}
-        <section className="py-20 sm:py-24 bg-[#ffffff]">
+        <section className="py-24 sm:py-32 bg-[#ffffff]">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20 mb-14">
               <div>
                 <span className="text-[11px] font-semibold text-[#999] uppercase" style={{ letterSpacing: '0.08em' }}>
-                  How It Works
+                  The Fix
                 </span>
               </div>
               <div className="lg:col-span-2">
                 <h2 className="text-3xl sm:text-4xl font-medium text-[#0a0a0a] leading-[1.1]" style={{ letterSpacing: '-0.04em' }}>
-                  Three steps to better results.
+                  Here&apos;s how we turn it around.
                 </h2>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-[#e5e5e5]">
               {[
-                { num: '01', title: 'Free 30-min audit', desc: 'We review your site, SEO, and competitors.' },
-                { num: '02', title: 'We build your plan', desc: 'Design, SEO, or ads — whatever\'s holding you back.' },
-                { num: '03', title: 'You get results', desc: 'Measurable, trackable, no fluff.' },
+                { num: '01', title: '30-minute review', desc: 'We find exactly where you\'re losing people.' },
+                { num: '02', title: 'Written report', desc: 'Specific issues, not vague recommendations.' },
+                { num: '03', title: 'We fix it', desc: 'Fast, clean, no technical jargon.' },
               ].map((step, i) => (
                 <div key={i} className={`py-8 md:px-8 ${i === 0 ? 'md:pl-0' : ''} ${i < 2 ? 'border-b md:border-b-0 md:border-r border-[#e5e5e5]' : ''}`}>
                   <span className="text-[40px] font-medium text-[#eee] leading-none block mb-4" style={{ letterSpacing: '-0.04em' }}>
@@ -312,14 +299,14 @@ export default function WebDesignBelfastPage() {
 
               <div>
                 <span className="text-[11px] font-semibold text-[#555] uppercase block mb-6" style={{ letterSpacing: '0.08em' }}>
-                  Free Consultation
+                  Free Website Review
                 </span>
                 <h2 className="text-3xl sm:text-4xl font-medium text-white leading-[1.1] mb-6" style={{ letterSpacing: '-0.04em' }}>
-                  Book your free audit
+                  Get your free review
                 </h2>
                 <p className="text-sm text-[#555] leading-relaxed mb-8" style={{ letterSpacing: '-0.01em', fontWeight: 500 }}>
-                  Tell us about your business and we&apos;ll show you<br />
-                  exactly how to get more leads online.
+                  Tell us about your business. We&apos;ll find out<br />
+                  exactly why your website isn&apos;t converting.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-3 mb-6">
@@ -334,8 +321,8 @@ export default function WebDesignBelfastPage() {
                 </div>
                 <div className="flex flex-col gap-2 text-xs text-[#444] font-medium">
                   <span>Belfast-based studio</span>
-                  <span>Free 30-minute consultation</span>
-                  <span>No obligation. No hidden fees.</span>
+                  <span>30-minute review + written report</span>
+                  <span>Zero obligation. Completely free.</span>
                 </div>
               </div>
 
@@ -349,7 +336,7 @@ export default function WebDesignBelfastPage() {
                       We&apos;ve got your details.
                     </h3>
                     <p className="text-sm text-[#666] font-medium" style={{ letterSpacing: '-0.02em' }}>
-                      We&apos;ll be in touch shortly to arrange your free consultation.
+                      We&apos;ll review your website and send you a written report with our findings.
                     </p>
                   </div>
                 ) : (
@@ -391,7 +378,7 @@ export default function WebDesignBelfastPage() {
                         {status === 'submitting' ? (
                           <><Loader2 size={16} className="animate-spin" /> Sending...</>
                         ) : (
-                          <>Book My Free Consultation <ArrowRight size={15} /></>
+                          <>Get My Free Website Review <ArrowRight size={15} /></>
                         )}
                       </button>
                     </div>
@@ -419,9 +406,9 @@ export default function WebDesignBelfastPage() {
                 </h2>
                 <div className="border-t border-[#e5e5e5]">
                   {[
-                    { q: 'How long does a website take?', a: '2–4 weeks for most projects. We move fast without cutting corners — you\'ll have a site that\'s ready to launch and built to last.' },
-                    { q: 'Do you work with small businesses?', a: 'Yes — Belfast SMEs are who we\'re built for. Whether you\'re a restaurant, tradesperson, or tech startup, we understand your market and your customers.' },
-                    { q: 'What does it cost?', a: 'We\'ll give you a clear quote on the call. No hidden fees, no surprise invoices. Every project is scoped properly before we start.' },
+                    { q: 'How do you know what\'s not working?', a: 'Real data — analytics, ad performance, heatmaps. We don\'t guess. We look at where visitors are coming from, what they\'re doing on your site, and exactly where they\'re dropping off.' },
+                    { q: 'What if it\'s just my ads?', a: 'We audit the full funnel: ads, landing page, form, follow-up. Often it\'s not one thing — it\'s a combination. We\'ll tell you exactly what\'s leaking and what to fix first.' },
+                    { q: 'Is it really free?', a: 'Yes. 30 minutes, written summary, zero obligation. We do this because it\'s the best way to show you what we can do — and most people who see the results want to work with us.' },
                   ].map((faq, i) => (
                     <details key={i} className="group border-b border-[#e5e5e5]">
                       <summary className="flex items-center justify-between py-5 cursor-pointer list-none">
@@ -453,16 +440,16 @@ export default function WebDesignBelfastPage() {
           <div className="absolute inset-0 bg-[#0a0a0a]/80" />
           <div className="relative z-10 max-w-3xl mx-auto px-5 sm:px-10 text-center">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-medium text-white leading-[1.1] mb-5" style={{ letterSpacing: '-0.04em' }}>
-              Ready to grow your<br />business online?
+              Stop losing leads to a<br />website that doesn&apos;t convert.
             </h2>
             <p className="text-base text-white/50 mb-10" style={{ letterSpacing: '-0.02em', fontWeight: 500 }}>
-              Book a free 30-minute consultation. No obligation, no sales pitch.
+              Free 30-minute review. Written report. Zero obligation.
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
               <button onClick={scrollToForm}
                 className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2"
                 style={{ letterSpacing: '-0.02em' }}>
-                Book My Free Consultation <ArrowRight size={15} />
+                Get My Free Website Review <ArrowRight size={15} />
               </button>
               <a href="mailto:hello@yarndigital.co.uk"
                 className="border border-white/20 text-white/60 font-medium text-[15px] px-8 py-3.5 rounded-full hover:border-white/40 hover:text-white transition-all"

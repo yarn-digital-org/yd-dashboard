@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import { ArrowRight, Loader2, Check } from 'lucide-react';
+import { ArrowRight, ArrowDown, Loader2, Check } from 'lucide-react';
 import Image from 'next/image';
 import { ForceLightTheme } from '@/components/ForceLightTheme';
 import PageViewTracker from '@/components/PageViewTracker';
@@ -128,13 +128,36 @@ export default function WebDesignBelfastPage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            TRUST BAR
+            WORK SHOWCASE — above the fold portfolio proof
             ═══════════════════════════════════════════ */}
-        <section className="py-10 sm:py-14 bg-[#0a0a0a] border-b border-[#1a1a1a]">
-          <div className="max-w-[1520px] mx-auto px-5 sm:px-10 text-center">
-            <p className="text-sm sm:text-base text-white/40 font-medium" style={{ letterSpacing: '-0.01em' }}>
-              Trusted by Belfast businesses including The Hills Restaurant, Krumb Bakery &amp; React Clarity
-            </p>
+        <section className="py-12 sm:py-16 bg-[#0a0a0a] border-b border-[#1a1a1a]">
+          <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
+            <div className="flex items-center justify-between mb-6">
+              <span className="text-[11px] font-semibold text-[#555] uppercase" style={{ letterSpacing: '0.08em' }}>
+                Recent Work
+              </span>
+              <a href="#case-studies" className="text-xs text-white/40 font-medium hover:text-white/60 transition-colors inline-flex items-center gap-1" style={{ letterSpacing: '-0.01em' }}>
+                See all work <ArrowDown size={12} />
+              </a>
+            </div>
+            <div className="grid grid-cols-3 gap-3 sm:gap-4">
+              {[
+                { title: 'Stonebridge Farm', tags: 'Brand & Web', image: IMG.stonebridge },
+                { title: 'React Clarity', tags: 'Brand & Dev', image: IMG.reactClarity },
+                { title: 'Krumb Bakery', tags: 'Brand & E-Commerce', image: IMG.krumb },
+              ].map((cs, i) => (
+                <a key={i} href="#case-studies" className="group block">
+                  <div className="aspect-[4/3] rounded-[16px] overflow-hidden mb-2">
+                    <Image src={cs.image} alt={cs.title} width={400} height={300}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  </div>
+                  <h3 className="text-[13px] font-semibold text-white/70 group-hover:text-white transition-colors" style={{ letterSpacing: '-0.02em' }}>
+                    {cs.title}
+                  </h3>
+                  <span className="text-[10px] text-[#444] font-medium">{cs.tags}</span>
+                </a>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -218,7 +241,7 @@ export default function WebDesignBelfastPage() {
         {/* ═══════════════════════════════════════════
             CASE STUDIES — Dark section
             ═══════════════════════════════════════════ */}
-        <section className="bg-[#0a0a0a] py-24 sm:py-32">
+        <section id="case-studies" className="bg-[#0a0a0a] py-24 sm:py-32">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20 mb-14">
               <div>

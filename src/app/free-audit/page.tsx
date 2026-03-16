@@ -86,10 +86,9 @@ export default function FreeAuditPage() {
                   className="text-base sm:text-lg text-white/50 leading-relaxed max-w-md mb-8"
                   style={{ letterSpacing: '-0.01em', fontWeight: 400 }}
                 >
-                  We&apos;ll audit your website&apos;s performance, SEO,
-                  design, and conversion — and tell you exactly
-                  what&apos;s holding it back. Free. No pitch. No
-                  strings.
+                  See exactly where your website is losing you money.
+                  We&apos;ll audit performance, SEO, design, and conversion —
+                  and show you what to fix first. Free. No pitch. No strings.
                 </p>
 
                 {/* Trust signals */}
@@ -135,7 +134,7 @@ export default function FreeAuditPage() {
                 </div>
 
                 <p className="text-xs text-[#888] font-medium mt-6 border-t border-[#1a1a1a] pt-5" style={{ letterSpacing: '-0.01em' }}>
-                  We only take on a handful of new projects each month — limited availability.
+                  We only take on 3–4 new projects per month. Book your audit to secure your spot.
                 </p>
               </div>
 

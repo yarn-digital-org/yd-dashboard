@@ -141,8 +141,8 @@ export default function FreeConsultationPage() {
                 className="text-base sm:text-lg text-white/60 leading-relaxed mb-6 max-w-lg"
                 style={{ letterSpacing: '-0.01em', fontWeight: 400 }}
               >
-                Web design, branding, SEO, and marketing that drives{' '}
-                real business results. Trusted by SMEs across NI.
+                Talk through your goals with a strategist — no pitch, no obligation.{' '}
+                Just honest advice on what&apos;s working and what&apos;s not.
               </p>
 
               {/* CTA — white pill like "Start a Project" on main site */}

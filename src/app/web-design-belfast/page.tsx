@@ -115,10 +115,10 @@ export default function WebDesignBelfastPage() {
           <div className="relative z-10 max-w-[1520px] mx-auto px-5 sm:px-10 flex flex-col justify-end min-h-screen pb-16 sm:pb-20 pt-32">
             <div className="max-w-2xl">
               <h1 className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-medium text-white leading-[1.02] mb-6" style={{ letterSpacing: '-0.03em' }}>
-                Belfast&apos;s Web Design<br />& SEO Agency
+                Everything Your Brand Needs,<br />Under One Roof.
               </h1>
               <p className="text-base sm:text-lg text-white/60 leading-relaxed mb-6 max-w-lg" style={{ letterSpacing: '-0.01em', fontWeight: 400 }}>
-                We design, build, and grow — websites that look great and actually bring in leads. Fast turnaround, local team, real results.
+                Brand strategy, web design, SEO, and digital marketing — all from one Belfast team. No juggling agencies, no mixed messages.
               </p>
               <button onClick={scrollToForm} className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
                 Get a Free Audit <ArrowRight size={15} />
@@ -135,6 +135,64 @@ export default function WebDesignBelfastPage() {
             <p className="text-sm sm:text-base text-white/40 font-medium" style={{ letterSpacing: '-0.01em' }}>
               Trusted by Belfast businesses including The Hills Restaurant, Krumb Bakery &amp; React Clarity
             </p>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════
+            PORTFOLIO — Above the fold for "See What We Could Build" ad
+            ═══════════════════════════════════════════ */}
+        <section className="py-20 sm:py-28 bg-[#0a0a0a] border-b border-[#1a1a1a]">
+          <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20 mb-14">
+              <div>
+                <span className="text-[11px] font-semibold text-[#555] uppercase" style={{ letterSpacing: '0.08em' }}>
+                  Recent Work
+                </span>
+              </div>
+              <div className="lg:col-span-2">
+                <h2 className="text-3xl sm:text-4xl font-medium text-white leading-[1.1]" style={{ letterSpacing: '-0.04em' }}>
+                  See what we&apos;ve built for Belfast businesses.
+                </h2>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                {
+                  name: 'The Hills Restaurant',
+                  desc: 'Full rebrand + responsive site. +38% organic traffic, 2x reservations.',
+                  img: '/images/yd/wtOblvlwQViPkZXQy7otlTIMaMQ.png',
+                },
+                {
+                  name: 'Krumb Bakery',
+                  desc: 'E-commerce build on Shopify. Clean, fast, built to sell.',
+                  img: '/images/yd/SqapF4Gl9mce8qi3Is6oKtl2tU.png',
+                },
+                {
+                  name: 'React Clarity',
+                  desc: 'Brand identity + marketing site. Professional, conversion-focused.',
+                  img: '/images/yd/H7pmHxrsHkVjHKJY8oD7Oy6ck.png',
+                },
+              ].map((project, i) => (
+                <div key={i} className="group">
+                  <div className="relative aspect-[4/3] rounded-[24px] overflow-hidden bg-[#111] border border-[#222] mb-4">
+                    <Image
+                      src={project.img}
+                      alt={project.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                    />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white mb-1" style={{ letterSpacing: '-0.03em' }}>
+                    {project.name}
+                  </h3>
+                  <p className="text-sm text-[#555] leading-relaxed" style={{ letterSpacing: '-0.01em' }}>
+                    {project.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -158,9 +216,9 @@ export default function WebDesignBelfastPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-[#e5e5e5]">
               {[
-                { title: 'Web Design', desc: 'Fast, modern, built to convert.' },
-                { title: 'SEO Belfast', desc: 'Get found on Google by local customers.' },
-                { title: 'Digital Marketing', desc: 'Ads, content, and strategy that drive leads.' },
+                { title: 'Brand & Identity', desc: 'Logo, guidelines, and a brand that sticks.' },
+                { title: 'Web Design & Dev', desc: 'Fast, modern sites built to convert.' },
+                { title: 'SEO & Marketing', desc: 'Get found, get leads, grow revenue.' },
               ].map((service, i) => (
                 <div key={i} className={`py-8 md:px-8 ${i === 0 ? 'md:pl-0' : ''} ${i < 2 ? 'border-b md:border-b-0 md:border-r border-[#e5e5e5]' : ''}`}>
                   <h3 className="text-lg font-semibold text-[#0a0a0a] mb-2" style={{ letterSpacing: '-0.03em' }}>

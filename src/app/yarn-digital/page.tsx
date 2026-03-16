@@ -134,17 +134,16 @@ export default function FreeAuditPage() {
                 className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-medium text-white leading-[1.02] mb-6"
                 style={{ letterSpacing: '-0.03em' }}
               >
-                Your Website<br />
-                Should Be Winning<br />
-                You Customers.
+                The Digital Partner<br />
+                Belfast SMEs Trust.
               </h1>
               <p
                 className="text-base sm:text-lg text-white/60 leading-relaxed mb-6 max-w-lg"
                 style={{ letterSpacing: '-0.01em', fontWeight: 400 }}
               >
-                Design → Build → Grow<br />
-                A free audit of your site — performance, SEO,<br className="hidden sm:block" />
-                design, and conversion. No pitch. No strings.
+                We&apos;re not a faceless agency. We&apos;re a small team in Belfast<br className="hidden sm:block" />
+                who genuinely care about helping SMEs grow.<br className="hidden sm:block" />
+                Brand, website, marketing — all under one roof.
               </p>
 
               {/* CTA — white pill like "Start a Project" on main site */}

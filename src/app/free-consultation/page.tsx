@@ -134,8 +134,8 @@ export default function FreeConsultationPage() {
                 className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-medium text-white leading-[1.02] mb-6"
                 style={{ letterSpacing: '-0.03em' }}
               >
-                Belfast&apos;s Strategy-First<br />
-                Digital Agency.
+                Book Your Free 30-Min<br />
+                Digital Consultation.
               </h1>
               <p
                 className="text-base sm:text-lg text-white/60 leading-relaxed mb-6 max-w-lg"

@@ -1,14 +1,45 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
 import {
   Plus, Globe, Eye, Trash2, Edit, Copy, ToggleLeft, ToggleRight,
   BarChart3, ExternalLink, X, Check, Loader2, TrendingUp, Smartphone, Monitor,
+  Layout,
 } from 'lucide-react';
 
+/* ─── Built (hardcoded) landing pages ─── */
+interface BuiltPage {
+  name: string;
+  path: string;
+  source: string;
+  description: string;
+}
+
+const BUILT_PAGES: BuiltPage[] = [
+  { name: 'Free Audit', path: '/free-audit', source: 'landing-page-free-audit', description: 'BOFU — main lead capture page' },
+  { name: 'Web Design Belfast', path: '/web-design-belfast', source: 'landing-page-web-design-belfast', description: 'Core Services — Google Ads' },
+  { name: 'Website Not Working', path: '/website-not-working', source: 'landing-page-website-not-working', description: 'Problem/Solution — MOFU ads' },
+  { name: 'Yarn Digital', path: '/yarn-digital', source: 'landing-page-yarn-digital', description: 'Brand — warm audience' },
+  { name: 'Free Consultation', path: '/free-consultation', source: 'landing-page-free-consultation', description: 'Consultation booking' },
+  { name: 'Free Review', path: '/free-review', source: 'landing-page-free-review', description: 'Website review offer' },
+  { name: 'SEO Belfast', path: '/seo-belfast', source: 'landing-page-seo-belfast', description: 'SEO services — local' },
+  { name: 'SEO Audit', path: '/seo-audit', source: 'landing-page-seo-audit', description: 'SEO audit offer' },
+  { name: 'Get Quote', path: '/get-quote', source: 'landing-page-get-quote', description: 'Quote request' },
+  { name: 'New Website', path: '/new-website', source: 'landing-page-new-website', description: 'New website enquiry' },
+  { name: 'New Brand', path: '/new-brand', source: 'landing-page-new-brand', description: 'Branding enquiry' },
+  { name: 'Shopify', path: '/shopify', source: 'landing-page-shopify', description: 'Shopify development' },
+  { name: 'Website Not Converting', path: '/website-not-converting', source: 'landing-page-website-not-converting', description: 'Problem/Solution — alternate' },
+];
+
+interface PageStats {
+  views?: number;
+  leads?: number;
+}
+
+/* ─── Dynamic (Firestore) landing pages ─── */
 interface LandingPageVariant {
   id: string;
   label: string;
@@ -67,9 +98,31 @@ export default function LandingPagesPage() {
   const [saving, setSaving] = useState(false);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [builtPageStats, setBuiltPageStats] = useState<Record<string, PageStats>>({});
+  const [copiedBuiltPath, setCopiedBuiltPath] = useState<string | null>(null);
   const [analyticsPageId, setAnalyticsPageId] = useState<string | null>(null);
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+
+  const fetchBuiltPageStats = useCallback(async () => {
+    try {
+      const res = await fetch('/api/analytics/landing-pages');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && typeof data === 'object') {
+          setBuiltPageStats(data.data || data);
+        }
+      }
+    } catch { /* silent */ }
+  }, []);
+
+  const copyBuiltUrl = (path: string) => {
+    const url = `${window.location.origin}${path}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedBuiltPath(path);
+      setTimeout(() => setCopiedBuiltPath(null), 2000);
+    });
+  };
 
   const openAnalytics = async (pageId: string) => {
     setAnalyticsPageId(pageId);
@@ -86,8 +139,11 @@ export default function LandingPagesPage() {
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/login');
-    if (user) fetchPages();
-  }, [user, authLoading, router]);
+    if (user) {
+      fetchPages();
+      fetchBuiltPageStats();
+    }
+  }, [user, authLoading, router, fetchBuiltPageStats]);
 
   const fetchPages = async () => {
     try {
@@ -207,7 +263,103 @@ export default function LandingPagesPage() {
             <h1 className="text-2xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
               Landing Pages
             </h1>
-            <p className="text-sm text-gray-500 mt-1">Create and publish landing pages with custom forms</p>
+            <p className="text-sm text-gray-500 mt-1">All active landing pages with lead capture forms</p>
+          </div>
+        </div>
+
+        {/* ─── Built Landing Pages ─── */}
+        <div className="bg-white rounded-xl border border-gray-200 mb-8">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#FF3300]/10 flex items-center justify-center text-[#FF3300]">
+                <Layout size={16} />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-gray-900">Landing Pages</h2>
+                <p className="text-xs text-gray-400">{BUILT_PAGES.length} live pages with lead capture</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Path</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Description</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Source Tag</th>
+                  <th className="text-center px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Views</th>
+                  <th className="text-center px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Leads</th>
+                  <th className="text-center px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {BUILT_PAGES.map((bp) => {
+                  const stats = builtPageStats[bp.path] || builtPageStats[bp.source] || {};
+                  return (
+                    <tr key={bp.path} className="border-b border-gray-50 hover:bg-gray-50/50 transition">
+                      <td className="px-5 py-3 font-medium text-gray-900 whitespace-nowrap">{bp.name}</td>
+                      <td className="px-5 py-3">
+                        <a
+                          href={bp.path}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#FF3300] hover:underline font-mono text-xs"
+                        >
+                          {bp.path}
+                        </a>
+                      </td>
+                      <td className="px-5 py-3 text-gray-500 hidden md:table-cell">{bp.description}</td>
+                      <td className="px-5 py-3 hidden lg:table-cell">
+                        <code className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{bp.source}</code>
+                      </td>
+                      <td className="px-5 py-3 text-center text-gray-600 hidden sm:table-cell">
+                        {stats.views != null ? stats.views.toLocaleString() : '—'}
+                      </td>
+                      <td className="px-5 py-3 text-center text-gray-600 hidden sm:table-cell">
+                        {stats.leads != null ? stats.leads.toLocaleString() : '—'}
+                      </td>
+                      <td className="px-5 py-3 text-center">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                          Live
+                        </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        <div className="flex items-center justify-end gap-1">
+                          <a
+                            href={bp.path}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 text-gray-400 hover:text-[#FF3300] hover:bg-[#FF3300]/5 rounded-lg transition"
+                            title="View page"
+                          >
+                            <ExternalLink size={15} />
+                          </a>
+                          <button
+                            onClick={() => copyBuiltUrl(bp.path)}
+                            className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                            title="Copy URL"
+                          >
+                            {copiedBuiltPath === bp.path ? <Check size={15} className="text-green-500" /> : <Copy size={15} />}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ─── Page Builder (dynamic pages) ─── */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">Page Builder</h2>
+            <p className="text-xs text-gray-500 mt-0.5">Create and publish custom landing pages with dynamic forms</p>
           </div>
           <button
             onClick={openCreate}
@@ -218,7 +370,7 @@ export default function LandingPagesPage() {
           </button>
         </div>
 
-        {/* Pages list */}
+        {/* Dynamic pages list */}
         {pages.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
             <Globe size={40} className="text-gray-300 mx-auto mb-3" />

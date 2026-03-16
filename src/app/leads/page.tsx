@@ -35,6 +35,7 @@ interface Lead {
   priority: LeadPriority;
   tags: string[];
   notes: Note[];
+  utm?: { source?: string; medium?: string; campaign?: string; content?: string };
   createdAt: string;
   updatedAt: string;
 }
@@ -299,6 +300,27 @@ export default function LeadsPage() {
     if (min && max) return `£${min.toLocaleString()} - £${max.toLocaleString()}`;
     if (min) return `From £${min.toLocaleString()}`;
     if (max) return `Up to £${max.toLocaleString()}`;
+  };
+
+  const getUtmDisplay = (lead: Lead): { text: string; color: string; bgColor: string } => {
+    const utm = lead.utm;
+    if (utm?.source && utm?.campaign) {
+      const text = `${utm.source} / ${utm.campaign}`;
+      // Paid traffic (ads, cpc, paid, fb, google, meta)
+      const paidKeywords = ['cpc', 'paid', 'ads', 'ppc', 'facebook', 'fb', 'google', 'meta', 'instagram', 'ig'];
+      const isPaid = paidKeywords.some(k => 
+        utm.source?.toLowerCase().includes(k) || utm.medium?.toLowerCase().includes(k)
+      );
+      if (isPaid) return { text, color: '#2563EB', bgColor: '#EFF6FF' };
+      return { text, color: '#059669', bgColor: '#ECFDF5' };
+    }
+    if (utm?.source) {
+      return { text: utm.source, color: '#059669', bgColor: '#ECFDF5' };
+    }
+    if (lead.source) {
+      return { text: lead.source.replace('_', ' '), color: '#059669', bgColor: '#ECFDF5' };
+    }
+    return { text: 'direct', color: '#6B7280', bgColor: '#F3F4F6' };
   };
 
   if (authLoading) {
@@ -661,7 +683,7 @@ export default function LeadsPage() {
                     Priority
                   </th>
                   <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Source
+                    Source / Campaign
                   </th>
                   <th style={{ padding: '0.875rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Created
@@ -809,9 +831,30 @@ export default function LeadsPage() {
                         </span>
                       </td>
 
-                      {/* Source */}
-                      <td style={{ padding: '1rem', color: '#6B7280', fontSize: '0.8125rem', textTransform: 'capitalize' }}>
-                        {lead.source?.replace('_', ' ') || '-'}
+                      {/* Source / Campaign */}
+                      <td style={{ padding: '1rem' }}>
+                        {(() => {
+                          const utm = getUtmDisplay(lead);
+                          return (
+                            <span style={{
+                              display: 'inline-block',
+                              padding: '0.25rem 0.625rem',
+                              borderRadius: '9999px',
+                              fontSize: '0.75rem',
+                              fontWeight: 500,
+                              backgroundColor: utm.bgColor,
+                              color: utm.color,
+                              maxWidth: '180px',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                            title={utm.text}
+                            >
+                              {utm.text}
+                            </span>
+                          );
+                        })()}
                       </td>
 
                       {/* Created */}

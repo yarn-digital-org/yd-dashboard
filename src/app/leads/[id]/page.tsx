@@ -34,6 +34,7 @@ interface Lead {
   priority: LeadPriority;
   tags: string[];
   notes: Note[];
+  utm?: { source?: string; medium?: string; campaign?: string; content?: string };
   convertedToProjectId?: string;
   convertedToContactId?: string;
   createdAt: string;
@@ -764,6 +765,35 @@ export default function LeadDetailPage() {
                 </div>
               </div>
             </div>
+
+            {/* UTM Tracking */}
+            {(lead.utm?.source || lead.utm?.medium || lead.utm?.campaign || lead.utm?.content) && (
+              <div
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '0.75rem',
+                  border: '1px solid #E5E7EB',
+                  padding: '1.25rem',
+                }}
+              >
+                <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '1rem', margin: '0 0 1rem' }}>
+                  UTM Tracking
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {[
+                    { label: 'Source', value: lead.utm?.source },
+                    { label: 'Medium', value: lead.utm?.medium },
+                    { label: 'Campaign', value: lead.utm?.campaign },
+                    { label: 'Content', value: lead.utm?.content },
+                  ].filter(item => item.value).map((item) => (
+                    <div key={item.label}>
+                      <div style={{ fontSize: '0.75rem', color: '#9CA3AF', marginBottom: '0.25rem' }}>{item.label}</div>
+                      <div style={{ fontSize: '0.875rem', color: '#374151' }}>{item.value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Priority Selection */}
             <div

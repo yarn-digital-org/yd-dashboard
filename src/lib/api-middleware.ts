@@ -171,6 +171,12 @@ export async function verifyCSRF(request: NextRequest): Promise<void> {
     return;
   }
 
+  // Skip CSRF for Bearer token auth (agent/API access)
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    return;
+  }
+
   const origin = request.headers.get('origin');
   const referer = request.headers.get('referer');
   const host = request.headers.get('host');
@@ -253,6 +259,27 @@ export function handleApiError(error: unknown): NextResponse<ApiResponse> {
 // ============================================
 
 export async function verifyAuth(request: NextRequest): Promise<AuthUser> {
+  // Check for Bearer token first (agent/API access)
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const bearerToken = authHeader.slice(7);
+    const agentApiKey = process.env.AGENT_API_KEY;
+    if (agentApiKey && bearerToken === agentApiKey) {
+      // Agent access — return a system user
+      return {
+        userId: 'system-agent',
+        email: 'agent@yarndigital.co.uk',
+      } as AuthUser;
+    }
+    // Also try JWT in Bearer token
+    try {
+      const decoded = jwt.verify(bearerToken, getJwtSecret()) as AuthUser;
+      return decoded;
+    } catch {
+      // Fall through to cookie auth
+    }
+  }
+
   const cookieStore = await cookies();
   const token = cookieStore.get('auth_token')?.value;
 

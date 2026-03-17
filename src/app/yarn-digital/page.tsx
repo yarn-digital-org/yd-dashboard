@@ -1,5 +1,6 @@
 'use client';
 import { trackGoogleAdsConversion } from '@/components/GoogleAnalytics';
+import { trackLead } from '@/components/MetaPixel';
 
 import { useState, useEffect, FormEvent } from 'react';
 import { ArrowRight, Loader2, Check } from 'lucide-react';
@@ -10,12 +11,6 @@ import PageViewTracker from '@/components/PageViewTracker';
 // ============================================
 // Meta Pixel + UTM
 // ============================================
-declare global {
-  interface Window { fbq?: (...args: unknown[]) => void; }
-}
-function trackLead() {
-  if (typeof window !== 'undefined' && window.fbq) window.fbq('track', 'Lead');
-}
 function getUtmParams(): Record<string, string> {
   if (typeof window === 'undefined') return {};
   const p = new URLSearchParams(window.location.search);
@@ -52,7 +47,7 @@ export default function YarnDigitalPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Something went wrong');
       setStatus('success');
-      trackLead(); trackGoogleAdsConversion();
+      trackLead({ email: formData.email, name: formData.name, phone: formData.phone || undefined }); trackGoogleAdsConversion();
     } catch (err) {
       setStatus('error');
       setErrorMsg(err instanceof Error ? err.message : 'Something went wrong.');

@@ -10,12 +10,14 @@ import {
   FolderKanban,
   MessageSquare,
   Calendar,
+  Mail,
 } from 'lucide-react';
 
 const navItems = [
   { name: 'Home', icon: LayoutDashboard, href: '/dashboard' },
   { name: 'Leads', icon: Users, href: '/leads' },
   { name: 'Projects', icon: FolderKanban, href: '/projects' },
+  { name: 'Email', icon: Mail, href: '/gmail' },
   { name: 'Messages', icon: MessageSquare, href: '/messages' },
   { name: 'Calendar', icon: Calendar, href: '/calendar' },
 ];

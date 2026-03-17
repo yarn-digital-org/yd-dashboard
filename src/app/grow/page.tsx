@@ -6,7 +6,6 @@ import { useState, useEffect, useRef, FormEvent } from 'react';
 import { Star, CheckCircle, ArrowRight, Loader2, Search, TrendingUp, BarChart3 } from 'lucide-react';
 import { ForceLightTheme } from '@/components/ForceLightTheme';
 
-}
 
 function getUtmParams(): Record<string, string> {
   if (typeof window === 'undefined') return {};

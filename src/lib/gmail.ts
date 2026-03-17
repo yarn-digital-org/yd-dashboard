@@ -267,3 +267,14 @@ export async function archiveMessage(userId: string, messageId: string): Promise
     requestBody: { removeLabelIds: ['INBOX'] },
   });
 }
+
+export async function markAsRead(userId: string, messageId: string): Promise<void> {
+  const gmail = await getGmailClient(userId);
+  await gmail.users.messages.modify({
+    userId: 'me',
+    id: messageId,
+    requestBody: {
+      removeLabelIds: ['UNREAD'],
+    },
+  });
+}

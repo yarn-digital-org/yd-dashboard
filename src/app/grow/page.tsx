@@ -3,6 +3,7 @@ import { trackGoogleAdsConversion } from '@/components/GoogleAnalytics';
 
 import { useState, useEffect, useRef, FormEvent } from 'react';
 import { Star, CheckCircle, ArrowRight, Loader2, Search, TrendingUp, BarChart3 } from 'lucide-react';
+import { ForceLightTheme } from '@/components/ForceLightTheme';
 
 declare global {
   interface Window {
@@ -182,6 +183,7 @@ export default function GrowLandingPage() {
   return (
     <>
       <MetaPixelScript />
+      <ForceLightTheme />
       <main className="min-h-screen">
         {/* HERO */}
         <section className="bg-[#0a0a0a] text-white">

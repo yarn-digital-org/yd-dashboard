@@ -43,56 +43,56 @@ html[data-theme="dark"] {
   color: #FFFFFF;
 }
 
-[data-theme="dark"] .bg-white {
+[data-theme="dark"] .bg-white:not(.landing-page .bg-white) {
   background-color: #1A1A1A !important;
 }
 
-[data-theme="dark"] .border-gray-200,
-[data-theme="dark"] .border-gray-100 {
+[data-theme="dark"] .border-gray-200:not(.landing-page .border-gray-200),
+[data-theme="dark"] .border-gray-100:not(.landing-page .border-gray-100) {
   border-color: #2D2D2D !important;
 }
 
-[data-theme="dark"] .text-gray-900 {
+[data-theme="dark"] .text-gray-900:not(.landing-page .text-gray-900) {
   color: #FFFFFF !important;
 }
 
-[data-theme="dark"] .text-gray-700 {
+[data-theme="dark"] .text-gray-700:not(.landing-page .text-gray-700) {
   color: #D0D0D0 !important;
 }
 
-[data-theme="dark"] .text-gray-600 {
+[data-theme="dark"] .text-gray-600:not(.landing-page .text-gray-600) {
   color: #A0A0A0 !important;
 }
 
-[data-theme="dark"] .text-gray-500 {
+[data-theme="dark"] .text-gray-500:not(.landing-page .text-gray-500) {
   color: #888888 !important;
 }
 
-[data-theme="dark"] .bg-gray-50,
-[data-theme="dark"] .bg-gray-100 {
+[data-theme="dark"] .bg-gray-50:not(.landing-page .bg-gray-50),
+[data-theme="dark"] .bg-gray-100:not(.landing-page .bg-gray-100) {
   background-color: #141414 !important;
 }
 
-[data-theme="dark"] .bg-white.rounded-lg,
-[data-theme="dark"] .bg-white.rounded-xl {
+[data-theme="dark"] .bg-white.rounded-lg:not(.landing-page .bg-white),
+[data-theme="dark"] .bg-white.rounded-xl:not(.landing-page .bg-white) {
   background-color: #1A1A1A !important;
   border-color: #2D2D2D !important;
 }
 
-[data-theme="dark"] .shadow-sm {
+[data-theme="dark"] .shadow-sm:not(.landing-page .shadow-sm) {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4) !important;
 }
 
-[data-theme="dark"] input,
-[data-theme="dark"] select,
-[data-theme="dark"] textarea {
+[data-theme="dark"] input:not(.landing-page input),
+[data-theme="dark"] select:not(.landing-page select),
+[data-theme="dark"] textarea:not(.landing-page textarea) {
   background-color: #141414 !important;
   border-color: #2D2D2D !important;
   color: #FFFFFF !important;
 }
 
-[data-theme="dark"] input::placeholder,
-[data-theme="dark"] textarea::placeholder {
+[data-theme="dark"] input:not(.landing-page input)::placeholder,
+[data-theme="dark"] textarea:not(.landing-page textarea)::placeholder {
   color: #666666 !important;
 }
 

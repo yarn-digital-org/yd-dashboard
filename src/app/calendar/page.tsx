@@ -13,6 +13,11 @@ import {
   Clock,
   Plus,
   X,
+  RefreshCw,
+  CheckCircle2,
+  AlertCircle,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
 
 type ViewType = 'month' | 'week' | 'day';
@@ -79,18 +84,32 @@ export default function CalendarPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const isMobile = useIsMobile();
-  const { events, loading, error, connectionStatus } = useCalendarEvents();
+  const { events, loading, error, connectionStatus, refetch } = useCalendarEvents();
 
   const [currentView, setCurrentView] = useState<ViewType>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
     }
   }, [user, authLoading, router]);
+
+  const handleManualSync = async () => {
+    setSyncing(true);
+    try {
+      await fetch('/api/calendar/sync', { method: 'POST' });
+      await refetch();
+    } catch (e) {
+      // ignore
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   // Get events for a specific day
   const getEventsForDay = (day: Date) => {
@@ -573,9 +592,9 @@ export default function CalendarPage() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F9FAFB' }}>
-      <Sidebar />
+      {!isMobile && <Sidebar />}
       
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', marginLeft: isMobile ? 0 : '240px' }}>
         {/* Header */}
         <div style={{
           padding: isMobile ? '0.75rem' : '1rem 1.5rem',
@@ -591,6 +610,28 @@ export default function CalendarPage() {
             <h1 style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: 700, color: '#111827', margin: 0 }}>
               Calendar
             </h1>
+
+            {/* Google sync status badge */}
+            {connectionStatus === 'connected' && (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                padding: '3px 8px', borderRadius: '999px',
+                backgroundColor: '#D1FAE5', color: '#065F46',
+                fontSize: '0.7rem', fontWeight: 600,
+              }}>
+                <CheckCircle2 size={11} /> Google Synced
+              </span>
+            )}
+            {connectionStatus === 'token_expired' && (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                padding: '3px 8px', borderRadius: '999px',
+                backgroundColor: '#FEF3C7', color: '#92400E',
+                fontSize: '0.7rem', fontWeight: 600,
+              }}>
+                <AlertCircle size={11} /> Token Expired
+              </span>
+            )}
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <button onClick={() => handleNavigate('prev')} style={{ ...buttonStyle, padding: '0.5rem' }}>
@@ -640,19 +681,39 @@ export default function CalendarPage() {
               ))}
             </div>
 
-            <button style={{
-              backgroundColor: '#FF3300',
-              color: '#FFFFFF',
-              padding: '0.5rem 1rem',
-              borderRadius: '0.5rem',
-              fontWeight: 500,
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.375rem',
-              fontSize: '0.875rem',
-            }}>
+            {connectionStatus === 'connected' && (
+              <button
+                onClick={handleManualSync}
+                disabled={syncing}
+                title="Sync with Google Calendar"
+                style={{
+                  padding: '0.5rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #E5E7EB',
+                  backgroundColor: '#FFFFFF',
+                  cursor: syncing ? 'not-allowed' : 'pointer',
+                  display: 'flex', alignItems: 'center',
+                  opacity: syncing ? 0.6 : 1,
+                }}
+              >
+                <RefreshCw size={16} color="#6B7280" style={{ animation: syncing ? 'spin 1s linear infinite' : 'none' }} />
+              </button>
+            )}
+            <button
+              onClick={() => setShowAddModal(true)}
+              style={{
+                backgroundColor: '#FF3300',
+                color: '#FFFFFF',
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem',
+                fontWeight: 500,
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.375rem',
+                fontSize: '0.875rem',
+              }}>
               <Plus size={16} />
               {isMobile ? '' : 'Add Event'}
             </button>
@@ -661,7 +722,7 @@ export default function CalendarPage() {
 
         {/* Calendar Body */}
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-          <div style={{ flex: 1, padding: '1rem', overflow: 'auto' }}>
+          <div style={{ flex: 1, padding: '1rem', overflow: 'auto', paddingBottom: isMobile ? '80px' : '1rem' }}>
             {loading ? (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#6B7280' }}>
                 Loading calendar...
@@ -893,6 +954,63 @@ export default function CalendarPage() {
           </div>
         </div>
       )}
+
+      {/* Add Event Modal (basic placeholder) */}
+      {showAddModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}
+          onClick={() => setShowAddModal(false)}
+        >
+          <div
+            style={{ backgroundColor: '#FFFFFF', borderRadius: '0.75rem', width: '100%', maxWidth: '440px', overflow: 'hidden' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ padding: '1.25rem', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600, color: '#111827' }}>Add Event</h2>
+              <button onClick={() => setShowAddModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280' }}>
+                <X size={20} />
+              </button>
+            </div>
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <input
+                placeholder="Event title"
+                style={{ width: '100%', padding: '10px 12px', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '0.875rem', boxSizing: 'border-box', outline: 'none' }}
+              />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="date"
+                  defaultValue={new Date().toISOString().split('T')[0]}
+                  style={{ flex: 1, padding: '10px 12px', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '0.875rem', outline: 'none' }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input type="time" defaultValue="09:00" style={{ flex: 1, padding: '10px 12px', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '0.875rem', outline: 'none' }} />
+                <input type="time" defaultValue="10:00" style={{ flex: 1, padding: '10px 12px', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '0.875rem', outline: 'none' }} />
+              </div>
+              <textarea
+                placeholder="Description (optional)"
+                rows={3}
+                style={{ width: '100%', padding: '10px 12px', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '0.875rem', boxSizing: 'border-box', resize: 'vertical', outline: 'none', fontFamily: 'inherit' }}
+              />
+            </div>
+            <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid #E5E7EB', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <button onClick={() => setShowAddModal(false)} style={{ padding: '8px 16px', border: '1px solid #E5E7EB', borderRadius: '8px', background: '#F3F4F6', cursor: 'pointer', fontSize: '0.875rem' }}>
+                Cancel
+              </button>
+              <button
+                onClick={() => setShowAddModal(false)}
+                style={{ padding: '8px 16px', backgroundColor: '#FF3300', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500 }}
+              >
+                Save Event
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }

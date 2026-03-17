@@ -1,20 +1,11 @@
 'use client';
 import { trackGoogleAdsConversion } from '@/components/GoogleAnalytics';
+import { trackLead } from '@/components/MetaPixel';
 
 import { useState, useEffect, useRef, FormEvent } from 'react';
 import { Star, CheckCircle, ArrowRight, Loader2, Search, TrendingUp, BarChart3 } from 'lucide-react';
 import { ForceLightTheme } from '@/components/ForceLightTheme';
 
-declare global {
-  interface Window {
-    fbq?: (...args: unknown[]) => void;
-  }
-}
-
-function trackLead() {
-  if (typeof window !== 'undefined' && window.fbq) {
-    window.fbq('track', 'Lead');
-  }
 }
 
 function getUtmParams(): Record<string, string> {
@@ -60,7 +51,7 @@ function LeadForm() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Something went wrong');
       setStatus('success');
-      trackLead(); trackGoogleAdsConversion();
+      trackLead({ email: formData.email, name: formData.name, phone: formData.phone || undefined }); trackGoogleAdsConversion();
     } catch (err) {
       setStatus('error');
       setErrorMsg(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
@@ -350,4 +341,3 @@ export default function GrowLandingPage() {
     </>
   );
 }
-

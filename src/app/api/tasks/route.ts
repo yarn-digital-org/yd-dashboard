@@ -148,24 +148,25 @@ async function handlePost(
   const now = new Date().toISOString();
   const orgId = await resolveOrgId(user);
 
-  const task: Omit<Task, 'id'> = {
+  const task: Record<string, unknown> = {
     title: data.title.trim(),
     description: data.description?.trim() || '',
     status: data.status || 'backlog',
     priority: data.priority || 'medium',
     assignedTo: Array.isArray(data.assignedTo) ? data.assignedTo : (data.assignedTo ? [data.assignedTo] : []),
     assignedToName: Array.isArray(data.assignedToName) ? data.assignedToName : (data.assignedToName ? [data.assignedToName] : ['Unassigned']),
-    projectId: data.projectId || undefined,
-    clientId: data.clientId || undefined,
     labels: data.labels || [],
-    dueDate: data.dueDate || undefined,
     isRecurring: data.isRecurring || false,
-    recurringConfig: data.recurringConfig || undefined,
     createdAt: now,
     updatedAt: now,
     orgId: orgId,
     notes: data.notes || '',
   };
+  // Only include optional fields if they have actual values (Firestore rejects undefined)
+  if (data.projectId) task.projectId = data.projectId;
+  if (data.clientId) task.clientId = data.clientId;
+  if (data.dueDate) task.dueDate = data.dueDate;
+  if (data.recurringConfig) task.recurringConfig = data.recurringConfig;
 
   const docRef = await db.collection(COLLECTIONS.TASKS).add(task);
 

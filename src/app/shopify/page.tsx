@@ -5,6 +5,7 @@ import { useState, useEffect, FormEvent } from 'react';
 import { ArrowRight, Loader2, Check, ArrowDown } from 'lucide-react';
 import Image from 'next/image';
 import PageViewTracker from '@/components/PageViewTracker';
+import { ForceLightTheme } from '@/components/ForceLightTheme';
 
 
 // ============================================
@@ -81,6 +82,7 @@ export default function ShopifyPage() {
     <>
       <MetaPixelScript />
 
+      <ForceLightTheme />
       <main className="min-h-screen bg-[#0a0a0a] font-sans antialiased landing-page" style={{ letterSpacing: '-0.02em' }}>
         <PageViewTracker page="shopify" />
 

@@ -191,7 +191,7 @@ export default function WebsiteNotConvertingPage() {
                 { num: '03', title: 'We fix it', desc: 'Fast, clean, no technical jargon.' },
               ].map((step, i) => (
                 <div key={i} className={`py-8 md:px-8 ${i === 0 ? 'md:pl-0' : ''} ${i < 2 ? 'border-b md:border-b-0 md:border-r border-[#e5e5e5]' : ''}`}>
-                  <span className="text-[40px] font-medium text-[#eee] leading-none block mb-4" style={{ letterSpacing: '-0.04em' }}>
+                  <span className="text-[40px] font-medium text-[#e63312] leading-none block mb-4" style={{ letterSpacing: '-0.04em' }}>
                     {step.num}
                   </span>
                   <h3 className="text-lg font-semibold text-[#0a0a0a] mb-2" style={{ letterSpacing: '-0.03em' }}>

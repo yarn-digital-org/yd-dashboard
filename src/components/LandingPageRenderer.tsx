@@ -5,6 +5,7 @@ import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import type { LandingPageData } from '@/app/lp/[slug]/page';
 import { LpAnalyticsTracker } from '@/components/LpAnalyticsTracker';
 import MetaPixel, { trackLead as trackMetaLead } from '@/components/MetaPixel';
+import { ForceLightTheme } from '@/components/ForceLightTheme';
 
 const FIELD_LABELS: Record<string, string> = {
   name: 'Full Name',
@@ -71,6 +72,8 @@ export default function LandingPageRenderer({ page }: { page: LandingPageData })
   };
 
   return (
+    <>
+    <ForceLightTheme />
     <div className="landing-page" style={{
       minHeight: '100vh',
       fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, sans-serif',
@@ -296,5 +299,6 @@ export default function LandingPageRenderer({ page }: { page: LandingPageData })
         }
       `}</style>
     </div>
+    </>
   );
 }

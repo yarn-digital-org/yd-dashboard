@@ -1,5 +1,6 @@
 'use client';
 import { trackGoogleAdsConversion } from '@/components/GoogleAnalytics';
+import { ForceLightTheme } from '@/components/ForceLightTheme';
 
 import { useState, useEffect, useRef, FormEvent } from 'react';
 import { Star, CheckCircle, ArrowRight, Loader2, Palette, Eye, Sparkles } from 'lucide-react';
@@ -172,8 +173,9 @@ export default function BrandLandingPage() {
 
   return (
     <>
+      <ForceLightTheme />
       <MetaPixelScript />
-      <main className="min-h-screen">
+      <main className="min-h-screen landing-page">
         {/* HERO */}
         <section className="bg-[#0a0a0a] text-white">
           <div className="max-w-4xl mx-auto px-6 py-20 sm:py-28 text-center">

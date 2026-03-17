@@ -5,12 +5,14 @@ import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
 
-// Google OAuth scopes for calendar access
+// Google OAuth scopes for calendar, contacts, and Gmail access
 const SCOPES = [
   'https://www.googleapis.com/auth/calendar.readonly',
   'https://www.googleapis.com/auth/calendar.events',
   'https://www.googleapis.com/auth/userinfo.email',
   'https://www.googleapis.com/auth/contacts.readonly',
+  'https://www.googleapis.com/auth/gmail.readonly',
+  'https://www.googleapis.com/auth/gmail.modify',
 ];
 
 export async function GET(request: NextRequest) {
@@ -50,7 +52,6 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate state parameter with user ID for security
-    // Format: userId:randomNonce
     const nonce = crypto.randomBytes(16).toString('hex');
     const state = Buffer.from(JSON.stringify({
       userId: decoded.userId,
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
       await adminDb.collection('oauth_states').doc(nonce).set({
         userId: decoded.userId,
         createdAt: new Date(),
-        expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minute expiry
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
       });
     }
 
@@ -74,8 +75,8 @@ export async function GET(request: NextRequest) {
     authUrl.searchParams.set('response_type', 'code');
     authUrl.searchParams.set('scope', SCOPES.join(' '));
     authUrl.searchParams.set('state', state);
-    authUrl.searchParams.set('access_type', 'offline'); // Required for refresh token
-    authUrl.searchParams.set('prompt', 'consent'); // Force consent to get refresh token
+    authUrl.searchParams.set('access_type', 'offline');
+    authUrl.searchParams.set('prompt', 'consent');
 
     return NextResponse.redirect(authUrl.toString());
   } catch (error: any) {

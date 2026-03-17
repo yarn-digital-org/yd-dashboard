@@ -78,6 +78,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Check for Bearer token (agent/API access) — skip cookie check
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ') && pathname.startsWith('/api/')) {
+    return NextResponse.next();
+  }
+
   // Check for auth token
   const token = request.cookies.get('auth_token')?.value;
 

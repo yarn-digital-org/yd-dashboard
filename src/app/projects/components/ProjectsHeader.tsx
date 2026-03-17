@@ -26,6 +26,9 @@ export default function ProjectsHeader({
           <p className="text-gray-600 mt-1 text-sm">
             Manage your client projects and workflows
           </p>
+          <p className="text-gray-500 mt-0.5 text-sm italic">
+            Design. Build. Grow. — Every project, tracked from brief to delivery.
+          </p>
         </div>
         
         <div className={`flex gap-3 ${isMobile ? 'w-full' : 'w-auto'}`}>

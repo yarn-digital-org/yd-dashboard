@@ -171,12 +171,29 @@ export default function ProjectList({
                   <td className="px-4 py-4">
                     {progress && progress.total > 0 ? (
                       <div className="space-y-1">
-                        <div className="text-xs text-gray-500">
-                          {progress.completed}/{progress.total} tasks
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">
+                            {progress.completed}/{progress.total}
+                          </span>
+                          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${
+                            progress.percent >= 75
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : progress.percent >= 25
+                              ? 'bg-amber-100 text-amber-700'
+                              : 'bg-red-100 text-red-700'
+                          }`}>
+                            {progress.percent}%
+                          </span>
                         </div>
-                        <div className="w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="w-32 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-emerald-500 rounded-full transition-all"
+                            className={`h-full rounded-full transition-all ${
+                              progress.percent >= 75
+                                ? 'bg-emerald-500'
+                                : progress.percent >= 25
+                                ? 'bg-amber-400'
+                                : 'bg-red-400'
+                            }`}
                             style={{ width: `${progress.percent}%` }}
                           />
                         </div>

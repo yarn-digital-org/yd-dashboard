@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useResponsive } from '@/hooks/useResponsive';
+import { useAuth } from '@/context/AuthContext';
 import {
   LayoutDashboard,
   Users,
@@ -22,10 +23,10 @@ const navItems = [
 export function BottomNav() {
   const { isMobile } = useResponsive();
   const pathname = usePathname();
+  const { user } = useAuth();
 
-  // Hide on public pages (landing pages, login, register)
-  const publicPaths = ['/free-audit', '/free-consultation', '/free-review', '/get-quote', '/web-design-belfast', '/website-not-working', '/yarn-digital', '/seo-belfast', '/seo-audit', '/new-website', '/new-brand', '/shopify', '/brand', '/grow', '/web-design', '/login', '/register'];
-  if (!isMobile || publicPaths.some(p => pathname?.startsWith(p))) return null;
+  // Only show for authenticated users on mobile
+  if (!isMobile || !user) return null;
 
   return (
     <nav

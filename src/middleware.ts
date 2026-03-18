@@ -51,7 +51,7 @@ const publicApiRoutes = [
   '/api/public/questionnaire', // Lead intake questionnaire responses
   '/api/public/unsubscribe', // GDPR unsubscribe
   '/api/public/subscribe', // Email list subscribe
-  '/api/blog/', // Public blog API
+  '/api/blog', // Public blog API
 ];
 
 // Static file patterns to skip

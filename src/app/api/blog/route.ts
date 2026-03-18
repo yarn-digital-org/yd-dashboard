@@ -12,12 +12,22 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const status = searchParams.get('status') || 'published';
 
-    const snapshot = await adminDb
-      .collection('blog_posts')
-      .where('status', '==', status)
-      .orderBy('publishedAt', 'desc')
-      .limit(limit)
-      .get();
+    let snapshot;
+    try {
+      snapshot = await adminDb
+        .collection('blog_posts')
+        .where('status', '==', status)
+        .orderBy('publishedAt', 'desc')
+        .limit(limit)
+        .get();
+    } catch (indexErr: any) {
+      // Fallback if composite index not yet built
+      snapshot = await adminDb
+        .collection('blog_posts')
+        .where('status', '==', status)
+        .limit(limit)
+        .get();
+    }
 
     const posts = snapshot.docs.map(doc => ({
       id: doc.id,

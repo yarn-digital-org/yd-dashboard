@@ -96,9 +96,10 @@ export default function GmailPage() {
     fetch('/api/google/accounts')
       .then(r => r.json())
       .then(d => {
-        if (d.success && d.accounts?.length > 0) {
-          setAccounts(d.accounts);
-          if (!activeAccount) setActiveAccount(d.accounts[0].email);
+        const accs = d.data?.accounts || d.accounts || [];
+        if (d.success && accs.length > 0) {
+          setAccounts(accs);
+          if (!activeAccount) setActiveAccount(accs[0].email);
         }
       })
       .catch(() => {});

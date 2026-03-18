@@ -11,10 +11,25 @@ export interface GoogleCalendarConfig {
 let cachedClient: calendar_v3.Calendar | null = null;
 let cachedConfig: GoogleCalendarConfig = {};
 
+function parseCredentialsJson(raw: string) {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    try {
+      return JSON.parse(raw.replace(/\\n/g, '\n'));
+    } catch {
+      const fixed = raw.replace(/("private_key"\s*:\s*")([\s\S]*?)(")/g, (_m, pre, key, post) => {
+        return pre + key.replace(/\n/g, '\\n') + post;
+      });
+      return JSON.parse(fixed);
+    }
+  }
+}
+
 function getServiceAccountCredentials() {
   // Try different environment variable formats
   if (process.env.GOOGLE_SA_CREDENTIALS) {
-    return JSON.parse(process.env.GOOGLE_SA_CREDENTIALS);
+    return parseCredentialsJson(process.env.GOOGLE_SA_CREDENTIALS);
   }
   if (process.env.GOOGLE_SA_CREDENTIALS_BASE64) {
     const decoded = Buffer.from(process.env.GOOGLE_SA_CREDENTIALS_BASE64, 'base64').toString('utf-8');

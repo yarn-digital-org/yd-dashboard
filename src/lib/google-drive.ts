@@ -7,16 +7,34 @@
 import { google, drive_v3 } from 'googleapis';
 import { adminDb } from '@/lib/firebase-admin';
 
+function parseCredentialsJson(raw: string) {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    // Handle case where private_key has literal newlines instead of \n
+    const fixed = raw.replace(/\\n/g, '\n');
+    try {
+      return JSON.parse(fixed);
+    } catch {
+      // Last resort: fix unescaped newlines inside the JSON string value
+      const fixed2 = raw.replace(/("private_key"\s*:\s*")([\s\S]*?)(")/g, (_m, pre, key, post) => {
+        return pre + key.replace(/\n/g, '\\n') + post;
+      });
+      return JSON.parse(fixed2);
+    }
+  }
+}
+
 function getServiceAccountCredentials() {
   if (process.env.GOOGLE_SA_CREDENTIALS) {
-    return JSON.parse(process.env.GOOGLE_SA_CREDENTIALS);
+    return parseCredentialsJson(process.env.GOOGLE_SA_CREDENTIALS);
   }
   if (process.env.GOOGLE_SA_CREDENTIALS_BASE64) {
     return JSON.parse(Buffer.from(process.env.GOOGLE_SA_CREDENTIALS_BASE64, 'base64').toString('utf-8'));
   }
   // Also try the user OAuth credentials path
   if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
-    return JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+    return parseCredentialsJson(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
   }
   return null;
 }

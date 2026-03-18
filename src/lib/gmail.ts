@@ -4,6 +4,7 @@
  */
 import { google, gmail_v1 } from 'googleapis';
 import { getUserCalendarTokens, refreshAccessToken } from '@/lib/google-calendar-user';
+import { getValidAccessToken } from '@/lib/google-accounts';
 import { adminDb } from '@/lib/firebase-admin';
 
 export interface GmailMessage {
@@ -35,9 +36,10 @@ export interface GmailThread {
 /**
  * Get Gmail client for a user using their OAuth tokens
  */
-export async function getGmailClient(userId: string): Promise<gmail_v1.Gmail> {
-  const tokens = await getUserCalendarTokens(userId);
-  if (!tokens) {
+export async function getGmailClient(userId: string, accountEmail?: string): Promise<gmail_v1.Gmail> {
+  // Use multi-account token retrieval (also falls back to legacy single-account)
+  const tokenData = await getValidAccessToken(userId, accountEmail);
+  if (!tokenData) {
     throw new Error('Google account not connected. Please connect Google in Settings > Integrations.');
   }
 
@@ -50,18 +52,8 @@ export async function getGmailClient(userId: string): Promise<gmail_v1.Gmail> {
 
   const oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
 
-  // Refresh token if expired
-  let accessToken = tokens.accessToken;
-  if (tokens.expiresAt && Date.now() > tokens.expiresAt - 60000) {
-    if (tokens.refreshToken) {
-      const refreshed = await refreshAccessToken(userId, tokens.refreshToken);
-      accessToken = refreshed.accessToken;
-    }
-  }
-
   oauth2Client.setCredentials({
-    access_token: accessToken,
-    refresh_token: tokens.refreshToken || undefined,
+    access_token: tokenData.accessToken,
   });
 
   return google.gmail({ version: 'v1', auth: oauth2Client });
@@ -159,9 +151,10 @@ function formatMessage(msg: gmail_v1.Schema$Message, includeBody = false): Gmail
  */
 export async function listInboxMessages(
   userId: string,
-  options: { maxResults?: number; pageToken?: string; q?: string } = {}
+  options: { maxResults?: number; pageToken?: string; q?: string } = {},
+  accountEmail?: string
 ): Promise<{ messages: GmailMessage[]; nextPageToken?: string; totalEstimate?: number }> {
-  const gmail = await getGmailClient(userId);
+  const gmail = await getGmailClient(userId, accountEmail);
 
   const listRes = await gmail.users.messages.list({
     userId: 'me',

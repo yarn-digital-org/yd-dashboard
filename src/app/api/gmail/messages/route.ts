@@ -25,8 +25,9 @@ export async function GET(request: NextRequest) {
     const pageToken = searchParams.get('pageToken') || undefined;
     const maxResults = searchParams.get('maxResults') ? parseInt(searchParams.get('maxResults')!) : 20;
     const q = searchParams.get('q') || undefined;
+    const account = searchParams.get('account') || undefined;
 
-    const result = await listInboxMessages(userId, { pageToken, maxResults, q });
+    const result = await listInboxMessages(userId, { pageToken, maxResults, q }, account);
     return NextResponse.json(result);
   } catch (error: any) {
     console.error('Gmail list error:', error);

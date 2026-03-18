@@ -72,6 +72,11 @@ export default function GmailPage() {
   const [showCompose, setShowCompose] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
 
+  // Multi-account
+  const [accounts, setAccounts] = useState<Array<{ email: string; displayName?: string }>>([]);
+  const [activeAccount, setActiveAccount] = useState<string | undefined>(undefined);
+  const [showAccountPicker, setShowAccountPicker] = useState(false);
+
   // Compose state
   const [composeTo, setComposeTo] = useState('');
   const [composeSubject, setComposeSubject] = useState('');
@@ -85,6 +90,20 @@ export default function GmailPage() {
     if (!authLoading && !user) router.push('/login');
   }, [user, authLoading, router]);
 
+  // Fetch connected Google accounts
+  useEffect(() => {
+    if (!user) return;
+    fetch('/api/google/accounts')
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && d.accounts?.length > 0) {
+          setAccounts(d.accounts);
+          if (!activeAccount) setActiveAccount(d.accounts[0].email);
+        }
+      })
+      .catch(() => {});
+  }, [user]);
+
   const fetchMessages = useCallback(async (query?: string, token?: string) => {
     try {
       if (!token) setLoading(true);
@@ -94,6 +113,7 @@ export default function GmailPage() {
       const params = new URLSearchParams({ maxResults: '25' });
       if (query) params.set('q', query);
       if (token) params.set('pageToken', token);
+      if (activeAccount) params.set('account', activeAccount);
 
       const res = await fetch(`/api/gmail/messages?${params}`);
       const data = await res.json();
@@ -122,7 +142,7 @@ export default function GmailPage() {
 
   useEffect(() => {
     if (user) fetchMessages();
-  }, [user, fetchMessages]);
+  }, [user, fetchMessages, activeAccount]);
 
   const handleSearch = (q: string) => {
     setSearchQuery(q);
@@ -249,7 +269,37 @@ export default function GmailPage() {
       {/* Header */}
       <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #1a1a1a', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <Mail size={18} style={{ color: '#e63312', flexShrink: 0 }} />
-        <span style={{ color: c.text, fontWeight: 600, fontSize: '0.95rem', letterSpacing: '-0.02em' }}>Inbox</span>
+        {accounts.length > 1 ? (
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowAccountPicker(p => !p)}
+              style={{ background: c.bgSecondary, border: `1px solid ${c.border}`, cursor: 'pointer', padding: '0.2rem 0.6rem', borderRadius: '6px', color: c.text, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+            >
+              {activeAccount || 'All accounts'} <span style={{ fontSize: '0.65rem' }}>▾</span>
+            </button>
+            {showAccountPicker && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', background: c.bgCard, border: `1px solid ${c.border}`, borderRadius: '8px', zIndex: 50, minWidth: '200px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+                {accounts.map(acc => (
+                  <button
+                    key={acc.email}
+                    onClick={() => { setActiveAccount(acc.email); setShowAccountPicker(false); setMessages([]); setSelectedMessage(null); }}
+                    style={{ display: 'block', width: '100%', textAlign: 'left', padding: '0.6rem 0.9rem', background: activeAccount === acc.email ? c.bgSecondary : 'transparent', border: 'none', cursor: 'pointer', color: c.text, fontSize: '0.85rem' }}
+                  >
+                    {acc.displayName || acc.email}
+                    {activeAccount === acc.email && <span style={{ float: 'right', color: '#e63312' }}>✓</span>}
+                  </button>
+                ))}
+                <div style={{ borderTop: `1px solid ${c.border}`, padding: '0.5rem 0.9rem' }}>
+                  <a href="/settings/integrations" style={{ color: '#e63312', fontSize: '0.8rem', textDecoration: 'none' }}>+ Add account</a>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <span style={{ color: c.text, fontWeight: 600, fontSize: '0.95rem', letterSpacing: '-0.02em' }}>
+            {activeAccount ? activeAccount.split('@')[0] : 'Inbox'}
+          </span>
+        )}
         <div style={{ flex: 1 }} />
         <button
           onClick={() => fetchMessages(searchQuery || undefined)}

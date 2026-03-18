@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { saveGoogleAccount } from '@/lib/google-accounts';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -113,20 +114,25 @@ export async function GET(request: NextRequest) {
 
     const expiresAt = Date.now() + (expires_in * 1000);
 
-    await adminDb.collection('users').doc(userId).collection('integrations').doc('google').set({
+    const scopes = [
+      'https://www.googleapis.com/auth/calendar.readonly',
+      'https://www.googleapis.com/auth/calendar.events',
+      'https://www.googleapis.com/auth/userinfo.email',
+      'https://www.googleapis.com/auth/contacts.readonly',
+      'https://www.googleapis.com/auth/gmail.readonly',
+      'https://www.googleapis.com/auth/gmail.modify',
+    ];
+
+    // Save to multi-account sub-collection (also updates legacy location for backwards compat)
+    await saveGoogleAccount(userId, {
+      email,
       accessToken: access_token,
       refreshToken: refresh_token || null,
       expiresAt,
-      email,
-      connectedAt: FieldValue.serverTimestamp(),
-      scopes: [
-        'https://www.googleapis.com/auth/calendar.readonly',
-        'https://www.googleapis.com/auth/calendar.events',
-        'https://www.googleapis.com/auth/userinfo.email',
-      ],
+      scopes,
     });
 
-    console.log(`Google Calendar connected for user ${userId} (${email})`);
+    console.log(`Google account connected for user ${userId} (${email})`);
 
     redirectUrl.searchParams.set('success', 'true');
     redirectUrl.searchParams.set('message', 'Google Calendar connected successfully');

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme, getColors } from '@/context/ThemeContext';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
 import { useIsMobile } from '@/hooks/useIsMobile';
@@ -74,6 +75,9 @@ function avatarColor(name: string): string {
 
 export default function InboxPage() {
   const { user } = useAuth();
+  const { theme } = useTheme();
+  const c = getColors(theme);
+  const isDark = theme === 'dark';
   const router = useRouter();
   const isMobile = useIsMobile();
 
@@ -185,7 +189,7 @@ export default function InboxPage() {
 
   // Styles
   const s = {
-    page: { display: 'flex', minHeight: '100vh', backgroundColor: '#F9FAFB' } as React.CSSProperties,
+    page: { display: 'flex', minHeight: '100vh', backgroundColor: c.bgSecondary } as React.CSSProperties,
     main: {
       flex: 1,
       display: 'flex',
@@ -196,8 +200,8 @@ export default function InboxPage() {
     },
     header: {
       padding: isMobile ? '16px' : '20px 28px',
-      borderBottom: '1px solid #E5E7EB',
-      backgroundColor: '#FFFFFF',
+      borderBottom: `1px solid ${c.border}`,
+      backgroundColor: c.bg,
       display: 'flex',
       alignItems: 'center',
       gap: '12px',
@@ -213,14 +217,14 @@ export default function InboxPage() {
       display: selectedMessage && isMobile ? 'none' : 'flex',
       flexDirection: 'column' as const,
       borderRight: '1px solid #E5E7EB',
-      backgroundColor: '#FFFFFF',
+      backgroundColor: c.bg,
       overflow: 'hidden',
     },
     detail: {
       flex: 1,
       display: selectedMessage || !isMobile ? 'flex' : 'none',
       flexDirection: 'column' as const,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: c.bg,
       overflow: 'hidden',
     },
   };
@@ -235,7 +239,7 @@ export default function InboxPage() {
         <div style={s.header}>
           <Mail size={22} color="#FF3300" />
           <div style={{ flex: 1 }}>
-            <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#111827' }}>
+            <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: c.text }}>
               Inbox
               {unreadCount > 0 && (
                 <span style={{
@@ -246,13 +250,13 @@ export default function InboxPage() {
                 </span>
               )}
             </h1>
-            <p style={{ margin: 0, fontSize: '0.8rem', color: '#6B7280' }}>Google Workspace emails</p>
+            <p style={{ margin: 0, fontSize: '0.8rem', color: c.textSecondary }}>Google Workspace emails</p>
           </div>
           <button
             onClick={() => fetchMessages(searchQuery || undefined, true)}
             disabled={refreshing}
             style={{
-              padding: '8px', border: '1px solid #E5E7EB', borderRadius: '8px',
+              padding: '8px', border: `1px solid ${c.border}`, borderRadius: '8px',
               background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center',
             }}
             title="Refresh"
@@ -274,9 +278,9 @@ export default function InboxPage() {
                   onChange={e => setSearchInput(e.target.value)}
                   placeholder="Search emails..."
                   style={{
-                    width: '100%', padding: '8px 8px 8px 32px', border: '1px solid #E5E7EB',
+                    width: '100%', padding: '8px 8px 8px 32px', border: `1px solid ${c.border}`,
                     borderRadius: '8px', fontSize: '0.85rem', boxSizing: 'border-box',
-                    outline: 'none', backgroundColor: '#F9FAFB',
+                    outline: 'none', backgroundColor: c.bgSecondary,
                   }}
                 />
               </div>
@@ -285,15 +289,15 @@ export default function InboxPage() {
             {/* List content */}
             <div style={{ flex: 1, overflowY: 'auto' }}>
               {loading ? (
-                <div style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
+                <div style={{ padding: '40px', textAlign: 'center', color: c.textMuted }}>
                   <RefreshCw size={24} style={{ animation: 'spin 1s linear infinite', marginBottom: '8px' }} />
                   <p style={{ margin: 0 }}>Loading inbox...</p>
                 </div>
               ) : notConnected ? (
                 <div style={{ padding: '40px', textAlign: 'center' }}>
                   <AlertCircle size={32} color="#FF3300" style={{ marginBottom: '12px' }} />
-                  <p style={{ margin: '0 0 4px', fontWeight: 600, color: '#111827' }}>Google account not connected</p>
-                  <p style={{ margin: '0 0 16px', fontSize: '0.85rem', color: '#6B7280' }}>
+                  <p style={{ margin: '0 0 4px', fontWeight: 600, color: c.text }}>Google account not connected</p>
+                  <p style={{ margin: '0 0 16px', fontSize: '0.85rem', color: c.textSecondary }}>
                     Connect your Google account to access Gmail.
                   </p>
                   <a
@@ -306,15 +310,15 @@ export default function InboxPage() {
                   >
                     Connect Google Account
                   </a>
-                  <p style={{ margin: '12px 0 0', fontSize: '0.75rem', color: '#9CA3AF' }}>
+                  <p style={{ margin: '12px 0 0', fontSize: '0.75rem', color: c.textMuted }}>
                     Note: You may need to re-authorise to grant Gmail access.
                   </p>
                 </div>
               ) : error ? (
                 <div style={{ padding: '40px', textAlign: 'center' }}>
                   <AlertCircle size={32} color="#EF4444" style={{ marginBottom: '12px' }} />
-                  <p style={{ margin: '0 0 4px', fontWeight: 600, color: '#111827' }}>Error loading inbox</p>
-                  <p style={{ margin: '0 0 16px', fontSize: '0.85rem', color: '#6B7280' }}>{error}</p>
+                  <p style={{ margin: '0 0 4px', fontWeight: 600, color: c.text }}>Error loading inbox</p>
+                  <p style={{ margin: '0 0 16px', fontSize: '0.85rem', color: c.textSecondary }}>{error}</p>
                   <button
                     onClick={() => fetchMessages()}
                     style={{
@@ -326,7 +330,7 @@ export default function InboxPage() {
                   </button>
                 </div>
               ) : messages.length === 0 ? (
-                <div style={{ padding: '40px', textAlign: 'center', color: '#9CA3AF' }}>
+                <div style={{ padding: '40px', textAlign: 'center', color: c.textMuted }}>
                   <Mail size={32} style={{ marginBottom: '12px' }} />
                   <p style={{ margin: 0 }}>No messages found</p>
                 </div>
@@ -358,26 +362,26 @@ export default function InboxPage() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
                           <span style={{
                             fontSize: '0.875rem', fontWeight: msg.isRead ? 500 : 700,
-                            color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                            color: c.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                           }}>
                             {msg.from}
                           </span>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                             {!msg.isRead && <div style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#FF3300' }} />}
                             {msg.hasAttachments && <Paperclip size={11} color="#9CA3AF" />}
-                            <span style={{ fontSize: '0.7rem', color: '#9CA3AF', whiteSpace: 'nowrap' }}>
+                            <span style={{ fontSize: '0.7rem', color: c.textMuted, whiteSpace: 'nowrap' }}>
                               {formatDate(msg.date)}
                             </span>
                           </div>
                         </div>
                         <p style={{
                           margin: '0 0 2px', fontSize: '0.8rem', fontWeight: msg.isRead ? 400 : 600,
-                          color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          color: c.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         }}>
                           {msg.subject}
                         </p>
                         <p style={{
-                          margin: 0, fontSize: '0.75rem', color: '#9CA3AF',
+                          margin: 0, fontSize: '0.75rem', color: c.textMuted,
                           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         }}>
                           {msg.snippet}
@@ -402,16 +406,16 @@ export default function InboxPage() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
                 {/* Detail header */}
-                <div style={{ padding: '16px 24px', borderBottom: '1px solid #E5E7EB', flexShrink: 0 }}>
+                <div style={{ padding: '16px 24px', borderBottom: `1px solid ${c.border}`, flexShrink: 0 }}>
                   {isMobile && (
                     <button
                       onClick={() => setSelectedMessage(null)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px', color: '#6B7280' }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px', color: c.textSecondary }}
                     >
                       <ArrowLeft size={16} /> Back
                     </button>
                   )}
-                  <h2 style={{ margin: '0 0 8px', fontSize: '1.05rem', fontWeight: 700, color: '#111827' }}>
+                  <h2 style={{ margin: '0 0 8px', fontSize: '1.05rem', fontWeight: 700, color: c.text }}>
                     {selectedMessage.subject}
                   </h2>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -424,11 +428,11 @@ export default function InboxPage() {
                       {getInitials(selectedMessage.from)}
                     </div>
                     <div>
-                      <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: '#111827' }}>
+                      <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: c.text }}>
                         {selectedMessage.from}
-                        <span style={{ fontWeight: 400, color: '#6B7280' }}> &lt;{selectedMessage.fromEmail}&gt;</span>
+                        <span style={{ fontWeight: 400, color: c.textSecondary }}> &lt;{selectedMessage.fromEmail}&gt;</span>
                       </p>
-                      <p style={{ margin: 0, fontSize: '0.75rem', color: '#9CA3AF' }}>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: c.textMuted }}>
                         To: {selectedMessage.to} · {selectedMessage.date ? new Date(selectedMessage.date).toLocaleString('en-GB') : ''}
                       </p>
                     </div>
@@ -438,17 +442,17 @@ export default function InboxPage() {
                 {/* Body */}
                 <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
                   {loadingMessage ? (
-                    <div style={{ textAlign: 'center', color: '#9CA3AF', paddingTop: '40px' }}>
+                    <div style={{ textAlign: 'center', color: c.textMuted, paddingTop: '40px' }}>
                       <RefreshCw size={20} style={{ animation: 'spin 1s linear infinite' }} />
                     </div>
                   ) : selectedMessage.body?.includes('<') ? (
                     <div
-                      style={{ fontSize: '0.875rem', lineHeight: 1.7, color: '#374151' }}
+                      style={{ fontSize: '0.875rem', lineHeight: 1.7, color: c.text }}
                       dangerouslySetInnerHTML={{ __html: selectedMessage.body.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '').replace(/\son\w+="[^"]*"/gi, '') }}
                     />
                   ) : (
                     <pre style={{
-                      margin: 0, fontSize: '0.875rem', lineHeight: 1.7, color: '#374151',
+                      margin: 0, fontSize: '0.875rem', lineHeight: 1.7, color: c.text,
                       whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'inherit',
                     }}>
                       {selectedMessage.body || selectedMessage.snippet}
@@ -458,14 +462,14 @@ export default function InboxPage() {
 
                 {/* Reply */}
                 {showReply ? (
-                  <div style={{ padding: '16px 24px', borderTop: '1px solid #E5E7EB', flexShrink: 0 }}>
+                  <div style={{ padding: '16px 24px', borderTop: `1px solid ${c.border}`, flexShrink: 0 }}>
                     <textarea
                       value={replyText}
                       onChange={e => setReplyText(e.target.value)}
                       placeholder={`Reply to ${selectedMessage.from}...`}
                       rows={4}
                       style={{
-                        width: '100%', border: '1px solid #E5E7EB', borderRadius: '8px',
+                        width: '100%', border: `1px solid ${c.border}`, borderRadius: '8px',
                         padding: '10px 12px', fontSize: '0.875rem', resize: 'vertical',
                         outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
                       }}
@@ -473,7 +477,7 @@ export default function InboxPage() {
                     <div style={{ display: 'flex', gap: '8px', marginTop: '8px', justifyContent: 'flex-end' }}>
                       <button
                         onClick={() => setShowReply(false)}
-                        style={{ padding: '8px 16px', border: '1px solid #E5E7EB', borderRadius: '8px', background: '#fff', cursor: 'pointer', fontSize: '0.875rem' }}
+                        style={{ padding: '8px 16px', border: `1px solid ${c.border}`, borderRadius: '8px', background: '#fff', cursor: 'pointer', fontSize: '0.875rem' }}
                       >
                         Cancel
                       </button>
@@ -492,7 +496,7 @@ export default function InboxPage() {
                     </div>
                   </div>
                 ) : (
-                  <div style={{ padding: '12px 24px', borderTop: '1px solid #E5E7EB', flexShrink: 0, display: 'flex', gap: '8px' }}>
+                  <div style={{ padding: '12px 24px', borderTop: `1px solid ${c.border}`, flexShrink: 0, display: 'flex', gap: '8px' }}>
                     <button
                       onClick={() => setShowReply(true)}
                       style={{

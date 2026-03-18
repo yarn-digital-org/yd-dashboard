@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme, getColors } from '@/context/ThemeContext';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { Sidebar } from '@/components/Sidebar';
 import {
@@ -53,6 +54,9 @@ function sanitizeHtml(html: string): string {
 
 export default function GmailPage() {
   const { user, loading: authLoading } = useAuth();
+  const { theme } = useTheme();
+  const c = getColors(theme);
+  const isDark = theme === 'dark';
   const router = useRouter();
   const isMobile = useIsMobile();
 
@@ -200,34 +204,34 @@ export default function GmailPage() {
   };
 
   const cardStyle = {
-    background: 'var(--card-bg, #111)',
+    background: c.bgCard,
     border: '1px solid var(--border, #222)',
   };
 
   if (authLoading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0a0a0a' }}>
-        <Loader2 size={24} style={{ color: '#555', animation: 'spin 1s linear infinite' }} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: c.bg }}>
+        <Loader2 size={24} style={{ color: c.textMuted, animation: 'spin 1s linear infinite' }} />
       </div>
     );
   }
 
   if (notConnected) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: '#0a0a0a' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: c.bg }}>
         {!isMobile && <Sidebar />}
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
           <div style={{ textAlign: 'center', maxWidth: 400 }}>
-            <AlertCircle size={48} style={{ color: '#555', margin: '0 auto 1rem' }} />
-            <h2 style={{ color: '#fff', fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>Gmail Not Connected</h2>
-            <p style={{ color: '#666', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+            <AlertCircle size={48} style={{ color: c.textMuted, margin: '0 auto 1rem' }} />
+            <h2 style={{ color: c.text, fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>Gmail Not Connected</h2>
+            <p style={{ color: c.textMuted, marginBottom: '1.5rem', lineHeight: 1.6 }}>
               Connect your Google account to access your Gmail inbox. You may need to re-authorize if you previously connected for Calendar only.
             </p>
             <a
               href="/api/auth/google/authorize"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-                background: '#e63312', color: '#fff', padding: '0.75rem 1.5rem',
+                background: '#e63312', color: c.text, padding: '0.75rem 1.5rem',
                 borderRadius: '9999px', textDecoration: 'none', fontWeight: 500, fontSize: '0.9rem',
               }}
             >
@@ -245,17 +249,17 @@ export default function GmailPage() {
       {/* Header */}
       <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #1a1a1a', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <Mail size={18} style={{ color: '#e63312', flexShrink: 0 }} />
-        <span style={{ color: '#fff', fontWeight: 600, fontSize: '0.95rem', letterSpacing: '-0.02em' }}>Inbox</span>
+        <span style={{ color: c.text, fontWeight: 600, fontSize: '0.95rem', letterSpacing: '-0.02em' }}>Inbox</span>
         <div style={{ flex: 1 }} />
         <button
           onClick={() => fetchMessages(searchQuery || undefined)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: '#555' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: c.textMuted }}
         >
           <RefreshCw size={14} />
         </button>
         <button
           onClick={() => { setReplyMode(false); setComposeTo(''); setComposeSubject(''); setComposeBody(''); setShowCompose(true); }}
-          style={{ background: '#e63312', border: 'none', cursor: 'pointer', padding: '0.375rem 0.75rem', borderRadius: '6px', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', fontWeight: 500 }}
+          style={{ background: '#e63312', border: 'none', cursor: 'pointer', padding: '0.375rem 0.75rem', borderRadius: '6px', color: c.text, display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', fontWeight: 500 }}
         >
           <Plus size={12} /> Compose
         </button>
@@ -264,15 +268,15 @@ export default function GmailPage() {
       {/* Search */}
       <div style={{ padding: '0.75rem 1.25rem', borderBottom: '1px solid #1a1a1a' }}>
         <div style={{ position: 'relative' }}>
-          <Search size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#555' }} />
+          <Search size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: c.textMuted }} />
           <input
             type="text"
             placeholder="Search mail..."
             value={searchQuery}
             onChange={e => handleSearch(e.target.value)}
             style={{
-              width: '100%', background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '8px',
-              padding: '0.5rem 0.75rem 0.5rem 2.25rem', color: '#fff', fontSize: '0.85rem', outline: 'none',
+              width: '100%', background: c.bgCard, border: `1px solid ${c.border}`, borderRadius: '8px',
+              padding: '0.5rem 0.75rem 0.5rem 2.25rem', color: c.text, fontSize: '0.85rem', outline: 'none',
               boxSizing: 'border-box',
             }}
           />
@@ -283,12 +287,12 @@ export default function GmailPage() {
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
-            <Loader2 size={20} style={{ color: '#555', animation: 'spin 1s linear infinite' }} />
+            <Loader2 size={20} style={{ color: c.textMuted, animation: 'spin 1s linear infinite' }} />
           </div>
         ) : error ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#666', fontSize: '0.875rem' }}>{error}</div>
+          <div style={{ padding: '2rem', textAlign: 'center', color: c.textMuted, fontSize: '0.875rem' }}>{error}</div>
         ) : messages.length === 0 ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: '#555', fontSize: '0.875rem' }}>No messages found</div>
+          <div style={{ padding: '3rem', textAlign: 'center', color: c.textMuted, fontSize: '0.875rem' }}>No messages found</div>
         ) : (
           <>
             {messages.map(msg => (
@@ -312,7 +316,7 @@ export default function GmailPage() {
                 <div style={{
                   width: 36, height: 36, borderRadius: '50%', background: '#2a2a2a',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0, fontSize: '0.75rem', fontWeight: 600, color: '#888',
+                  flexShrink: 0, fontSize: '0.75rem', fontWeight: 600, color: c.textSecondary,
                 }}>
                   {getInitials(msg.from)}
                 </div>
@@ -324,7 +328,7 @@ export default function GmailPage() {
                     }}>
                       {msg.from}
                     </span>
-                    <span style={{ fontSize: '0.75rem', color: '#555', flexShrink: 0, marginLeft: '0.5rem' }}>
+                    <span style={{ fontSize: '0.75rem', color: c.textMuted, flexShrink: 0, marginLeft: '0.5rem' }}>
                       {formatDate(msg.date)}
                     </span>
                   </div>
@@ -336,7 +340,7 @@ export default function GmailPage() {
                   }}>
                     {msg.subject}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: '#555', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: '0.75rem', color: c.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {msg.snippet}
                   </div>
                 </div>
@@ -350,7 +354,7 @@ export default function GmailPage() {
                 <button
                   onClick={() => fetchMessages(searchQuery || undefined, nextPageToken)}
                   disabled={loadingMore}
-                  style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', color: '#aaa', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}
+                  style={{ background: c.bgCard, border: `1px solid ${c.border}`, color: c.textSecondary, padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}
                 >
                   {loadingMore ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : 'Load more'}
                 </button>
@@ -365,7 +369,7 @@ export default function GmailPage() {
   const MessageDetail = () => {
     if (!selectedMessage) {
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#555' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: c.textMuted }}>
           <Mail size={48} style={{ marginBottom: '1rem', opacity: 0.3 }} />
           <p style={{ fontSize: '0.9rem' }}>Select a message to read</p>
         </div>
@@ -377,20 +381,20 @@ export default function GmailPage() {
         {/* Detail header */}
         <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #1a1a1a', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           {isMobile && (
-            <button onClick={() => setShowDetail(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', padding: '0.25rem', marginRight: '0.25rem' }}>
+            <button onClick={() => setShowDetail(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textSecondary, padding: '0.25rem', marginRight: '0.25rem' }}>
               <ChevronLeft size={18} />
             </button>
           )}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h2 style={{ color: '#fff', fontSize: '1rem', fontWeight: 600, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.02em' }}>
+            <h2 style={{ color: c.text, fontSize: '1rem', fontWeight: 600, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.02em' }}>
               {selectedMessage.subject}
             </h2>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button onClick={handleReply} style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '6px', padding: '0.375rem 0.75rem', color: '#aaa', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem' }}>
+            <button onClick={handleReply} style={{ background: c.bgCard, border: `1px solid ${c.border}`, borderRadius: '6px', padding: '0.375rem 0.75rem', color: c.textSecondary, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem' }}>
               <Reply size={13} /> Reply
             </button>
-            <button onClick={() => handleArchive(selectedMessage.id)} style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '6px', padding: '0.375rem 0.75rem', color: '#aaa', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem' }}>
+            <button onClick={() => handleArchive(selectedMessage.id)} style={{ background: c.bgCard, border: `1px solid ${c.border}`, borderRadius: '6px', padding: '0.375rem 0.75rem', color: c.textSecondary, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem' }}>
               <Archive size={13} /> Archive
             </button>
           </div>
@@ -399,15 +403,15 @@ export default function GmailPage() {
         {/* Sender info */}
         <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #1a1a1a' }}>
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-            <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '0.85rem', fontWeight: 600, color: '#888' }}>
+            <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '0.85rem', fontWeight: 600, color: c.textSecondary }}>
               {getInitials(selectedMessage.from)}
             </div>
             <div>
-              <div style={{ color: '#fff', fontWeight: 600, fontSize: '0.9rem' }}>{selectedMessage.from}</div>
-              <div style={{ color: '#666', fontSize: '0.8rem' }}>
+              <div style={{ color: c.text, fontWeight: 600, fontSize: '0.9rem' }}>{selectedMessage.from}</div>
+              <div style={{ color: c.textMuted, fontSize: '0.8rem' }}>
                 {selectedMessage.from} → {selectedMessage.to || 'me'}
               </div>
-              <div style={{ color: '#555', fontSize: '0.75rem', marginTop: '0.2rem' }}>
+              <div style={{ color: c.textMuted, fontSize: '0.75rem', marginTop: '0.2rem' }}>
                 {new Date(selectedMessage.date).toLocaleString()}
               </div>
             </div>
@@ -418,7 +422,7 @@ export default function GmailPage() {
         <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
           {loadingMessage ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
-              <Loader2 size={20} style={{ color: '#555', animation: 'spin 1s linear infinite' }} />
+              <Loader2 size={20} style={{ color: c.textMuted, animation: 'spin 1s linear infinite' }} />
             </div>
           ) : selectedMessage.body ? (
             (selectedMessage.bodyType === 'html' || selectedMessage.body?.includes('<')) ? (
@@ -432,7 +436,7 @@ export default function GmailPage() {
               </pre>
             )
           ) : (
-            <p style={{ color: '#666', fontSize: '0.875rem' }}>{selectedMessage.snippet}</p>
+            <p style={{ color: c.textMuted, fontSize: '0.875rem' }}>{selectedMessage.snippet}</p>
           )}
         </div>
       </div>
@@ -444,10 +448,10 @@ export default function GmailPage() {
       position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000,
       display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', padding: '1rem',
     }}>
-      <div style={{ background: '#111', border: '1px solid #222', borderRadius: '12px', width: '100%', maxWidth: 500, maxHeight: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ background: c.bgCard, border: '1px solid #222', borderRadius: '12px', width: '100%', maxWidth: 500, maxHeight: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #1a1a1a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: '#fff', fontWeight: 600, fontSize: '0.9rem' }}>{replyMode ? 'Reply' : 'New Message'}</span>
-          <button onClick={() => setShowCompose(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666' }}>
+          <span style={{ color: c.text, fontWeight: 600, fontSize: '0.9rem' }}>{replyMode ? 'Reply' : 'New Message'}</span>
+          <button onClick={() => setShowCompose(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted }}>
             <X size={16} />
           </button>
         </div>
@@ -456,13 +460,13 @@ export default function GmailPage() {
             placeholder="To"
             value={composeTo}
             onChange={e => setComposeTo(e.target.value)}
-            style={{ background: 'transparent', border: 'none', borderBottom: '1px solid #2a2a2a', color: '#fff', padding: '0.5rem 0', fontSize: '0.875rem', outline: 'none' }}
+            style={{ background: 'transparent', border: 'none', borderBottom: `1px solid ${c.border}`, color: c.text, padding: '0.5rem 0', fontSize: '0.875rem', outline: 'none' }}
           />
           <input
             placeholder="Subject"
             value={composeSubject}
             onChange={e => setComposeSubject(e.target.value)}
-            style={{ background: 'transparent', border: 'none', borderBottom: '1px solid #2a2a2a', color: '#fff', padding: '0.5rem 0', fontSize: '0.875rem', outline: 'none' }}
+            style={{ background: 'transparent', border: 'none', borderBottom: `1px solid ${c.border}`, color: c.text, padding: '0.5rem 0', fontSize: '0.875rem', outline: 'none' }}
           />
           <textarea
             placeholder="Write your message..."
@@ -477,7 +481,7 @@ export default function GmailPage() {
             onClick={handleSend}
             disabled={composeSending || !composeTo || !composeSubject || !composeBody}
             style={{
-              background: '#e63312', color: '#fff', border: 'none', borderRadius: '8px',
+              background: '#e63312', color: c.text, border: 'none', borderRadius: '8px',
               padding: '0.5rem 1.25rem', cursor: 'pointer', display: 'flex', alignItems: 'center',
               gap: '0.4rem', fontSize: '0.875rem', fontWeight: 500, opacity: composeSending ? 0.7 : 1,
             }}
@@ -491,7 +495,7 @@ export default function GmailPage() {
   );
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#0a0a0a' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: c.bg }}>
       {!isMobile && <Sidebar />}
 
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', height: '100vh' }}>

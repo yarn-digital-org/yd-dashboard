@@ -54,6 +54,7 @@ const publicApiRoutes = [
   '/api/public/subscribe', // Email list subscribe
   '/api/blog', // Public blog API
   '/api/automations/seed', // Automation seed (auth handled in route)
+  '/api/cron/', // Cron jobs (auth handled in routes)
 ];
 
 // Static file patterns to skip

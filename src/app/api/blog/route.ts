@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, slug, content, excerpt, author, tags, metaTitle, metaDescription, status: postStatus, featuredImage } = body;
+    const { title, slug, content, excerpt, author, tags, metaTitle, metaDescription, status: postStatus, featuredImage, publishDate } = body;
 
     if (!title || !slug || !content) {
       return NextResponse.json({ success: false, error: 'title, slug, and content are required' }, { status: 400 });
@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
     };
 
     if (featuredImage) post.featuredImage = featuredImage;
+    if (publishDate) post.publishDate = publishDate;
     if (postStatus === 'published') post.publishedAt = now;
 
     const docRef = await adminDb.collection('blog_posts').add(post);

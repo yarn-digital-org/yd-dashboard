@@ -421,7 +421,7 @@ export default function GmailPage() {
               <Loader2 size={20} style={{ color: '#555', animation: 'spin 1s linear infinite' }} />
             </div>
           ) : selectedMessage.body ? (
-            selectedMessage.bodyType === 'html' ? (
+            (selectedMessage.bodyType === 'html' || selectedMessage.body?.includes('<')) ? (
               <div
                 style={{ color: '#ccc', fontSize: '0.9rem', lineHeight: 1.7 }}
                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedMessage.body) }}

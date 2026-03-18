@@ -56,13 +56,13 @@ function formatDate(dateStr: string): string {
   }
 }
 
-function getInitials(name: string): string {
+function getInitials(name: string | undefined | null): string {
+  if (!name) return '?';
   return name
     .split(' ')
     .slice(0, 2)
-    .map(w => w[0])
-    .join('')
-    .toUpperCase();
+    .map(w => w[0]?.toUpperCase() || '')
+    .join('') || '?';
 }
 
 function avatarColor(name: string): string {
@@ -441,6 +441,11 @@ export default function InboxPage() {
                     <div style={{ textAlign: 'center', color: '#9CA3AF', paddingTop: '40px' }}>
                       <RefreshCw size={20} style={{ animation: 'spin 1s linear infinite' }} />
                     </div>
+                  ) : selectedMessage.body?.includes('<') ? (
+                    <div
+                      style={{ fontSize: '0.875rem', lineHeight: 1.7, color: '#374151' }}
+                      dangerouslySetInnerHTML={{ __html: selectedMessage.body.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '').replace(/\son\w+="[^"]*"/gi, '') }}
+                    />
                   ) : (
                     <pre style={{
                       margin: 0, fontSize: '0.875rem', lineHeight: 1.7, color: '#374151',

@@ -41,6 +41,7 @@ const publicApiRoutes = [
   '/api/auth/reset-password',
   '/api/auth/verify-email',
   '/api/auth/me', // Used to check session
+  '/api/auth/google/', // Google OAuth authorize + callback
   '/api/forms/', // Form submissions are public
   '/api/agents/', // Agent heartbeat, status, messaging endpoints
   '/api/tasks/', // Task CRUD for agents (auth handled in route)

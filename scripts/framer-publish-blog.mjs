@@ -54,7 +54,7 @@ function markdownToHtml(md) {
     .replace(/\n/g, '<br>');
 
   // Wrap list items
-  html = html.replace(/(<li>.*?<\/li>)+/gs, (match) => `<ul>${match}</ul>`);
+  html = html.replace(/(<li>[^]*?<\/li>)+/g, (match) => `<ul>${match}</ul>`);
 
   // Wrap in paragraphs
   html = `<p>${html}</p>`;

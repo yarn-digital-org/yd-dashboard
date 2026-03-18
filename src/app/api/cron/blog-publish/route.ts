@@ -30,7 +30,7 @@ function markdownToHtml(md: string): string {
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br>');
 
-  html = html.replace(/(<li>.*?<\/li>)+/gs, (match) => `<ul>${match}</ul>`);
+  html = html.replace(/(<li>[^]*?<\/li>)+/g, (match) => `<ul>${match}</ul>`);
   html = `<p>${html}</p>`;
   html = html.replace(/<p><\/p>/g, '');
   html = html.replace(/<p><hr><\/p>/g, '<hr>');

@@ -30,6 +30,7 @@ const publicRoutes = [
   '/yarn-digital',
   '/unsubscribe',
   '/subscribe-confirm',
+  '/blog',
 ];
 
 // API routes that don't require authentication
@@ -50,6 +51,7 @@ const publicApiRoutes = [
   '/api/public/questionnaire', // Lead intake questionnaire responses
   '/api/public/unsubscribe', // GDPR unsubscribe
   '/api/public/subscribe', // Email list subscribe
+  '/api/blog/', // Public blog API
 ];
 
 // Static file patterns to skip

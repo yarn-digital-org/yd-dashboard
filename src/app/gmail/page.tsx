@@ -14,7 +14,7 @@ interface GmailMessage {
   id: string;
   threadId: string;
   from: string;
-  fromName: string;
+  fromName?: string;
   to: string;
   subject: string;
   snippet: string;
@@ -34,12 +34,13 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
-function getInitials(name: string): string {
+function getInitials(name: string | undefined | null): string {
+  if (!name) return '?';
   return name
     .split(' ')
     .slice(0, 2)
     .map(w => w[0]?.toUpperCase() || '')
-    .join('');
+    .join('') || '?';
 }
 
 function sanitizeHtml(html: string): string {
@@ -313,7 +314,7 @@ export default function GmailPage() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   flexShrink: 0, fontSize: '0.75rem', fontWeight: 600, color: '#888',
                 }}>
-                  {getInitials(msg.fromName)}
+                  {getInitials(msg.from)}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
@@ -321,7 +322,7 @@ export default function GmailPage() {
                       fontSize: '0.875rem', color: msg.isUnread ? '#fff' : '#888',
                       fontWeight: msg.isUnread ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
-                      {msg.fromName}
+                      {msg.from}
                     </span>
                     <span style={{ fontSize: '0.75rem', color: '#555', flexShrink: 0, marginLeft: '0.5rem' }}>
                       {formatDate(msg.date)}
@@ -399,10 +400,10 @@ export default function GmailPage() {
         <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #1a1a1a' }}>
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
             <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '0.85rem', fontWeight: 600, color: '#888' }}>
-              {getInitials(selectedMessage.fromName)}
+              {getInitials(selectedMessage.from)}
             </div>
             <div>
-              <div style={{ color: '#fff', fontWeight: 600, fontSize: '0.9rem' }}>{selectedMessage.fromName}</div>
+              <div style={{ color: '#fff', fontWeight: 600, fontSize: '0.9rem' }}>{selectedMessage.from}</div>
               <div style={{ color: '#666', fontSize: '0.8rem' }}>
                 {selectedMessage.from} → {selectedMessage.to || 'me'}
               </div>

@@ -220,6 +220,26 @@ export async function POST(request: NextRequest) {
     // Fire-and-forget Slack notification — doesn't block the response
     notifySlack(data, docRef.id).catch(() => {});
 
+    // Fire automations (new_lead trigger) — non-blocking
+    try {
+      if (leadDoc.userId) {
+        const { fireAutomations } = await import('@/lib/automation-engine');
+        await fireAutomations('new_lead', {
+          id: docRef.id,
+          _collection: 'leads',
+          ...data,
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          company: data.company,
+          website: data.website,
+          message: data.message,
+        }, leadDoc.userId);
+      }
+    } catch (autoErr) {
+      console.error('Automation trigger error (non-blocking):', autoErr);
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Thank you! We\'ll be in touch within 1 business day.',

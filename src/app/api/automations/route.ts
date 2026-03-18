@@ -91,13 +91,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate trigger type
-    const validTriggers = ['new_contact', 'new_lead', 'invoice_overdue', 'form_submission'];
+    const validTriggers = ['new_contact', 'new_lead', 'invoice_overdue', 'form_submission', 'new_booking', 'event_starting_soon', 'event_completed'];
     if (!validTriggers.includes(trigger.type)) {
       return NextResponse.json({ error: 'Invalid trigger type' }, { status: 400 });
     }
 
     // Validate action types
-    const validActions = ['send_email', 'create_task', 'update_status', 'notify'];
+    const validActions = ['send_email', 'create_task', 'update_status', 'notify', 'delay', 'add_to_list', 'update_contact', 'webhook'];
     for (const action of actions) {
       if (!validActions.includes(action.type)) {
         return NextResponse.json({ error: `Invalid action type: ${action.type}` }, { status: 400 });

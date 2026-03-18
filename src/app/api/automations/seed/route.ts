@@ -8,10 +8,13 @@ import { adminDb } from '@/lib/firebase-admin';
  */
 export async function POST(request: NextRequest) {
   try {
-    // Auth check
+    // Auth check — Bearer token OR cookie session
     const authHeader = request.headers.get('authorization');
     const agentKey = process.env.AGENT_API_KEY;
-    if (!agentKey || !authHeader?.startsWith('Bearer ') || authHeader.slice(7) !== agentKey) {
+    const cookieToken = request.cookies.get('auth_token')?.value;
+    const hasBearerAuth = agentKey && authHeader?.startsWith('Bearer ') && authHeader.slice(7) === agentKey;
+    const hasCookieAuth = !!cookieToken;
+    if (!hasBearerAuth && !hasCookieAuth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

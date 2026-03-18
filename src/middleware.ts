@@ -52,6 +52,7 @@ const publicApiRoutes = [
   '/api/public/unsubscribe', // GDPR unsubscribe
   '/api/public/subscribe', // Email list subscribe
   '/api/blog', // Public blog API
+  '/api/automations/seed', // Automation seed (auth handled in route)
 ];
 
 // Static file patterns to skip

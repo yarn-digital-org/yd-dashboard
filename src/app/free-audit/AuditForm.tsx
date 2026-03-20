@@ -18,7 +18,7 @@ function getUtmParams(): Record<string, string> {
 
 export default function AuditForm() {
   const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', company: '', challenge: '',
+    name: '', email: '', phone: '', company: '', website: '', challenge: '',
   });
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -91,6 +91,17 @@ export default function AuditForm() {
             onChange={(e) => setFormData({ ...formData, company: e.target.value })}
           />
         </div>
+      </div>
+
+      <div>
+        <input
+          type="url"
+          required
+          placeholder="Your website URL"
+          className={inputClass}
+          value={formData.website}
+          onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+        />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">

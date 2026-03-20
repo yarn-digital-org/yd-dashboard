@@ -286,16 +286,16 @@ select option {
   color: inherit !important;
 }
 /* Let elements with explicit text color classes override the inherit */
-[data-theme="dark"] .landing-page .bg-white .text-\\[\\#0a0a0a\\] { color: #0a0a0a !important; }
-[data-theme="dark"] .landing-page .bg-white .text-\\[\\#333\\] { color: #333333 !important; }
-[data-theme="dark"] .landing-page .bg-white .text-\\[\\#666\\] { color: #666666 !important; }
-[data-theme="dark"] .landing-page .bg-white .text-\\[\\#999\\] { color: #999999 !important; }
-[data-theme="dark"] .landing-page .bg-white .text-\\[\\#e63312\\] { color: #e63312 !important; }
-[data-theme="dark"] .landing-page .bg-white .text-\\[\\#e5e5e5\\] { border-color: #e5e5e5 !important; }
+[data-theme="dark"] .landing-page .bg-white [class*="text-"][class*="#0a0a0a"] { color: #0a0a0a !important; }
+[data-theme="dark"] .landing-page .bg-white [class*="text-"][class*="#333"] { color: #333333 !important; }
+[data-theme="dark"] .landing-page .bg-white [class*="text-"][class*="#666"] { color: #666666 !important; }
+[data-theme="dark"] .landing-page .bg-white [class*="text-"][class*="#999"] { color: #999999 !important; }
+[data-theme="dark"] .landing-page .bg-white [class*="text-"][class*="#e63312"] { color: #e63312 !important; }
+[data-theme="dark"] .landing-page .bg-white [class*="text-"][class*="#e5e5e5"] { border-color: #e5e5e5 !important; }
 
 /* Dark sections in landing pages should stay dark */
-[data-theme="dark"] .landing-page .bg-\\[\\#0a0a0a\\] { background-color: #0a0a0a !important; }
-[data-theme="dark"] .landing-page .bg-\\[\\#111\\] { background-color: #111 !important; }
+[data-theme="dark"] .landing-page [class*="bg-"][class*="#0a0a0a"] { background-color: #0a0a0a !important; }
+[data-theme="dark"] .landing-page [class*="bg-"][class*="#111"] { background-color: #111 !important; }
 
 /* Landing page inputs — transparent bg, inherit text color from parent */
 [data-theme="dark"] .landing-page input,
@@ -313,4 +313,4 @@ select option {
 
 /* Prevent dark mode from touching landing page shadows/borders */
 [data-theme="dark"] .landing-page .shadow-sm { box-shadow: none !important; }
-[data-theme="dark"] .landing-page .border-\\[\\#e5e5e5\\] { border-color: #e5e5e5 !important; }
+[data-theme="dark"] .landing-page [class*="border-"][class*="#e5e5e5"] { border-color: #e5e5e5 !important; }

@@ -275,7 +275,7 @@ export default function FreeAuditPage() {
                 style={{ letterSpacing: '-0.02em' }}
               >
                 Yarn Digital redesigned everything — brand, photography direction,
-                and a fully responsive site built to convert. More traffic, more bookings.
+                and a fully responsive site built to convert. +38% organic traffic in 6 weeks. Reservations doubled.
               </p>
               <cite className="text-sm text-[#555] not-italic font-semibold">
                 — The Hills Restaurant
@@ -311,9 +311,9 @@ export default function FreeAuditPage() {
                 </p>
                 <div className="grid grid-cols-3 gap-6">
                   {[
-                    { stat: '↑', label: 'More traffic' },
-                    { stat: '↑', label: 'More bookings' },
-                    { stat: '↓', label: 'Lower bounce rate' },
+                    { stat: '+38%', label: 'Organic traffic in 6 weeks' },
+                    { stat: '2×', label: 'Reservations via website' },
+                    { stat: '−50%', label: 'Bounce rate' },
                   ].map((s, i) => (
                     <div key={i}>
                       <div

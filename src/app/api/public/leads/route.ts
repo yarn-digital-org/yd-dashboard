@@ -159,7 +159,16 @@ export async function POST(request: NextRequest) {
       createdAt: now,
       updatedAt: now,
       // Assign to the org's default user — picks up in dashboard
-      userId: process.env.DEFAULT_ORG_USER_ID || '',
+      // Fall back to looking up the first admin user in Firestore if env vars not set
+      userId: process.env.DEFAULT_ORG_USER_ID || await (async () => {
+        try {
+          const snapshot = await adminDb.collection('users')
+            .where('role', 'in', ['admin', 'owner'])
+            .limit(1)
+            .get();
+          return snapshot.empty ? '' : snapshot.docs[0].id;
+        } catch { return ''; }
+      })(),
       orgId: process.env.DEFAULT_ORG_ID || '',
     };
 

@@ -92,7 +92,7 @@ export default function FreeAuditPage() {
                     Book My Free Audit →
                   </a>
                   <p className="text-xs text-white/40 font-medium mt-3" style={{ letterSpacing: '-0.01em' }}>
-                    We audit a limited number of sites each week. No spam. No obligation.
+                    No spam. No obligation.
                   </p>
                 </div>
 
@@ -125,9 +125,6 @@ export default function FreeAuditPage() {
                   <p className="text-sm text-white/50 font-medium" style={{ letterSpacing: '-0.01em' }}>
                     Your free audit starts with a 30-minute discovery call.
                   </p>
-                  <p className="text-sm text-white/40 font-medium" style={{ letterSpacing: '-0.01em' }}>
-                    We take on a limited number of new clients each month — a few spots are usually available.
-                  </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
@@ -155,9 +152,7 @@ export default function FreeAuditPage() {
                   </span>
                 </div>
 
-                <p className="text-xs text-[#888] font-medium mt-6 border-t border-[#1a1a1a] pt-5" style={{ letterSpacing: '-0.01em' }}>
-                  We only take on 3–4 new projects per month. Book your audit to secure your spot.
-                </p>
+
 
                 {/* Consultation alternative — bridges ad promise */}
                 <p className="text-sm text-white/50 font-medium mt-4" style={{ letterSpacing: '-0.01em' }}>
@@ -182,9 +177,7 @@ export default function FreeAuditPage() {
                 <p className="text-sm text-[#555] font-medium mb-4">
                   Takes 30 seconds. Delivered within 48 hours.
                 </p>
-                <p className="text-xs text-[#e63312]/80 font-medium mb-6" style={{ letterSpacing: '-0.01em' }}>
-                  Limited availability — we review a small number of sites each week
-                </p>
+
                 <AuditForm />
               </div>
             </div>
@@ -254,14 +247,13 @@ export default function FreeAuditPage() {
               className="text-[11px] font-semibold text-[#555] uppercase mb-8"
               style={{ letterSpacing: '0.08em' }}
             >
-              Join 50+ Belfast businesses who&apos;ve already got their free audit
+              Trusted by Belfast businesses
             </p>
             <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 mb-14">
               {[
                 'The Hills Restaurant',
                 'Krumb Bakery',
                 'React Clarity',
-                'Stonebridge Farm',
               ].map((name) => (
                 <span
                   key={name}
@@ -282,11 +274,11 @@ export default function FreeAuditPage() {
                 className="text-lg sm:text-xl text-white/80 leading-relaxed mb-4"
                 style={{ letterSpacing: '-0.02em' }}
               >
-                Yarn Digital rebuilt our website from scratch. Within a month we
-                had more enquiries than the whole previous year.
+                Yarn Digital redesigned everything — brand, photography direction,
+                and a fully responsive site built to convert. More traffic, more bookings.
               </p>
               <cite className="text-sm text-[#555] not-italic font-semibold">
-                — Stonebridge Farm
+                — The Hills Restaurant
               </cite>
             </blockquote>
           </div>

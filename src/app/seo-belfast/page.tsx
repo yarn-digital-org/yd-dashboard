@@ -497,6 +497,63 @@ export default function SEOBelfastPage() {
         </section>
 
         {/* ═══════════════════════════════════════════
+            FAQs + JSON-LD Schema
+            ═══════════════════════════════════════════ */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: [
+              { '@type': 'Question', name: 'How long does SEO take to work?', acceptedAnswer: { '@type': 'Answer', text: 'Most businesses see meaningful movement in 3–6 months, with stronger results from month 6 onwards. SEO compounds over time. If anyone promises page one rankings in a few weeks, walk away.' } },
+              { '@type': 'Question', name: "What's actually involved in an SEO audit?", acceptedAnswer: { '@type': 'Answer', text: 'A proper audit covers four areas: technical, on-page, local (Belfast/NI search results), and backlinks. We look at all four, tell you what\'s holding you back, and prioritise the fastest-moving fixes. Delivered within 48 hours.' } },
+              { '@type': 'Question', name: 'Do I need SEO if I\'m already running Google Ads?', acceptedAnswer: { '@type': 'Answer', text: 'Yes — they do different jobs. Ads give immediate visibility but stop the moment you stop paying. SEO builds organic rankings that keep generating traffic without ongoing ad spend. The smartest approach is both running together.' } },
+              { '@type': 'Question', name: "Why isn't my website ranking on Google?", acceptedAnswer: { '@type': 'Answer', text: 'Usually one of three reasons: technical issues blocking Google, content not targeting the right terms, or not enough quality sites linking to you. Often all three. Our free audit tells you which and what to fix first.' } },
+              { '@type': 'Question', name: "What's the difference between local SEO and regular SEO?", acceptedAnswer: { '@type': 'Answer', text: 'Local SEO targets searches with location intent — "web design Belfast", "SEO agency near me." For most Belfast SMEs, this is where the highest-value customers come from. We build local SEO as the foundation before expanding to broader terms.' } },
+            ],
+          }) }}
+        />
+        <section className="py-24 sm:py-32 bg-[#ffffff]">
+          <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20">
+              <div>
+                <span className="text-[11px] font-semibold text-[#999] uppercase" style={{ letterSpacing: '0.08em' }}>
+                  Common Questions
+                </span>
+              </div>
+              <div className="lg:col-span-2">
+                <h2 className="text-3xl sm:text-4xl font-medium text-[#0a0a0a] leading-[1.1] mb-12" style={{ letterSpacing: '-0.04em' }}>
+                  Everything you need to know.
+                </h2>
+                <div className="border-t border-[#e5e5e5]">
+                  {[
+                    { q: 'How long does SEO take to work?', a: 'Most businesses see meaningful movement in 3–6 months, with stronger results from month 6 onwards. SEO compounds over time. If anyone promises page one rankings in a few weeks, walk away.' },
+                    { q: "What's actually involved in an SEO audit?", a: "A proper audit covers four areas: technical, on-page, local (Belfast/NI search results), and backlinks. We look at all four, tell you what's holding you back, and prioritise the fastest-moving fixes. Delivered within 48 hours." },
+                    { q: "Do I need SEO if I'm already running Google Ads?", a: "Yes — they do different jobs. Ads give immediate visibility but stop the moment you stop paying. SEO builds organic rankings that keep generating traffic without ongoing ad spend. The smartest approach is both running together." },
+                    { q: "Why isn't my website ranking on Google?", a: "Usually one of three reasons: technical issues blocking Google, content not targeting the right terms, or not enough quality sites linking to you. Often all three. Our free audit tells you which and what to fix first." },
+                    { q: "What's the difference between local SEO and regular SEO?", a: 'Local SEO targets searches with location intent — "web design Belfast", "SEO agency near me." For most Belfast SMEs, this is where the highest-value customers come from. We build local SEO as the foundation before expanding to broader terms.' },
+                  ].map((faq, i) => (
+                    <details key={i} className="group border-b border-[#e5e5e5]">
+                      <summary className="flex items-center justify-between py-5 cursor-pointer list-none">
+                        <span className="text-[15px] font-semibold text-[#0a0a0a] pr-4" style={{ letterSpacing: '-0.02em' }}>
+                          {faq.q}
+                        </span>
+                        <span className="text-[#999] text-xl flex-shrink-0 transition-transform group-open:rotate-45">+</span>
+                      </summary>
+                      <div className="pb-5 pr-8">
+                        <p className="text-sm text-[#666] leading-relaxed" style={{ letterSpacing: '-0.01em' }}>
+                          {faq.a}
+                        </p>
+                      </div>
+                    </details>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════
             BOTTOM CTA — B&W image bg (same editorial feel)
             ═══════════════════════════════════════════ */}
         <section className="relative py-28 sm:py-36 overflow-hidden">

@@ -544,8 +544,22 @@ export default function WebDesignBelfastPage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            FAQs
+            FAQs + JSON-LD Schema
             ═══════════════════════════════════════════ */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: [
+              { '@type': 'Question', name: 'How long does it take to build a website?', acceptedAnswer: { '@type': 'Answer', text: 'Most projects take 4–8 weeks from kickoff to launch, depending on scope. A straightforward business site is typically 4 weeks. We\'ll give you a clear timeline before we start — and we stick to it.' } },
+              { '@type': 'Question', name: 'Do I need to provide the content, or do you write it?', acceptedAnswer: { '@type': 'Answer', text: 'We can do both. If you need copywriting, we handle it as part of the project — we\'ll interview you and write content that sounds like you and ranks on Google.' } },
+              { '@type': 'Question', name: 'Will my website work on mobile?', acceptedAnswer: { '@type': 'Answer', text: 'Every website we build is mobile-first. We design for mobile screens before desktop — because the majority of your visitors arrive on a phone.' } },
+              { '@type': 'Question', name: 'What platform will my website be built on — and can I manage it myself?', acceptedAnswer: { '@type': 'Answer', text: 'We build on WordPress and Shopify — platforms that give you full control without needing a developer every time something changes. We\'ll recommend the right one for your business and train you up before handover.' } },
+              { '@type': 'Question', name: 'What happens after the website launches?', acceptedAnswer: { '@type': 'Answer', text: 'We don\'t disappear at launch. Every site comes with a handover, documentation, and a walkthrough. Ongoing support, SEO, and marketing available if needed — no obligation.' } },
+            ],
+          }) }}
+        />
         <section className="py-24 sm:py-32 bg-[#ffffff]">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20">
@@ -560,9 +574,11 @@ export default function WebDesignBelfastPage() {
                 </h2>
                 <div className="border-t border-[#e5e5e5]">
                   {[
-                    { q: 'How long does a website take?', a: 'Most web design Belfast projects take 2–4 weeks. We move fast without cutting corners — you\'ll have a site that\'s ready to launch and built to last.' },
-                    { q: 'Do you work with small businesses?', a: 'Yes — Belfast SMEs are who we\'re built for. Our web design in Belfast is tailored to local businesses. Whether you\'re a restaurant, tradesperson, or tech startup, we understand your market and your customers.' },
-                    { q: 'What does it cost?', a: 'We\'ll give you a clear quote on the call. No hidden fees, no surprise invoices. Every web design Belfast project is scoped properly before we start.' },
+                    { q: 'How long does it take to build a website?', a: 'Most projects take 4–8 weeks from kickoff to launch, depending on scope. A straightforward business site is typically 4 weeks. We\'ll give you a clear timeline before we start — and we stick to it.' },
+                    { q: 'Do I need to provide the content, or do you write it?', a: 'We can do both. If you need copywriting, we handle it as part of the project — we\'ll interview you and write content that sounds like you and ranks on Google.' },
+                    { q: 'Will my website work on mobile?', a: 'Every website we build is mobile-first. We design for mobile screens before desktop — because the majority of your visitors arrive on a phone.' },
+                    { q: 'What platform will my website be built on — and can I manage it myself?', a: 'We build on WordPress and Shopify — platforms that give you full control without needing a developer every time something changes. We\'ll recommend the right one for your business and train you up before handover.' },
+                    { q: 'What happens after the website launches?', a: 'We don\'t disappear at launch. Every site comes with a handover, documentation, and a walkthrough. Ongoing support, SEO, and marketing available if needed — no obligation.' },
                   ].map((faq, i) => (
                     <details key={i} className="group border-b border-[#e5e5e5]">
                       <summary className="flex items-center justify-between py-5 cursor-pointer list-none">

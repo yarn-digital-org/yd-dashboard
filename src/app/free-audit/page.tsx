@@ -82,6 +82,20 @@ export default function FreeAuditPage() {
                   <br />
                   Agency.
                 </h1>
+                {/* Mobile-only CTA — visible above the fold before user scrolls to form */}
+                <div className="lg:hidden mb-8">
+                  <a
+                    href="#audit-form"
+                    className="bg-[#e63312] text-white font-semibold text-[15px] px-10 py-4 rounded-full hover:bg-[#cc2b0e] transition-all inline-flex items-center gap-2"
+                    style={{ letterSpacing: '-0.02em' }}
+                  >
+                    Book My Free Audit →
+                  </a>
+                  <p className="text-xs text-white/40 font-medium mt-3" style={{ letterSpacing: '-0.01em' }}>
+                    We audit a limited number of sites each week. No spam. No obligation.
+                  </p>
+                </div>
+
                 <p
                   className="text-base sm:text-lg text-white/50 leading-relaxed max-w-md mb-8"
                   style={{ letterSpacing: '-0.01em', fontWeight: 400 }}
@@ -158,7 +172,7 @@ export default function FreeAuditPage() {
               </div>
 
               {/* Right — form */}
-              <div className="bg-[#111] border border-[#222] rounded-[24px] p-6 sm:p-8 lg:p-10">
+              <div id="audit-form" className="bg-[#111] border border-[#222] rounded-[24px] p-6 sm:p-8 lg:p-10">
                 <h2
                   className="text-xl sm:text-2xl font-medium text-white mb-1"
                   style={{ letterSpacing: '-0.03em' }}
@@ -350,7 +364,7 @@ export default function FreeAuditPage() {
               30 seconds. No pitch. No strings.
             </p>
             <a
-              href="#top"
+              href="#audit-form"
               className="bg-[#e63312] text-white font-semibold text-[15px] px-10 py-4 rounded-full hover:bg-[#cc2b0e] transition-all inline-flex items-center gap-2"
               style={{ letterSpacing: '-0.02em' }}
             >

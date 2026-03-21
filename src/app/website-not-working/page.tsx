@@ -242,7 +242,7 @@ export default function WebsiteNotConvertingPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { title: 'The Hills Restaurant', desc: 'Full rebrand and responsive site built to convert. More traffic, more bookings.', tags: 'Brand × Web Design', image: IMG.hillsMockup },
+                { title: 'The Hills Restaurant', desc: 'Full rebrand and responsive site. +38% organic traffic in 6 weeks. Reservations doubled.', tags: 'Brand × Web Design', image: IMG.hillsMockup },
                 { title: 'React Clarity', desc: 'A clinical-grade brand for a health-tech startup.', tags: 'Brand × Development', image: IMG.reactClarity },
                 { title: 'Krumb Bakery', desc: 'Handcrafted branding for Belfast\'s best sourdough.', tags: 'Brand × E-Commerce', image: IMG.krumb },
               ].map((cs, i) => (

@@ -307,7 +307,7 @@ export default function WebDesignBelfastPage() {
               </h2>
               <p className="text-base text-[#666] leading-relaxed" style={{ letterSpacing: '-0.01em' }}>
                 Most Belfast businesses need a website that&apos;s easy to manage after launch. We build on WordPress and{' '}
-                <a href="/shopify" className="text-[#0a0a0a] underline underline-offset-2 hover:text-[#e63312] transition-colors">Shopify</a>
+                <a href="/shopify-web-design-belfast" className="text-[#0a0a0a] underline underline-offset-2 hover:text-[#e63312] transition-colors">Shopify</a>
                 {' '}— the two platforms that give you full control without needing a developer every time something changes. Every site we build is mobile-first, SEO-ready, and fast. Whether you need a content site, a booking system, or a full online store, we&apos;ll build it on the right platform for your business.
               </p>
             </div>

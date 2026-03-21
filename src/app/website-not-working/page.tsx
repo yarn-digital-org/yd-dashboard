@@ -142,9 +142,18 @@ export default function WebsiteNotConvertingPage() {
                 <span className="text-xs text-[#555] font-medium">48-hour turnaround</span>
                 <span className="text-xs text-[#555] font-medium">No sales pitch. Ever.</span>
               </div>
-              <button onClick={scrollToForm} className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
-                Get a Free Website Review <ArrowRight size={15} />
-              </button>
+              <div className="flex flex-wrap items-center gap-4 mt-0">
+                <button onClick={scrollToForm} className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
+                  Get a Free Website Review <ArrowRight size={15} />
+                </button>
+                <a
+                  href="#case-studies"
+                  className="text-sm text-white/50 font-medium border border-white/20 px-6 py-3.5 rounded-full hover:border-white/40 hover:text-white/70 transition-all"
+                  style={{ letterSpacing: '-0.02em' }}
+                >
+                  See Our Work →
+                </a>
+              </div>
             </div>
           </div>
         </section>
@@ -227,7 +236,7 @@ export default function WebsiteNotConvertingPage() {
         {/* ═══════════════════════════════════════════
             CASE STUDIES — Dark section
             ═══════════════════════════════════════════ */}
-        <section className="bg-[#0a0a0a] py-24 sm:py-32">
+        <section id="case-studies" className="bg-[#0a0a0a] py-24 sm:py-32">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20 mb-14">
               <div>

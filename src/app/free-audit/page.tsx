@@ -155,15 +155,22 @@ export default function FreeAuditPage() {
 
 
                 {/* Consultation alternative — bridges ad promise */}
-                <p className="text-sm text-white/50 font-medium mt-4" style={{ letterSpacing: '-0.01em' }}>
-                  Prefer a call?{' '}
+                <div className="flex flex-wrap items-center gap-4 mt-4">
                   <a
                     href="/free-consultation"
-                    className="text-white underline underline-offset-2 hover:text-white/80 transition-colors"
+                    className="text-sm text-white/50 font-medium hover:text-white/80 transition-colors"
+                    style={{ letterSpacing: '-0.01em' }}
                   >
-                    Book a free 30-min consultation →
+                    Prefer a call? Book a free 30-min consultation →
                   </a>
-                </p>
+                  <a
+                    href="#case-studies"
+                    className="text-sm text-white/40 font-medium hover:text-white/60 transition-colors border border-white/20 px-4 py-2 rounded-full hover:border-white/40"
+                    style={{ letterSpacing: '-0.01em' }}
+                  >
+                    See Our Work →
+                  </a>
+                </div>
               </div>
 
               {/* Right — form */}
@@ -285,7 +292,7 @@ export default function FreeAuditPage() {
         </section>
 
         {/* ─── CASE STUDY — The Hills ─── */}
-        <section className="py-20 sm:py-24 bg-[#0a0a0a] border-t border-[#1a1a1a]">
+        <section id="case-studies" className="py-20 sm:py-24 bg-[#0a0a0a] border-t border-[#1a1a1a]">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
               <div>

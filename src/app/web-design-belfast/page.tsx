@@ -139,9 +139,18 @@ export default function WebDesignBelfastPage() {
                 <span className="text-xs text-[#555] font-medium">48-hour turnaround</span>
                 <span className="text-xs text-[#555] font-medium">No sales pitch. Ever.</span>
               </div>
-              <button onClick={scrollToForm} className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
-                Get a Free Audit <ArrowRight size={15} />
-              </button>
+              <div className="flex flex-wrap items-center gap-4">
+                <button onClick={scrollToForm} className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
+                  Get a Free Audit <ArrowRight size={15} />
+                </button>
+                <a
+                  href="#case-studies"
+                  className="text-sm text-white/50 font-medium border border-white/20 px-6 py-3.5 rounded-full hover:border-white/40 hover:text-white/70 transition-all"
+                  style={{ letterSpacing: '-0.02em' }}
+                >
+                  See Our Work →
+                </a>
+              </div>
 
               {/* Case study preview — above the fold for "See What We Could Build" ads */}
               <div className="mt-10 flex items-center gap-4">

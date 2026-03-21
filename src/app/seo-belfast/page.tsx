@@ -30,7 +30,6 @@ const IMG = {
   heroBg: '/images/yd/d2waLq2nwXqrYR11yjS6gYIdocM.png',
   founder: '/images/yd/gt2H9pZhxxqOiw8FCUVWqnG0DTQ.png',
   hillsMockup: '/images/yd/wtOblvlwQViPkZXQy7otlTIMaMQ.png',
-  stonebridge: '/images/yd/1A7y3aX1XOiC43HofQw8EHV8Ck.png',
   reactClarity: '/images/yd/NEudPHtTPkhwnF9EnfisOCj7YU0.png',
   krumb: '/images/yd/c2ByT5WhAv4Ac8xz0FBRqtJ0DPE.png',
 };

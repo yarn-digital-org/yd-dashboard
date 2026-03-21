@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Web Design Derry | Yarn Digital — Design, Build, Grow',
   description:
-    'Professional web design in Derry from Yarn Digital. We build fast, modern websites for Derry SMEs that convert visitors into customers. Free 30-min consultation available.',
+    'Yarn Digital designs and builds websites for Derry businesses that load fast, rank on Google, and convert visitors into customers. Free consultation. No obligation.',
   openGraph: {
     title: 'Web Design Derry | Yarn Digital — Design, Build, Grow',
     description:

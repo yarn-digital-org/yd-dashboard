@@ -9,9 +9,6 @@ import { ForceLightTheme } from '@/components/ForceLightTheme';
 import PageViewTracker from '@/components/PageViewTracker';
 
 
-// ============================================
-// Meta Pixel + UTM
-// ============================================
 function getUtmParams(): Record<string, string> {
   if (typeof window === 'undefined') return {};
   const p = new URLSearchParams(window.location.search);
@@ -23,7 +20,6 @@ function getUtmParams(): Record<string, string> {
   };
 }
 
-// Self-hosted images
 const IMG = {
   heroBg: '/images/yd/d2waLq2nwXqrYR11yjS6gYIdocM.png',
   founder: '/images/yd/gt2H9pZhxxqOiw8FCUVWqnG0DTQ.png',
@@ -32,9 +28,6 @@ const IMG = {
   krumb: '/images/yd/c2ByT5WhAv4Ac8xz0FBRqtJ0DPE.png',
 };
 
-// ============================================
-// Main Page
-// ============================================
 export default function SEODerryPage() {
   const [formData, setFormData] = useState({
     name: '', company: '', website: '', email: '', phone: '',
@@ -132,7 +125,6 @@ export default function SEODerryPage() {
               >
                 More visibility. More enquiries. No technical jargon.
               </p>
-
               <button
                 onClick={scrollToForm}
                 className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2"
@@ -145,7 +137,7 @@ export default function SEODerryPage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            ABOUT
+            INTRO
             ═══════════════════════════════════════════ */}
         <section className="py-24 sm:py-36 bg-[#ffffff]">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
@@ -162,27 +154,213 @@ export default function SEODerryPage() {
         </section>
 
         {/* ═══════════════════════════════════════════
+            SERVICES
+            ═══════════════════════════════════════════ */}
+        <section className="py-24 sm:py-32 bg-[#ffffff] border-t border-[#e5e5e5]">
+          <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20">
+              <div>
+                <span className="text-[11px] font-semibold text-[#999] uppercase" style={{ letterSpacing: '0.08em' }}>
+                  Our Services
+                </span>
+              </div>
+              <div className="lg:col-span-2">
+                <h2
+                  className="text-3xl sm:text-4xl lg:text-[3.25rem] font-medium text-[#0a0a0a] leading-[1.1] mb-12"
+                  style={{ letterSpacing: '-0.04em' }}
+                >
+                  Everything you need to rank higher on Google — from one NI studio.
+                </h2>
+                <div className="border-t border-[#e5e5e5]">
+                  {[
+                    {
+                      title: 'Local SEO Strategy',
+                      desc: 'Data-driven SEO strategy built around the Derry and Londonderry market — your competitors, your customers, your search terms. Not a template lifted from a generic playbook.',
+                    },
+                    {
+                      title: 'Technical SEO Audit',
+                      desc: "We dig into your site structure, page speed, crawlability, and Core Web Vitals. Fix the technical issues that are quietly tanking your Google rankings.",
+                    },
+                    {
+                      title: 'On-Page Optimisation',
+                      desc: 'Every page title, heading, meta tag, and internal link — optimised for the keywords your Derry customers are actually searching.',
+                    },
+                    {
+                      title: 'Content Strategy',
+                      desc: "We identify the content gaps your competitors haven't filled and build a content plan that earns you rankings in Derry and beyond.",
+                    },
+                    {
+                      title: 'Link Building',
+                      desc: 'High-quality backlinks from relevant NI and UK sources. The kind that actually move rankings, not the kind that get you penalised.',
+                    },
+                    {
+                      title: 'Monthly Reporting',
+                      desc: "Clear, jargon-free reporting every month. Rankings, traffic, leads — all in one place. You'll always know what's working.",
+                    },
+                  ].map((item, i) => (
+                    <div key={i} className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-10 py-5 border-b border-[#e5e5e5] hover:border-[#999] transition-colors">
+                      <div className="text-[15px] font-semibold text-[#0a0a0a]" style={{ letterSpacing: '-0.02em' }}>
+                        {item.title}
+                      </div>
+                      <div className="sm:col-span-2 text-sm text-[#666] leading-relaxed" style={{ letterSpacing: '-0.01em' }}>
+                        {item.desc}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════
+            WHY DERRY NEEDS LOCAL SEO
+            ═══════════════════════════════════════════ */}
+        <section className="bg-[#0a0a0a] py-24 sm:py-32">
+          <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20">
+              <div>
+                <span className="text-[11px] font-semibold text-[#555] uppercase" style={{ letterSpacing: '0.08em' }}>
+                  Local Market
+                </span>
+              </div>
+              <div className="lg:col-span-2">
+                <h2
+                  className="text-3xl sm:text-4xl font-medium text-white leading-[1.1] mb-8"
+                  style={{ letterSpacing: '-0.04em' }}
+                >
+                  Derry searches are growing. Is your business showing up?
+                </h2>
+                <p className="text-base text-[#666] leading-relaxed mb-6" style={{ letterSpacing: '-0.02em', fontWeight: 500 }}>
+                  Derry and Londonderry&apos;s business community has expanded significantly — retail on Shipquay Street,
+                  hospitality around the Walled City, tradespeople and professional services across the wider council area.
+                  The customers are searching Google every day.
+                </p>
+                <p className="text-base text-[#666] leading-relaxed mb-6" style={{ letterSpacing: '-0.02em', fontWeight: 500 }}>
+                  But most Derry businesses don&apos;t have local SEO set up properly. No Google Business Profile optimisation.
+                  No local citations. No content targeting Derry-specific searches. That&apos;s your opportunity.
+                </p>
+                <p className="text-base text-[#666] leading-relaxed" style={{ letterSpacing: '-0.02em', fontWeight: 500 }}>
+                  We work with Derry SMEs to close the gap — quickly, without the jargon, and with monthly reporting so
+                  you always know where you stand.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════
+            HOW IT WORKS
+            ═══════════════════════════════════════════ */}
+        <section className="py-24 sm:py-32 bg-[#ffffff]">
+          <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20 mb-14">
+              <div>
+                <span className="text-[11px] font-semibold text-[#999] uppercase" style={{ letterSpacing: '0.08em' }}>
+                  How It Works
+                </span>
+              </div>
+              <div className="lg:col-span-2">
+                <h2 className="text-3xl sm:text-4xl font-medium text-[#0a0a0a] leading-[1.1]" style={{ letterSpacing: '-0.04em' }}>
+                  Three steps to ranking higher in Derry.
+                </h2>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-[#e5e5e5]">
+              {[
+                {
+                  num: '01',
+                  title: 'Free SEO Review',
+                  desc: "We review your site, your current Google rankings, and your three nearest Derry competitors. You'll get a clear picture of where you're losing visibility.",
+                },
+                {
+                  num: '02',
+                  title: 'We build your SEO plan',
+                  desc: 'Keyword strategy, technical fixes, content plan, and Google Business Profile optimisation — a full roadmap built for the Derry market.',
+                },
+                {
+                  num: '03',
+                  title: 'You rank. You grow.',
+                  desc: 'Measurable ranking improvements, more organic traffic, more enquiries. We report on it monthly and adjust the strategy as you grow.',
+                },
+              ].map((step, i) => (
+                <div key={i} className={`py-8 md:px-8 ${i === 0 ? 'md:pl-0' : ''} ${i < 2 ? 'border-b md:border-b-0 md:border-r border-[#e5e5e5]' : ''}`}>
+                  <span className="text-[40px] font-medium text-[#e63312] leading-none block mb-4" style={{ letterSpacing: '-0.04em' }}>
+                    {step.num}
+                  </span>
+                  <h3 className="text-lg font-semibold text-[#0a0a0a] mb-2" style={{ letterSpacing: '-0.03em' }}>
+                    {step.title}
+                  </h3>
+                  <p className="text-sm text-[#666] leading-relaxed" style={{ letterSpacing: '-0.01em' }}>
+                    {step.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════
+            CASE STUDIES
+            ═══════════════════════════════════════════ */}
+        <section className="bg-[#0a0a0a] py-24 sm:py-32">
+          <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20 mb-14">
+              <div>
+                <span className="text-[11px] font-semibold text-[#555] uppercase" style={{ letterSpacing: '0.08em' }}>
+                  Work
+                </span>
+              </div>
+              <div className="lg:col-span-2">
+                <h2 className="text-3xl sm:text-4xl font-medium text-white leading-[1.15] mb-2" style={{ letterSpacing: '-0.04em' }}>
+                  Case Studies
+                </h2>
+                <p className="text-sm text-[#555]" style={{ letterSpacing: '-0.02em', fontWeight: 500 }}>
+                  Featured work between ©2022–25
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { title: 'The Hills Restaurant', desc: 'Full rebrand and responsive site built to convert. More traffic, more bookings.', tags: 'Brand × Web Design', image: IMG.hillsMockup },
+                { title: 'React Clarity', desc: 'A clinical-grade brand for a health-tech startup.', tags: 'Brand × Development', image: IMG.reactClarity },
+                { title: 'Krumb Bakery', desc: "Handcrafted branding for Belfast's best sourdough.", tags: 'Brand × E-Commerce', image: IMG.krumb },
+              ].map((cs, i) => (
+                <div key={i} className="bg-[#111] rounded-[24px] overflow-hidden group border border-[#1a1a1a] hover:border-[#333] transition-colors">
+                  <div className="aspect-[4/3] overflow-hidden">
+                    <Image src={cs.image} alt={cs.title} width={600} height={450}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  </div>
+                  <div className="p-5 sm:p-6">
+                    <h3 className="text-[15px] font-semibold text-white mb-1.5" style={{ letterSpacing: '-0.03em' }}>{cs.title}</h3>
+                    <p className="text-sm text-[#666] leading-relaxed mb-3" style={{ letterSpacing: '-0.01em' }}>{cs.desc}</p>
+                    <span className="text-[11px] font-medium text-[#444]" style={{ letterSpacing: '0.02em' }}>{cs.tags}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════
             AUDIT FORM
             ═══════════════════════════════════════════ */}
         <section id="audit-form" className="bg-[#0a0a0a] py-24 sm:py-32">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-20">
-
               <div>
                 <span className="text-[11px] font-semibold text-[#555] uppercase block mb-6" style={{ letterSpacing: '0.08em' }}>
                   Free SEO Review
                 </span>
-                <h2
-                  className="text-3xl sm:text-4xl font-medium text-white leading-[1.1] mb-6"
-                  style={{ letterSpacing: '-0.04em' }}
-                >
+                <h2 className="text-3xl sm:text-4xl font-medium text-white leading-[1.1] mb-6" style={{ letterSpacing: '-0.04em' }}>
                   See where you&apos;re losing visibility.
                 </h2>
                 <p className="text-sm text-[#555] leading-relaxed mb-8" style={{ letterSpacing: '-0.01em', fontWeight: 500 }}>
                   Free 30-minute SEO review — we&apos;ll show you exactly where you stand<br />
                   and what to fix first.
                 </p>
-
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-3 mb-6">
                   <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (
@@ -227,13 +405,11 @@ export default function SEODerryPage() {
                           value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })} />
                       </div>
                     </div>
-
                     <div>
                       <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Website URL *</label>
                       <input type="text" required placeholder="yourwebsite.co.uk" className={inputClass}
                         value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} />
                     </div>
-
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-6">
                       <div>
                         <label className={labelClass} style={{ letterSpacing: '0.04em' }}>Email *</label>
@@ -246,17 +422,13 @@ export default function SEODerryPage() {
                           value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
                       </div>
                     </div>
-
                     {status === 'error' && (
                       <p className="text-red-400 text-sm font-medium">{errorMsg}</p>
                     )}
-
                     <div className="pt-4">
-                      <button
-                        type="submit" disabled={status === 'submitting'}
+                      <button type="submit" disabled={status === 'submitting'}
                         className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-10 py-4 rounded-full hover:bg-[#ffffff]/90 transition-all disabled:opacity-50 inline-flex items-center gap-2"
-                        style={{ letterSpacing: '-0.02em' }}
-                      >
+                        style={{ letterSpacing: '-0.02em' }}>
                         {status === 'submitting' ? (
                           <><Loader2 size={16} className="animate-spin" /> Sending...</>
                         ) : (
@@ -272,40 +444,50 @@ export default function SEODerryPage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            SERVICES
+            FAQ
             ═══════════════════════════════════════════ */}
         <section className="py-24 sm:py-32 bg-[#ffffff]">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20">
               <div>
                 <span className="text-[11px] font-semibold text-[#999] uppercase" style={{ letterSpacing: '0.08em' }}>
-                  Our Services
+                  Common Questions
                 </span>
               </div>
               <div className="lg:col-span-2">
-                <h2
-                  className="text-3xl sm:text-4xl lg:text-[3.25rem] font-medium text-[#0a0a0a] leading-[1.1] mb-12"
-                  style={{ letterSpacing: '-0.04em' }}
-                >
-                  Everything you need to rank higher on Google — from one NI studio.
+                <h2 className="text-3xl sm:text-4xl font-medium text-[#0a0a0a] leading-[1.1] mb-12" style={{ letterSpacing: '-0.04em' }}>
+                  Everything you need to know.
                 </h2>
                 <div className="border-t border-[#e5e5e5]">
                   {[
-                    { title: 'Local SEO Strategy', desc: 'Data-driven SEO strategy tailored to the Derry/Londonderry market — not generic advice.' },
-                    { title: 'Technical SEO Audit', desc: 'Site structure, page speed, crawlability, Core Web Vitals. Fix what Google can\'t ignore.' },
-                    { title: 'On-Page Optimisation', desc: 'Keywords, meta tags, headings, internal linking — every element optimised to rank.' },
-                    { title: 'Content Strategy', desc: 'The right content, targeting the right searches. Built to drive qualified traffic, not just impressions.' },
-                    { title: 'Link Building', desc: 'High-quality backlinks from relevant sources. The kind that actually move the needle.' },
-                    { title: 'Monthly Reporting', desc: 'Clear, honest reporting every month. Rankings, traffic, leads — all in one place.' },
-                  ].map((item, i) => (
-                    <div key={i} className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-10 py-5 border-b border-[#e5e5e5] hover:border-[#999] transition-colors">
-                      <div className="text-[15px] font-semibold text-[#0a0a0a]" style={{ letterSpacing: '-0.02em' }}>
-                        {item.title}
+                    {
+                      q: 'Do you work with businesses in Derry/Londonderry or only Belfast?',
+                      a: "We work with businesses across all of Northern Ireland. Derry/Londonderry is one of our key markets — local SEO for Derry businesses is a core part of what we do.",
+                    },
+                    {
+                      q: 'How long does it take to see SEO results in Derry?',
+                      a: "Typical timeline is 3–6 months for meaningful ranking improvements. Some quick wins (technical fixes, Google Business Profile) can show results faster. We're honest about timelines — no one can guarantee page 1 in 30 days.",
+                    },
+                    {
+                      q: 'What makes your SEO different from other agencies?',
+                      a: "We're a small, focused team — no account managers passing work down a chain. You deal directly with the people doing the work. Our approach is built on data, not guesswork, and every recommendation is backed by what's actually happening in your market.",
+                    },
+                    {
+                      q: 'Do I need to be a big business to afford SEO?',
+                      a: 'No. We work with SMEs — restaurants, tradespeople, retailers, professional services. Our SEO engagements are sized for businesses at different growth stages.',
+                    },
+                  ].map((faq, i) => (
+                    <details key={i} className="group border-b border-[#e5e5e5]">
+                      <summary className="flex items-center justify-between py-5 cursor-pointer list-none">
+                        <span className="text-[15px] font-semibold text-[#0a0a0a] pr-4" style={{ letterSpacing: '-0.02em' }}>
+                          {faq.q}
+                        </span>
+                        <span className="text-[#999] text-xl flex-shrink-0 transition-transform group-open:rotate-45">+</span>
+                      </summary>
+                      <div className="pb-5 pr-8">
+                        <p className="text-sm text-[#666] leading-relaxed" style={{ letterSpacing: '-0.01em' }}>{faq.a}</p>
                       </div>
-                      <div className="sm:col-span-2 text-sm text-[#666] leading-relaxed" style={{ letterSpacing: '-0.01em' }}>
-                        {item.desc}
-                      </div>
-                    </div>
+                    </details>
                   ))}
                 </div>
               </div>
@@ -314,58 +496,9 @@ export default function SEODerryPage() {
         </section>
 
         {/* ═══════════════════════════════════════════
-            CASE STUDIES
-            ═══════════════════════════════════════════ */}
-        <section className="bg-[#0a0a0a] py-24 sm:py-32">
-          <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-20 mb-14">
-              <div>
-                <span className="text-[11px] font-semibold text-[#555] uppercase" style={{ letterSpacing: '0.08em' }}>
-                  Work
-                </span>
-              </div>
-              <div className="lg:col-span-2">
-                <h2 className="text-3xl sm:text-4xl font-medium text-white leading-[1.15] mb-2" style={{ letterSpacing: '-0.04em' }}>
-                  Case Studies
-                </h2>
-                <p className="text-sm text-[#555]" style={{ letterSpacing: '-0.02em', fontWeight: 500 }}>
-                  Featured work between ©2022–25
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { title: 'The Hills Restaurant', desc: 'Full rebrand and responsive site built to convert. More traffic, more bookings.', tags: 'Brand × Web Design', image: IMG.hillsMockup },
-                { title: 'React Clarity', desc: 'A clinical-grade brand for a health-tech startup.', tags: 'Brand × Development', image: IMG.reactClarity },
-                { title: 'Krumb Bakery', desc: 'Handcrafted branding for Belfast\'s best sourdough.', tags: 'Brand × E-Commerce', image: IMG.krumb },
-              ].map((cs, i) => (
-                <div key={i} className="bg-[#111] rounded-[24px] overflow-hidden group border border-[#1a1a1a] hover:border-[#333] transition-colors">
-                  <div className="aspect-[4/3] overflow-hidden">
-                    <Image src={cs.image} alt={cs.title} width={600} height={450}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                  </div>
-                  <div className="p-5 sm:p-6">
-                    <h3 className="text-[15px] font-semibold text-white mb-1.5" style={{ letterSpacing: '-0.03em' }}>
-                      {cs.title}
-                    </h3>
-                    <p className="text-sm text-[#666] leading-relaxed mb-3" style={{ letterSpacing: '-0.01em' }}>
-                      {cs.desc}
-                    </p>
-                    <span className="text-[11px] font-medium text-[#444]" style={{ letterSpacing: '0.02em' }}>
-                      {cs.tags}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════
             ABOUT + FOUNDER
             ═══════════════════════════════════════════ */}
-        <section className="py-24 sm:py-32 bg-[#ffffff]">
+        <section className="py-24 sm:py-32 bg-[#ffffff] border-t border-[#e5e5e5]">
           <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-20">
               <div>
@@ -377,15 +510,20 @@ export default function SEODerryPage() {
                 </h2>
                 <p className="text-base text-[#666] leading-relaxed mb-4" style={{ letterSpacing: '-0.02em', fontWeight: 500 }}>
                   Yarn Digital is a full-service studio led by Jonny Davison. We work with
-                  ambitious SMEs across Northern Ireland — including Derry/Londonderry — delivering SEO, content strategy, and
-                  digital growth, built properly.
+                  ambitious SMEs across Northern Ireland — from Belfast to Derry, Newry to Antrim. SEO, content strategy,
+                  and digital growth, built properly.
                 </p>
-                <p className="text-base text-[#666] leading-relaxed" style={{ letterSpacing: '-0.02em', fontWeight: 500 }}>
-                  We&apos;re not a faceless agency. We know your market, we speak your language,
-                  and we&apos;ll tell you the truth about what&apos;s working and what isn&apos;t.
+                <p className="text-base text-[#666] leading-relaxed mb-6" style={{ letterSpacing: '-0.02em', fontWeight: 500 }}>
+                  We&apos;re not a faceless agency that outsources your work to a junior in another city. We know the NI
+                  market, we speak your language, and we&apos;ll tell you the truth about what&apos;s working and what isn&apos;t.
+                </p>
+                <p className="text-sm text-[#999] font-medium">
+                  Also need a new website?{' '}
+                  <a href="/web-design-derry" className="text-[#0a0a0a] underline underline-offset-2 hover:text-[#e63312] transition-colors">
+                    See our web design services in Derry →
+                  </a>
                 </p>
               </div>
-
               <div className="flex flex-col items-center lg:items-start gap-6">
                 <div className="relative w-44 h-44 rounded-[24px] overflow-hidden">
                   <Image src={IMG.founder} alt="Jonny Davison — Founder" fill className="object-cover" />
@@ -394,9 +532,7 @@ export default function SEODerryPage() {
                   <p className="text-lg text-[#333] font-medium italic leading-relaxed mb-2" style={{ letterSpacing: '-0.02em' }}>
                     &ldquo;We build what we&apos;d want for our own business — fast, beautiful, and built to last.&rdquo;
                   </p>
-                  <cite className="text-sm text-[#999] not-italic font-semibold">
-                    Jonny Davison, Founder
-                  </cite>
+                  <cite className="text-sm text-[#999] not-italic font-semibold">Jonny Davison, Founder</cite>
                 </blockquote>
               </div>
             </div>
@@ -413,10 +549,13 @@ export default function SEODerryPage() {
           <div className="absolute inset-0 bg-[#0a0a0a]/80" />
           <div className="relative z-10 max-w-3xl mx-auto px-5 sm:px-10 text-center">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-medium text-white leading-[1.1] mb-5" style={{ letterSpacing: '-0.04em' }}>
-              Ready to find out where you&apos;re<br />losing visibility on Google?
+              Ready to find out what&apos;s stopping you<br />ranking on Google in Derry?
             </h2>
-            <p className="text-base text-white/50 mb-10" style={{ letterSpacing: '-0.02em', fontWeight: 500 }}>
-              Free 30-minute SEO review. We&apos;ll show you exactly where you stand.
+            <p className="text-base text-white/50 mb-4" style={{ letterSpacing: '-0.02em', fontWeight: 500 }}>
+              Free SEO review — we&apos;ll tell you exactly where you stand and what to fix first.
+            </p>
+            <p className="text-xs text-white/30 mb-10 font-medium">
+              5.0 ★ · Audit delivered within 48 hours · No sales pitch. Ever.
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
               <button

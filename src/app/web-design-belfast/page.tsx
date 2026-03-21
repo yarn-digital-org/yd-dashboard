@@ -297,6 +297,24 @@ export default function WebDesignBelfastPage() {
         </section>
 
         {/* ═══════════════════════════════════════════
+            WORDPRESS & SHOPIFY — SEO keyword section
+            ═══════════════════════════════════════════ */}
+        <section className="py-12 sm:py-16 bg-[#ffffff] border-t border-[#e5e5e5]">
+          <div className="max-w-[1520px] mx-auto px-5 sm:px-10">
+            <div className="max-w-3xl">
+              <h2 className="text-xl sm:text-2xl font-medium text-[#0a0a0a] mb-4" style={{ letterSpacing: '-0.03em' }}>
+                WordPress and Shopify specialists.
+              </h2>
+              <p className="text-base text-[#666] leading-relaxed" style={{ letterSpacing: '-0.01em' }}>
+                Most Belfast businesses need a website that&apos;s easy to manage after launch. We build on WordPress and{' '}
+                <a href="/shopify" className="text-[#0a0a0a] underline underline-offset-2 hover:text-[#e63312] transition-colors">Shopify</a>
+                {' '}— the two platforms that give you full control without needing a developer every time something changes. Every site we build is mobile-first, SEO-ready, and fast. Whether you need a content site, a booking system, or a full online store, we&apos;ll build it on the right platform for your business.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════
             HOW IT WORKS — 3-step process
             ═══════════════════════════════════════════ */}
         <section className="py-20 sm:py-24 bg-[#ffffff]">

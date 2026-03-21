@@ -128,17 +128,14 @@ export default function ShopifyPage() {
                 className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-medium text-white leading-[1.02] mb-6"
                 style={{ letterSpacing: '-0.03em' }}
               >
-                Sell More With a<br />
-                Shopify Store Built<br />
-                to Convert.
+                Shopify Web Design Belfast<br />
+                — Built to Sell From Day One.
               </h1>
               <p
                 className="text-base sm:text-lg text-white/60 leading-relaxed mb-6 max-w-lg"
                 style={{ letterSpacing: '-0.01em', fontWeight: 400 }}
               >
-                Custom Shopify stores designed for growth.<br />
-                Fast checkout, SEO built in, and a design<br className="hidden sm:block" />
-                your customers will love.
+                Belfast&apos;s Shopify specialists. Fast, beautiful stores — designed to convert browsers into buyers, built to scale with your business.
               </p>
 
               {/* CTA — white pill like "Start a Project" on main site */}

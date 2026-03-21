@@ -1,15 +1,15 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Free Website Audit | Yarn Digital Belfast',
+  title: 'Shopify Web Design Belfast | Yarn Digital — E-Commerce That Sells',
   description:
-    'Get a free, no-obligation website audit from Belfast\'s full-service digital agency. We\'ll tell you what\'s working, what isn\'t, and what to fix first.',
+    "Belfast's Shopify specialists. Fast, beautiful stores — designed to convert browsers into buyers, built to scale with your business.",
   openGraph: {
-    title: 'Free Website Audit | Yarn Digital Belfast',
+    title: 'Shopify Web Design Belfast | Yarn Digital — E-Commerce That Sells',
     description:
-      'Your website should be winning you customers. Is it? Get a free audit — no sales pitch, no strings.',
+      "Belfast's Shopify specialists. Fast, beautiful stores — designed to convert browsers into buyers, built to scale with your business.",
     type: 'website',
-    url: 'https://yd-dashboard.vercel.app/free-audit',
+    url: 'https://yd-dashboard.vercel.app/shopify',
   },
   robots: {
     index: true,
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function FreeAuditLayout({
+export default function ShopifyLayout({
   children,
 }: {
   children: React.ReactNode;

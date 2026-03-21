@@ -258,10 +258,10 @@ export default function BrandLandingPage() {
                 result="A brand they're proud to put on everything — packaging, signage, social media."
               />
               <CaseStudy
-                name="Stonebridge Farm"
-                situation="Local farm with a strong community story but no visual identity to tell it."
-                work="Brand strategy and identity grounded in provenance and place."
-                result="A brand that reflects exactly what Stonebridge is — honest, local, trusted."
+                name="Krumb Bakery"
+                situation="A Belfast bakery with a loyal following but no brand to match the quality of what they make."
+                work="Brand strategy, visual identity, and packaging direction built around craft and warmth."
+                result="A brand that looks exactly like Krumb feels — handcrafted, honest, and loved by customers."
               />
               <CaseStudy
                 name="The Hills Restaurant"

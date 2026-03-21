@@ -103,7 +103,7 @@ export default function ReviewForm() {
           )}
         </button>
         <p className="text-xs text-[#444] mt-3 font-medium">
-          We review a limited number of sites each week. No spam. No obligation.
+          No spam. No obligation.
         </p>
       </div>
     </form>

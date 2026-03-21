@@ -220,7 +220,7 @@ export default function WebsiteNotConvertingPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { title: 'Stonebridge Farm', desc: 'Brand identity grounded in provenance and place.', tags: 'Branding × Strategy', image: IMG.stonebridge },
+                { title: 'The Hills Restaurant', desc: 'Full rebrand and responsive site built to convert. More traffic, more bookings.', tags: 'Brand × Web Design', image: IMG.hillsMockup },
                 { title: 'React Clarity', desc: 'A clinical-grade brand for a health-tech startup.', tags: 'Brand × Development', image: IMG.reactClarity },
                 { title: 'Krumb Bakery', desc: 'Handcrafted branding for Belfast\'s best sourdough.', tags: 'Brand × E-Commerce', image: IMG.krumb },
               ].map((cs, i) => (
@@ -266,7 +266,7 @@ export default function WebsiteNotConvertingPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { quote: 'Yarn Digital rebuilt our website from scratch. Within a month we had more enquiries than the whole previous year.', name: 'Stonebridge Farm', tag: 'Brand & Web Design' },
+                { quote: 'Yarn Digital redesigned everything. Within a month we had more traffic and more bookings than we\'d seen all year.', name: 'The Hills Restaurant', tag: 'Brand & Web Design' },
                 { quote: 'Straightforward, fast, and they delivered exactly what they promised. Our team uses the platform every day.', name: 'React Clarity', tag: 'Web Application' },
                 { quote: 'The new site looks exactly like us. Our customers keep commenting on it.', name: 'Krumb Bakery', tag: 'Brand & E-Commerce' },
               ].map((t, i) => (

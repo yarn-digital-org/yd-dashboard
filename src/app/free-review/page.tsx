@@ -128,16 +128,16 @@ export default function FreeReviewPage() {
               Join 50+ Belfast businesses who&apos;ve already got their free review
             </p>
             <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 mb-14">
-              {['The Hills Restaurant', 'Krumb Bakery', 'React Clarity', 'Stonebridge Farm'].map((name) => (
+              {['The Hills Restaurant', 'Krumb Bakery', 'React Clarity'].map((name) => (
                 <span key={name} className="text-sm text-[#444] font-medium" style={{ letterSpacing: '-0.02em' }}>{name}</span>
               ))}
             </div>
             <blockquote>
               <span className="text-4xl text-[#222] leading-none block mb-4">&ldquo;</span>
               <p className="text-lg sm:text-xl text-white/80 leading-relaxed mb-4" style={{ letterSpacing: '-0.02em' }}>
-                Yarn Digital rebuilt our website from scratch. Within a month we had more enquiries than the whole previous year.
+                Yarn Digital redesigned everything. Within a month we had more traffic and more bookings than we&apos;d seen all year.
               </p>
-              <cite className="text-sm text-[#555] not-italic font-semibold">— Stonebridge Farm</cite>
+              <cite className="text-sm text-[#555] not-italic font-semibold">— The Hills Restaurant</cite>
             </blockquote>
           </div>
         </section>

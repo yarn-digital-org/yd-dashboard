@@ -294,10 +294,10 @@ export default function WebDesignLandingPage() {
                 result="A site that customers actually use — and that matches how the bakery feels in person."
               />
               <CaseStudy
-                name="Stonebridge Farm"
-                situation="Local farm with a loyal community but no way to reach new customers online."
-                work="Website built around their story — provenance, place, and trust."
-                result="An online presence that brings their farm-to-table story to life."
+                name="Krumb Bakery"
+                situation="A beloved Belfast bakery with no website that matched the quality of their products."
+                work="Full website build on Shopify — clean, fast, built to sell online and in-store."
+                result="An online presence that brings their handcrafted brand to life and drives orders."
               />
             </div>
           </div>

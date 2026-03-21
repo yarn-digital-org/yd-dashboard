@@ -282,9 +282,9 @@ export default function GrowLandingPage() {
                 result="First page for 'bakery Belfast'. New customers walking in saying they found them on Google."
               />
               <CaseStudy
-                name="Stonebridge Farm"
-                situation="Strong community following, but no organic traffic from search."
-                work="Content strategy built around their story — local food, provenance, farm-to-table."
+                name="Krumb Bakery"
+                situation="A quality bakery with word-of-mouth growth but no online presence driving new customers."
+                work="SEO and content strategy built around their products and local Belfast community."
                 result="Organic traffic growth and a content engine that keeps bringing in new customers."
               />
             </div>

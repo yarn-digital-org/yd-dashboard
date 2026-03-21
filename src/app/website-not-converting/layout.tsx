@@ -11,6 +11,9 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://yd-dashboard.vercel.app/website-not-converting',
   },
+  alternates: {
+    canonical: 'https://yd-dashboard.vercel.app/website-not-converting',
+  },
   robots: {
     index: true,
     follow: true,

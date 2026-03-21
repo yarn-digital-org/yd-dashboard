@@ -11,6 +11,9 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://yd-dashboard.vercel.app/get-quote',
   },
+  alternates: {
+    canonical: 'https://yd-dashboard.vercel.app/get-quote',
+  },
   robots: {
     index: true,
     follow: true,

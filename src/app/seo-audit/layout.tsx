@@ -9,7 +9,10 @@ export const metadata: Metadata = {
     description:
       'Your website should be winning you customers. Is it? Get a free audit — no sales pitch, no strings.',
     type: 'website',
-    url: 'https://yd-dashboard.vercel.app/free-audit',
+    url: 'https://yd-dashboard.vercel.app/seo-audit',
+  },
+  alternates: {
+    canonical: 'https://yd-dashboard.vercel.app/seo-audit',
   },
   robots: {
     index: true,

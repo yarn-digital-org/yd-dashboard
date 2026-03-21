@@ -11,6 +11,9 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://yd-dashboard.vercel.app/free-review',
   },
+  alternates: {
+    canonical: 'https://yd-dashboard.vercel.app/free-review',
+  },
   robots: {
     index: true,
     follow: true,

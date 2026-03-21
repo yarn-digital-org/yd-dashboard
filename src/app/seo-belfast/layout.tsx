@@ -11,6 +11,9 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://yd-dashboard.vercel.app/seo-belfast',
   },
+  alternates: {
+    canonical: 'https://yd-dashboard.vercel.app/seo-belfast',
+  },
   robots: {
     index: true,
     follow: true,

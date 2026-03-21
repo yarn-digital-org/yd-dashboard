@@ -9,6 +9,9 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://yd-dashboard.vercel.app/website-not-working',
   },
+  alternates: {
+    canonical: 'https://yd-dashboard.vercel.app/website-not-working',
+  },
   robots: { index: true, follow: true },
 };
 

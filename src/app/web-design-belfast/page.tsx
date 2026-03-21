@@ -122,6 +122,18 @@ export default function WebDesignBelfastPage() {
               <p className="text-base sm:text-lg text-white/60 leading-relaxed mb-6 max-w-lg" style={{ letterSpacing: '-0.01em', fontWeight: 400 }}>
                 Belfast web design, SEO, and digital marketing — all from one local team. Fast turnaround, real results, no juggling agencies.
               </p>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-6">
+                <div className="flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} width="13" height="13" viewBox="0 0 24 24" fill="white">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                  ))}
+                  <span className="text-xs text-[#666] ml-1 font-medium">5.0</span>
+                </div>
+                <span className="text-xs text-[#555] font-medium">48-hour turnaround</span>
+                <span className="text-xs text-[#555] font-medium">No sales pitch. Ever.</span>
+              </div>
               <button onClick={scrollToForm} className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
                 Get a Free Audit <ArrowRight size={15} />
               </button>
@@ -426,6 +438,8 @@ export default function WebDesignBelfastPage() {
                     ))}
                     <span className="text-xs text-[#666] ml-1 font-medium">5.0</span>
                   </div>
+                  <span className="text-xs text-[#555] font-medium">48-hour turnaround</span>
+                  <span className="text-xs text-[#555] font-medium">No sales pitch. Ever.</span>
                 </div>
                 <div className="flex flex-col gap-2 text-xs text-[#444] font-medium">
                   <span>Belfast-based · No outsourcing · Fast turnaround · Results you can measure</span>

@@ -25,6 +25,8 @@ const publicRoutes = [
   '/free-consultation',
   '/seo-belfast',
   '/web-design-belfast',
+  '/seo-derry',
+  '/web-design-derry',
   '/website-not-working',
   '/website-not-converting',
   '/yarn-digital',

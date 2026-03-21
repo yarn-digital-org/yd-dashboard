@@ -112,6 +112,11 @@ export default function WebDesignBelfastPage() {
                 Web Design Belfast<br />That Wins You Customers.
               </h1>
 
+              {/* Trust bar — above the fold */}
+              <p className="text-xs text-white/40 font-medium mb-6" style={{ letterSpacing: '-0.01em' }}>
+                Trusted by 50+ Belfast businesses&nbsp;·&nbsp;5.0 ★ on Google&nbsp;·&nbsp;Belfast-based, no outsourcing
+              </p>
+
               {/* Mobile-only CTA — above the fold */}
               <div className="lg:hidden mb-6">
                 <button onClick={scrollToForm} className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>

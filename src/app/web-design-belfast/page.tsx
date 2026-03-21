@@ -112,6 +112,14 @@ export default function WebDesignBelfastPage() {
               <h1 className="text-[2.75rem] sm:text-6xl lg:text-[4.5rem] font-medium text-white leading-[1.02] mb-6" style={{ letterSpacing: '-0.03em' }}>
                 Web Design Belfast<br />That Wins You Customers.
               </h1>
+
+              {/* Mobile-only CTA — above the fold */}
+              <div className="lg:hidden mb-6">
+                <button onClick={scrollToForm} className="bg-[#ffffff] text-[#0a0a0a] font-medium text-[15px] px-8 py-3.5 rounded-full hover:bg-[#ffffff]/90 transition-all inline-flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
+                  Book a Free 30-Min Call <ArrowRight size={15} />
+                </button>
+              </div>
+
               <p className="text-base sm:text-lg text-white/60 leading-relaxed mb-6 max-w-lg" style={{ letterSpacing: '-0.01em', fontWeight: 400 }}>
                 Belfast web design, SEO, and digital marketing — all from one local team. Fast turnaround, real results, no juggling agencies.
               </p>

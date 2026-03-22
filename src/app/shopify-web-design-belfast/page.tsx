@@ -25,9 +25,7 @@ function getUtmParams(): Record<string, string> {
 const IMG = {
   heroBg: '/images/yd/d2waLq2nwXqrYR11yjS6gYIdocM.png',
   krumb: '/images/yd/c2ByT5WhAv4Ac8xz0FBRqtJ0DPE.png',
-  krumbFull: '/images/yd/SqapF4Gl9mce8qi3Is6oKtl2tU.png',
   hillsMockup: '/images/yd/wtOblvlwQViPkZXQy7otlTIMaMQ.png',
-  reactClarity: '/images/yd/NEudPHtTPkhwnF9EnfisOCj7YU0.png',
 };
 
 export default function ShopifyWebDesignBelfastPage() {
@@ -256,7 +254,7 @@ export default function ShopifyWebDesignBelfastPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16 items-center">
               <div className="rounded-[24px] overflow-hidden bg-[#111] border border-[#1a1a1a] aspect-[4/3]">
                 <Image
-                  src={IMG.krumbFull}
+                  src={IMG.krumb}
                   alt="Krumb Bakery Shopify store"
                   width={800}
                   height={600}

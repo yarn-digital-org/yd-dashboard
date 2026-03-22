@@ -179,7 +179,7 @@ export default function OutreachPage() {
       const params = new URLSearchParams();
       if (statusFilter) params.set('status', statusFilter);
       if (sectorFilter) params.set('sector', sectorFilter);
-      const res = await fetch(`/api/outreach/prospects?${params}`);
+      const res = await fetch(`/api/outreach/prospects?${params}`, { cache: 'no-store' });
       const json = await res.json();
       if (json.success) {
         setProspects(json.data.prospects);
@@ -192,7 +192,7 @@ export default function OutreachPage() {
   const fetchTemplates = useCallback(async () => {
     setLoadingTemplates(true);
     try {
-      const res = await fetch('/api/outreach/templates');
+      const res = await fetch('/api/outreach/templates', { cache: 'no-store' });
       const json = await res.json();
       if (json.success) setTemplates(json.data.templates);
     } catch { /* silent */ }

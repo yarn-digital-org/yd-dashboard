@@ -32,6 +32,11 @@ const BUILT_PAGES: BuiltPage[] = [
   { name: 'New Brand', path: '/new-brand', source: 'landing-page-new-brand', description: 'Branding enquiry' },
   { name: 'Shopify', path: '/shopify', source: 'landing-page-shopify', description: 'Shopify development' },
   { name: 'Website Not Converting', path: '/website-not-converting', source: 'landing-page-website-not-converting', description: 'Problem/Solution — alternate' },
+  { name: 'SEO Lisburn', path: '/seo-lisburn', source: 'landing-page-seo-lisburn', description: 'Geo — Local SEO Lisburn' },
+  { name: 'SEO Derry', path: '/seo-derry', source: 'landing-page-seo-derry', description: 'Geo — Local SEO Derry/Londonderry' },
+  { name: 'Web Design Derry', path: '/web-design-derry', source: 'landing-page-web-design-derry', description: 'Geo — Web Design Derry/Londonderry' },
+  { name: 'Web Design Lisburn', path: '/web-design-lisburn', source: 'landing-page-web-design-lisburn', description: 'Geo — Web Design Lisburn' },
+  { name: 'Shopify Web Design Belfast', path: '/shopify-web-design-belfast', source: 'landing-page-shopify-web-design-belfast', description: 'Service — Shopify development Belfast' },
 ];
 
 interface PageStats {

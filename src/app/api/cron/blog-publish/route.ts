@@ -209,10 +209,11 @@ export async function POST(request: NextRequest) {
         const post = doc.data();
 
         if (existingSlugs.has(post.slug)) {
-          // Mark as synced even if it already exists in Framer
+          // Mark as synced even if it already exists in Framer; restore published status
           await adminDb.collection('blog_posts').doc(doc.id).update({
             framerSynced: true,
             framerSyncedAt: now,
+            status: 'published',
           });
           results.push({ id: doc.id, title: post.title, status: 'already_in_framer' });
           continue;

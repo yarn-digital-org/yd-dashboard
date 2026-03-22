@@ -723,6 +723,36 @@ export default function OutreachPage() {
                                       {/* Edit mode */}
                                       {draftMode === 'edit' && (
                                         <div className="space-y-3">
+                                          {/* Template selector */}
+                                          {templates.length > 0 && (
+                                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                              <label className="text-xs font-semibold text-gray-500 whitespace-nowrap">Load template:</label>
+                                              <select
+                                                className="flex-1 px-2 py-1.5 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300]"
+                                                defaultValue=""
+                                                onChange={e => {
+                                                  const tid = e.target.value;
+                                                  if (!tid) return;
+                                                  const t = templates.find(t => t.id === tid);
+                                                  if (!t) return;
+                                                  setDraftEdits(prev => ({
+                                                    ...prev,
+                                                    [p.id]: {
+                                                      subject: personalise(t.subject, p),
+                                                      body: personalise(t.body, p),
+                                                    },
+                                                  }));
+                                                  e.target.value = '';
+                                                }}
+                                              >
+                                                <option value="">— pick a template to load —</option>
+                                                {templates.map(t => (
+                                                  <option key={t.id} value={t.id}>{t.sector} ({t.channel})</option>
+                                                ))}
+                                              </select>
+                                              <span className="text-xs text-gray-400">Replaces current draft</span>
+                                            </div>
+                                          )}
                                           <div>
                                             <label className="block text-xs font-semibold text-gray-500 uppercase mb-1.5" style={{ letterSpacing: '0.05em' }}>Subject / Opening line</label>
                                             <input
@@ -743,7 +773,7 @@ export default function OutreachPage() {
                                               style={{ maxWidth: '65ch', fontFamily: 'inherit' }}
                                             />
                                           </div>
-                                          <p className="text-xs text-gray-400">Edit the message, then hit <span className="font-semibold text-gray-600">Save Draft</span>. Switch back to Preview to read it as Jonny will see it. Hit <span className="font-semibold text-gray-600">Approve</span> when ready to send.</p>
+                                          <p className="text-xs text-gray-400">Edit the message, then hit <span className="font-semibold text-gray-600">Save Draft</span>. Switch back to Preview to read it. Hit <span className="font-semibold text-gray-600">Approve &amp; Send</span> when ready.</p>
                                         </div>
                                       )}
 

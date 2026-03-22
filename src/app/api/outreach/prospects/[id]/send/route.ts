@@ -11,8 +11,16 @@ import {
 import { COLLECTIONS } from '@/types';
 import { sendEmail as sendViaGmail } from '@/lib/gmail';
 
-// Jonny's userId — Gmail tokens are stored under this
 const JONNY_USER_ID = '7d227bb7-f40d-49ef-8425-b765e894cc21';
+
+interface SendResult {
+  sent: boolean;
+  via: string;
+  to: string;
+  manual: boolean;
+  error?: string;
+  note?: string;
+}
 
 async function handlePost(
   request: NextRequest,
@@ -23,21 +31,19 @@ async function handlePost(
 
   const doc = await db.collection(COLLECTIONS.OUTREACH_PROSPECTS).doc(id).get();
   if (!doc.exists) throw new NotFoundError('Prospect not found');
-  const prospect = { id: doc.id, ...doc.data() } as any;
-  // No ownership check — single-tenant dashboard, auth is sufficient
+  const prospect = doc.data() as any;
 
   if (prospect.status !== 'approved') {
     throw new BadRequestError('Prospect must be approved before sending');
   }
   if (!prospect.draftMessage || !prospect.draftSubject) {
-    throw new BadRequestError('Draft subject and message are required before sending');
+    throw new BadRequestError('Draft subject and message are required');
   }
 
   const isEmail = prospect.contactMethod === 'email';
   const now = new Date().toISOString();
 
   if (isEmail && prospect.contactValue) {
-    // Send via Gmail (jonny@yarndigital.co.uk OAuth)
     try {
       await sendViaGmail(
         JONNY_USER_ID,
@@ -45,49 +51,28 @@ async function handlePost(
         prospect.draftSubject,
         prospect.draftMessage
       );
-    } catch (err: any) {
-      console.error('Gmail send error:', err);
-      // Return the error detail so UI shows the real reason
-      return successResponse({
-        sent: false,
-        via: 'gmail',
-        to: prospect.contactValue,
-        manual: false,
-        error: err?.message || 'Unknown Gmail error',
-      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unknown Gmail error';
+      console.error('Gmail send error:', msg);
+      const result: SendResult = { sent: false, via: 'gmail', to: prospect.contactValue, manual: false, error: msg };
+      return successResponse(result);
     }
 
     await db.collection(COLLECTIONS.OUTREACH_PROSPECTS).doc(id).update({
-      status: 'sent',
-      sentAt: now,
-      updatedAt: now,
-      sentVia: 'gmail',
+      status: 'sent', sentAt: now, updatedAt: now, sentVia: 'gmail',
     });
 
-    return successResponse({
-      sent: true,
-      via: 'gmail',
-      to: prospect.contactValue as string,
-      manual: false,
-      note: `Sent from jonny@yarndigital.co.uk via Gmail`,
-    });
+    const result: SendResult = { sent: true, via: 'gmail', to: prospect.contactValue, manual: false, note: 'Sent via Gmail' };
+    return successResponse(result);
   }
 
   // Non-email: mark as sent manually
   await db.collection(COLLECTIONS.OUTREACH_PROSPECTS).doc(id).update({
-    status: 'sent',
-    sentAt: now,
-    updatedAt: now,
-    sentVia: prospect.contactMethod,
+    status: 'sent', sentAt: now, updatedAt: now, sentVia: prospect.contactMethod,
   });
 
-  return successResponse({
-    sent: true,
-    via: prospect.contactMethod as string,
-    to: prospect.contactValue as string,
-    manual: true,
-    note: `Mark as sent manually via ${prospect.contactMethod}`,
-  });
+  const result: SendResult = { sent: true, via: prospect.contactMethod, to: prospect.contactValue, manual: true, note: `Sent manually via ${prospect.contactMethod}` };
+  return successResponse(result);
 }
 
 export const POST = withAuth(handlePost, { skipCSRF: true });

@@ -81,7 +81,8 @@ export async function POST(request: NextRequest) {
       { 
         userId: userData.id,
         email: userData.email,
-        role: userData.role 
+        role: userData.role,
+        orgId: userData.orgId || userData.id,
       },
       jwtSecret,
       { expiresIn: '7d' }

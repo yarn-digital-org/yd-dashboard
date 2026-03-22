@@ -24,6 +24,7 @@ async function handlePost(
   const doc = await db.collection(COLLECTIONS.OUTREACH_PROSPECTS).doc(id).get();
   if (!doc.exists) throw new NotFoundError('Prospect not found');
   const prospect = { id: doc.id, ...doc.data() } as any;
+  // No ownership check — single-tenant dashboard, auth is sufficient
 
   if (prospect.status !== 'approved') {
     throw new BadRequestError('Prospect must be approved before sending');

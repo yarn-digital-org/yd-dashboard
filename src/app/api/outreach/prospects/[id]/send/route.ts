@@ -46,7 +46,15 @@ async function handlePost(
         prospect.draftMessage
       );
     } catch (err: any) {
-      throw new Error(`Gmail send failed: ${err?.message || 'unknown error'}`);
+      console.error('Gmail send error:', err);
+      // Return the error detail so UI shows the real reason
+      return successResponse({
+        sent: false,
+        via: 'gmail',
+        to: prospect.contactValue,
+        manual: false,
+        error: err?.message || 'Unknown Gmail error',
+      });
     }
 
     await db.collection(COLLECTIONS.OUTREACH_PROSPECTS).doc(id).update({

@@ -292,7 +292,7 @@ export default function OutreachPage() {
     const sendJson = await sendRes.json();
     setActionLoading(null);
 
-    if (sendRes.ok) {
+    if (sendRes.ok && sendJson.data?.sent !== false) {
       const via = sendJson.data?.via || p.contactMethod;
       const note = sendJson.data?.manual
         ? `✓ Approved & marked sent via ${via}`
@@ -300,8 +300,8 @@ export default function OutreachPage() {
       setSendResult(prev => ({ ...prev, [p.id]: { ok: true, msg: note } }));
       setTimeout(() => setSendResult(prev => { const n = { ...prev }; delete n[p.id]; return n; }), 5000);
     } else {
-      // Approved but send failed — show warning
-      setSendResult(prev => ({ ...prev, [p.id]: { ok: false, msg: `Approved but send failed: ${sendJson.error || 'unknown'}` } }));
+      const errDetail = sendJson.data?.error || sendJson.error || 'unknown error';
+      setSendResult(prev => ({ ...prev, [p.id]: { ok: false, msg: `Approved but send failed: ${errDetail}` } }));
     }
     fetchProspects();
   };

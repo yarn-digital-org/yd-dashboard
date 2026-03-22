@@ -3,15 +3,15 @@ import { z } from 'zod';
 import { adminDb } from '@/lib/firebase-admin';
 import {
   withAuth,
-  resolveOrgId,
   successResponse,
   validateBody,
   requireDb,
   AuthUser,
   NotFoundError,
-  ForbiddenError,
 } from '@/lib/api-middleware';
 import { COLLECTIONS } from '@/types';
+
+const YARN_ORG_ID = 'org_yarn_digital';
 
 const patchProspectSchema = z.object({
   action: z.enum(['approve', 'promote_to_lead']).optional(),
@@ -29,12 +29,10 @@ const patchProspectSchema = z.object({
   draftMessage: z.string().optional(),
 });
 
-async function getProspect(db: FirebaseFirestore.Firestore, id: string, orgId: string) {
+async function getProspect(db: FirebaseFirestore.Firestore, id: string) {
   const doc = await db.collection(COLLECTIONS.OUTREACH_PROSPECTS).doc(id).get();
   if (!doc.exists) throw new NotFoundError('Prospect not found');
-  const data = doc.data()!;
-  if (data.userId !== orgId) throw new ForbiddenError('Access denied');
-  return { id: doc.id, ...data };
+  return { id: doc.id, ...doc.data() };
 }
 
 async function handleGet(
@@ -43,8 +41,7 @@ async function handleGet(
 ) {
   const db = requireDb();
   const { id } = await context.params;
-  const orgId = await resolveOrgId(context.user);
-  return successResponse(await getProspect(db, id, orgId));
+  return successResponse(await getProspect(db, id));
 }
 
 async function handlePatch(
@@ -53,8 +50,7 @@ async function handlePatch(
 ) {
   const db = requireDb();
   const { id } = await context.params;
-  const orgId = await resolveOrgId(context.user);
-  const prospect = await getProspect(db, id, orgId) as any;
+  const prospect = await getProspect(db, id) as any;
   const data = await validateBody(request, patchProspectSchema);
   const now = new Date().toISOString();
 
@@ -67,7 +63,7 @@ async function handlePatch(
 
   if (data.action === 'promote_to_lead') {
     const lead = {
-      userId: orgId,
+      userId: YARN_ORG_ID,
       name: prospect.decisionMaker || prospect.company,
       email: prospect.contactMethod === 'email' ? prospect.contactValue : '',
       phone: prospect.contactMethod === 'phone' ? prospect.contactValue : undefined,
@@ -77,8 +73,7 @@ async function handlePatch(
       priority: 'medium',
       tags: ['outreach', prospect.sector],
       notes: [],
-      createdAt: now,
-      updatedAt: now,
+      createdAt: now, updatedAt: now,
     };
     await db.collection(COLLECTIONS.LEADS).add(lead);
     await db.collection(COLLECTIONS.OUTREACH_PROSPECTS).doc(id).update({
@@ -102,8 +97,7 @@ async function handleDelete(
 ) {
   const db = requireDb();
   const { id } = await context.params;
-  const orgId = await resolveOrgId(context.user);
-  await getProspect(db, id, orgId);
+  await getProspect(db, id);
   await db.collection(COLLECTIONS.OUTREACH_PROSPECTS).doc(id).delete();
   return successResponse({ deleted: true });
 }

@@ -1,15 +1,7 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { adminDb } from '@/lib/firebase-admin';
-import {
-  withAuth,
-  resolveOrgId,
-  successResponse,
-  requireDb,
-  AuthUser,
-  NotFoundError,
-  ForbiddenError,
-} from '@/lib/api-middleware';
+import { withAuth, successResponse, requireDb, AuthUser, NotFoundError } from '@/lib/api-middleware';
 import { COLLECTIONS } from '@/types';
 
 const patchSchema = z.object({
@@ -20,50 +12,33 @@ const patchSchema = z.object({
   tailoredServices: z.string().optional(),
 });
 
-async function getTemplate(db: FirebaseFirestore.Firestore, id: string, orgId: string) {
+async function getTemplate(db: FirebaseFirestore.Firestore, id: string) {
   const doc = await db.collection(COLLECTIONS.OUTREACH_TEMPLATES).doc(id).get();
   if (!doc.exists) throw new NotFoundError('Template not found');
-  const data = doc.data()!;
-  if (data.userId !== orgId) throw new ForbiddenError('Access denied');
-  return { id: doc.id, ...data };
+  return { id: doc.id, ...doc.data() };
 }
 
-async function handleGet(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }>; user: AuthUser }
-) {
+async function handleGet(request: NextRequest, context: { params: Promise<{ id: string }>; user: AuthUser }) {
   const db = requireDb();
   const { id } = await context.params;
-  const orgId = await resolveOrgId(context.user);
-  return successResponse(await getTemplate(db, id, orgId));
+  return successResponse(await getTemplate(db, id));
 }
 
-async function handlePatch(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }>; user: AuthUser }
-) {
+async function handlePatch(request: NextRequest, context: { params: Promise<{ id: string }>; user: AuthUser }) {
   const db = requireDb();
   const { id } = await context.params;
-  const orgId = await resolveOrgId(context.user);
-  await getTemplate(db, id, orgId);
-  const body = await request.json();
-  const data = patchSchema.parse(body);
+  await getTemplate(db, id);
+  const data = patchSchema.parse(await request.json());
   const updates: Record<string, unknown> = { updatedAt: new Date().toISOString() };
-  for (const [k, v] of Object.entries(data)) {
-    if (v !== undefined) updates[k] = v;
-  }
+  for (const [k, v] of Object.entries(data)) { if (v !== undefined) updates[k] = v; }
   await db.collection(COLLECTIONS.OUTREACH_TEMPLATES).doc(id).update(updates);
   return successResponse({ id, ...updates });
 }
 
-async function handleDelete(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }>; user: AuthUser }
-) {
+async function handleDelete(request: NextRequest, context: { params: Promise<{ id: string }>; user: AuthUser }) {
   const db = requireDb();
   const { id } = await context.params;
-  const orgId = await resolveOrgId(context.user);
-  await getTemplate(db, id, orgId);
+  await getTemplate(db, id);
   await db.collection(COLLECTIONS.OUTREACH_TEMPLATES).doc(id).delete();
   return successResponse({ deleted: true });
 }

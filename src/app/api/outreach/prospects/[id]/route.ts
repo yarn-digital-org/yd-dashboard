@@ -24,6 +24,8 @@ const patchProspectSchema = z.object({
   painPoint: z.string().optional(),
   notes: z.string().optional(),
   status: z.enum(['identified','pending_approval','approved','sent','replied','call_booked','closed','not_interested']).optional(),
+  draftSubject: z.string().optional(),
+  draftMessage: z.string().optional(),
 });
 
 async function getProspect(db: FirebaseFirestore.Firestore, id: string, userId: string) {

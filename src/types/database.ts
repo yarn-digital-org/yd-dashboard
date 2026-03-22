@@ -1287,6 +1287,8 @@ export const COLLECTIONS = {
   // Leads
   LEADS: 'leads',
   LEAD_FORMS: 'leadForms',
+  OUTREACH_PROSPECTS: 'outreachProspects',
+  OUTREACH_TEMPLATES: 'outreachTemplates',
   PROPOSALS: 'proposals',
   
   // Projects

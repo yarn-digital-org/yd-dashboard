@@ -81,10 +81,22 @@ async function handlePatch(
   }
 
   // Generic field update
+  const decodeEntities = (str: string) =>
+    str
+      .replace(/&#x2F;/g, '/')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#x27;/g, "'");
+
+  const stringFields = ['company', 'website', 'decisionMaker', 'decisionMakerTitle', 'contactValue', 'painPoint', 'notes', 'draftSubject', 'draftMessage'];
   const { action: _action, ...fields } = data;
   const update: Record<string, unknown> = { updatedAt: now };
   for (const [k, v] of Object.entries(fields)) {
-    if (v !== undefined) update[k] = v;
+    if (v !== undefined) {
+      update[k] = stringFields.includes(k) && typeof v === 'string' ? decodeEntities(v) : v;
+    }
   }
   await db.collection(COLLECTIONS.OUTREACH_PROSPECTS).doc(id).update(update);
   return successResponse({ id, ...update });

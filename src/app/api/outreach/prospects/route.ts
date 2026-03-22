@@ -90,17 +90,27 @@ async function handlePost(
   const data = await validateBody(request, createProspectSchema);
   const now = new Date().toISOString();
 
+  // Decode any HTML entities that may have been introduced by the caller
+  const decodeEntities = (str: string) =>
+    str
+      .replace(/&#x2F;/g, '/')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#x27;/g, "'");
+
   const prospect = {
     userId: orgId,
-    company: data.company.trim(),
+    company: decodeEntities(data.company.trim()),
     sector: data.sector,
-    website: data.website.trim(),
-    decisionMaker: data.decisionMaker.trim(),
-    decisionMakerTitle: data.decisionMakerTitle?.trim() || null,
+    website: decodeEntities(data.website.trim()),
+    decisionMaker: decodeEntities(data.decisionMaker.trim()),
+    decisionMakerTitle: data.decisionMakerTitle ? decodeEntities(data.decisionMakerTitle.trim()) : null,
     contactMethod: data.contactMethod,
-    contactValue: data.contactValue.trim(),
-    painPoint: data.painPoint.trim(),
-    notes: data.notes?.trim() || null,
+    contactValue: decodeEntities(data.contactValue.trim()),
+    painPoint: decodeEntities(data.painPoint.trim()),
+    notes: data.notes ? decodeEntities(data.notes.trim()) : null,
     status: data.status || 'identified',
     approvedAt: null,
     sentAt: null,

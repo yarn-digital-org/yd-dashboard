@@ -268,6 +268,33 @@ export default function OutreachPage() {
     fetchProspects();
   };
 
+  const [sendResult, setSendResult] = useState<Record<string, { ok: boolean; msg: string }>>({});
+
+  const handleSend = async (p: Prospect) => {
+    if (!p.draftMessage) {
+      setSendResult(prev => ({ ...prev, [p.id]: { ok: false, msg: 'Save a draft first' } }));
+      return;
+    }
+    const isEmail = p.contactMethod === 'email';
+    const confirm = isEmail
+      ? window.confirm(`Send email to ${p.contactValue}?\n\nSubject: ${p.draftSubject}\n\nThis will send immediately from jonny@yarndigital.co.uk.`)
+      : window.confirm(`Mark as sent via ${p.contactMethod}?\n\nContact: ${p.contactValue}\n\nMake sure you've sent it manually first.`);
+    if (!confirm) return;
+    setActionLoading(p.id + '-send');
+    const res = await fetch(`/api/outreach/prospects/${p.id}/send`, { method: 'POST' });
+    const json = await res.json();
+    setActionLoading(null);
+    if (res.ok) {
+      const via = json.data?.via || p.contactMethod;
+      const note = json.data?.manual ? `Marked sent via ${via}` : `Sent via ${via}`;
+      setSendResult(prev => ({ ...prev, [p.id]: { ok: true, msg: note } }));
+      setTimeout(() => setSendResult(prev => { const n = { ...prev }; delete n[p.id]; return n; }), 4000);
+    } else {
+      setSendResult(prev => ({ ...prev, [p.id]: { ok: false, msg: json.error || 'Send failed' } }));
+    }
+    fetchProspects();
+  };
+
   const handlePromoteToLead = async (id: string) => {
     setActionLoading(id + '-promote');
     await fetch(`/api/outreach/prospects/${id}`, {
@@ -523,9 +550,33 @@ export default function OutreachPage() {
 
                                   {/* Approve */}
                                   {(p.status === 'identified' || p.status === 'pending_approval') && (
-                                    <button onClick={() => handleApprove(p.id)} disabled={actionLoading === p.id} title="Approve for outreach" className="px-2.5 py-1 bg-blue-600 text-white rounded-md text-xs font-medium hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-1">
+                                    <button onClick={() => handleApprove(p.id)} disabled={actionLoading === p.id} title="Approve — review the draft first, then approve" className="px-2.5 py-1 bg-blue-600 text-white rounded-md text-xs font-medium hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-1">
                                       {actionLoading === p.id ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />} Approve
                                     </button>
+                                  )}
+
+                                  {/* Send — only shown when approved + has draft */}
+                                  {p.status === 'approved' && (
+                                    <button
+                                      onClick={() => handleSend(p)}
+                                      disabled={actionLoading === p.id + '-send'}
+                                      title={p.draftMessage ? `Send to ${p.contactValue}` : 'Save a draft first'}
+                                      className={`px-2.5 py-1 rounded-md text-xs font-medium transition flex items-center gap-1 disabled:opacity-50 ${
+                                        p.draftMessage
+                                          ? 'bg-[#FF3300] text-white hover:bg-[#E62E00]'
+                                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                      }`}
+                                    >
+                                      {actionLoading === p.id + '-send' ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
+                                      {p.contactMethod === 'email' ? 'Send Email' : 'Mark Sent'}
+                                    </button>
+                                  )}
+
+                                  {/* Send result flash */}
+                                  {sendResult[p.id] && (
+                                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${sendResult[p.id].ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+                                      {sendResult[p.id].msg}
+                                    </span>
                                   )}
 
                                   {/* Promote to lead */}

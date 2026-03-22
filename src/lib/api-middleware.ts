@@ -479,8 +479,11 @@ export function withAuth<T>(
 ): ApiHandler<T> {
   return async (request, context): Promise<NextResponse<ApiResponse<T>>> => {
     try {
-      // CSRF protection for state-changing operations
-      if (!options.skipCSRF) {
+      // Skip CSRF for Bearer token (API key) authenticated requests
+      const hasBearerAuth = request.headers.get('authorization')?.startsWith('Bearer ');
+
+      // CSRF protection for state-changing operations (skip for API key auth)
+      if (!options.skipCSRF && !hasBearerAuth) {
         await verifyCSRF(request);
       }
 

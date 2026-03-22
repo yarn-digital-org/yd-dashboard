@@ -45,19 +45,18 @@ async function handleGet(
 
   let query: FirebaseFirestore.Query = db
     .collection(COLLECTIONS.OUTREACH_PROSPECTS)
-    .where('userId', '==', user.userId)
-    .orderBy('createdAt', 'desc');
+    .where('userId', '==', user.userId);
 
   if (statusFilter) {
     query = db
       .collection(COLLECTIONS.OUTREACH_PROSPECTS)
       .where('userId', '==', user.userId)
-      .where('status', '==', statusFilter)
-      .orderBy('createdAt', 'desc');
+      .where('status', '==', statusFilter);
   }
 
   const snapshot = await query.get();
   let prospects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  prospects.sort((a: any, b: any) => (b.createdAt > a.createdAt ? 1 : -1));
 
   if (sectorFilter) {
     prospects = prospects.filter((p: any) => p.sector === sectorFilter);

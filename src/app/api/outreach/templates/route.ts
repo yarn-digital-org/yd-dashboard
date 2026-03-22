@@ -27,9 +27,10 @@ async function handleGet(
   const snapshot = await db
     .collection(COLLECTIONS.OUTREACH_TEMPLATES)
     .where('userId', '==', user.userId)
-    .orderBy('createdAt', 'desc')
     .get();
-  const templates = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const templates = snapshot.docs
+    .map(doc => ({ id: doc.id, ...doc.data() }))
+    .sort((a: any, b: any) => (b.createdAt > a.createdAt ? 1 : -1));
   return successResponse({ templates });
 }
 

@@ -48,7 +48,6 @@ export interface AuthUser {
   email: string;
   role: string;
   name?: string;
-  orgId?: string;
 }
 
 export interface ApiResponse<T = unknown> {
@@ -403,7 +402,6 @@ export function requireDb() {
 // ============================================
 
 // In-memory cache for orgId lookups (per-request lifecycle)
-// Note: intentionally short-lived — serverless cold starts clear this automatically
 const orgIdCache = new Map<string, string>();
 
 /**
@@ -413,11 +411,6 @@ const orgIdCache = new Map<string, string>();
  * - Caches lookups in memory for the duration of the request
  */
 export async function resolveOrgId(user: AuthUser): Promise<string> {
-  // Fast path: orgId is embedded in the JWT (new logins)
-  if (user.orgId) {
-    return user.orgId;
-  }
-
   const cacheKey = user.userId;
 
   // Check cache first
@@ -431,6 +424,7 @@ export async function resolveOrgId(user: AuthUser): Promise<string> {
     const userDoc = await db.collection('users').doc(user.userId).get();
 
     if (!userDoc.exists) {
+      // User doc doesn't exist, fall back to userId
       orgIdCache.set(cacheKey, user.userId);
       return user.userId;
     }
@@ -438,10 +432,13 @@ export async function resolveOrgId(user: AuthUser): Promise<string> {
     const userData = userDoc.data();
     const orgId = userData?.orgId || user.userId;
 
+    // Cache the result
     orgIdCache.set(cacheKey, orgId);
+
     return orgId;
   } catch (error) {
     console.error('Error resolving orgId:', error);
+    // On error, fall back to userId for backwards compatibility
     return user.userId;
   }
 }

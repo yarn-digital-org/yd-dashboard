@@ -1,7 +1,13 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { adminDb } from '@/lib/firebase-admin';
-import { withAuth, successResponse, validateBody, requireDb, AuthUser } from '@/lib/api-middleware';
+import {
+  withAuth,
+  successResponse,
+  validateBody,
+  requireDb,
+  AuthUser,
+} from '@/lib/api-middleware';
 import { COLLECTIONS } from '@/types';
 
 const YARN_ORG_ID = 'org_yarn_digital';
@@ -19,7 +25,11 @@ async function handleGet(
   context: { params: Promise<Record<string, string>>; user: AuthUser }
 ) {
   const db = requireDb();
-  const snapshot = await db.collection(COLLECTIONS.OUTREACH_TEMPLATES).where('userId', '==', YARN_ORG_ID).get();
+  const { user } = context;
+  const snapshot = await db
+    .collection(COLLECTIONS.OUTREACH_TEMPLATES)
+    .where('userId', '==', YARN_ORG_ID)
+    .get();
   const templates = snapshot.docs
     .map(doc => ({ id: doc.id, ...doc.data() }))
     .sort((a: any, b: any) => (b.createdAt > a.createdAt ? 1 : -1));
@@ -31,15 +41,21 @@ async function handlePost(
   context: { params: Promise<Record<string, string>>; user: AuthUser }
 ) {
   const db = requireDb();
+  const { user } = context;
   const data = await validateBody(request, createTemplateSchema);
   const now = new Date().toISOString();
+
   const template = {
     userId: YARN_ORG_ID,
-    sector: data.sector, channel: data.channel,
-    subject: data.subject.trim(), body: data.body.trim(),
+    sector: data.sector,
+    channel: data.channel,
+    subject: data.subject.trim(),
+    body: data.body.trim(),
     tailoredServices: data.tailoredServices?.trim() || null,
-    createdAt: now, updatedAt: now,
+    createdAt: now,
+    updatedAt: now,
   };
+
   const docRef = await db.collection(COLLECTIONS.OUTREACH_TEMPLATES).add(template);
   return successResponse({ id: docRef.id, ...template }, 201);
 }

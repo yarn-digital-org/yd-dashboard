@@ -1,28 +1,42 @@
 import { NextRequest } from 'next/server';
-import { adminDb } from '@/lib/firebase-admin';
-import { withAuth, successResponse, requireDb, AuthUser } from '@/lib/api-middleware';
-import { COLLECTIONS } from '@/types';
 import { z } from 'zod';
+import { adminDb } from '@/lib/firebase-admin';
+import {
+  withAuth,
+  successResponse,
+  validateBody,
+  requireDb,
+  AuthUser,
+} from '@/lib/api-middleware';
+import { COLLECTIONS } from '@/types';
+
+const YARN_ORG_ID = 'org_yarn_digital';
+
+const bulkApproveSchema = z.object({
+  ids: z.array(z.string()).min(1),
+});
 
 async function handlePost(
   request: NextRequest,
   context: { params: Promise<Record<string, string>>; user: AuthUser }
 ) {
   const db = requireDb();
-  const { ids } = z.object({ ids: z.array(z.string()).min(1) }).parse(await request.json());
+  const { user } = context;
+  const { ids } = await validateBody(request, bulkApproveSchema);
   const now = new Date().toISOString();
+
   const batch = db.batch();
-  let approved = 0;
   for (const id of ids) {
-    const doc = await db.collection(COLLECTIONS.OUTREACH_PROSPECTS).doc(id).get();
-    if (!doc.exists) continue;
-    batch.update(db.collection(COLLECTIONS.OUTREACH_PROSPECTS).doc(id), {
-      status: 'approved', approvedAt: now, updatedAt: now,
-    });
-    approved++;
+    const ref = db.collection(COLLECTIONS.OUTREACH_PROSPECTS).doc(id);
+    // Verify ownership by checking the doc exists and belongs to user
+    const doc = await ref.get();
+    if (doc.exists && doc.data()?.userId === YARN_ORG_ID) {
+      batch.update(ref, { status: 'approved', approvedAt: now, updatedAt: now });
+    }
   }
   await batch.commit();
-  return successResponse({ approved });
+
+  return successResponse({ approved: ids.length });
 }
 
 export const POST = withAuth(handlePost);

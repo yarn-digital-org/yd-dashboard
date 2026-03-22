@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { adminDb } from '@/lib/firebase-admin';
 import {
@@ -10,12 +10,18 @@ import {
 } from '@/lib/api-middleware';
 import { COLLECTIONS } from '@/types';
 
-// Org ID shared across all Yarn Digital team accounts
+// All outreach data is shared across the Yarn Digital team
 const YARN_ORG_ID = 'org_yarn_digital';
 
 export type OutreachStatus =
-  | 'identified' | 'pending_approval' | 'approved' | 'sent'
-  | 'replied' | 'call_booked' | 'closed' | 'not_interested';
+  | 'identified'
+  | 'pending_approval'
+  | 'approved'
+  | 'sent'
+  | 'replied'
+  | 'call_booked'
+  | 'closed'
+  | 'not_interested';
 
 const createProspectSchema = z.object({
   company: z.string().min(1),
@@ -35,11 +41,11 @@ async function handleGet(
   context: { params: Promise<Record<string, string>>; user: AuthUser }
 ) {
   const db = requireDb();
+  const { user } = context;
   const { searchParams } = new URL(request.url);
   const statusFilter = searchParams.get('status');
   const sectorFilter = searchParams.get('sector');
 
-  // Query by org ID — all team members share this scope
   let query: FirebaseFirestore.Query = db
     .collection(COLLECTIONS.OUTREACH_PROSPECTS)
     .where('userId', '==', YARN_ORG_ID);
@@ -79,6 +85,7 @@ async function handlePost(
   context: { params: Promise<Record<string, string>>; user: AuthUser }
 ) {
   const db = requireDb();
+  const { user } = context;
   const data = await validateBody(request, createProspectSchema);
   const now = new Date().toISOString();
 
@@ -94,8 +101,11 @@ async function handlePost(
     painPoint: data.painPoint.trim(),
     notes: data.notes?.trim() || null,
     status: data.status || 'identified',
-    approvedAt: null, sentAt: null, repliedAt: null,
-    createdAt: now, updatedAt: now,
+    approvedAt: null,
+    sentAt: null,
+    repliedAt: null,
+    createdAt: now,
+    updatedAt: now,
   };
 
   const docRef = await db.collection(COLLECTIONS.OUTREACH_PROSPECTS).add(prospect);

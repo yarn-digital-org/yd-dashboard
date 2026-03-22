@@ -101,9 +101,20 @@ const DEFAULT_TEMPLATE_FORM = {
   subject: '', body: '', tailoredServices: '',
 };
 
+// ─── Decode HTML entities from Firestore strings ──────────
+function decodeEntities(str: string): string {
+  return str
+    .replace(/&#x2F;/gi, '/')
+    .replace(/&#x27;/gi, "'")
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"');
+}
+
 // ─── Personalise template ─────────────────────────────────
 function personalise(text: string, prospect: Prospect): string {
-  return text
+  return decodeEntities(text)
     .replace(/\[Name\]/g, prospect.decisionMaker)
     .replace(/\[name\]/g, prospect.decisionMaker)
     .replace(/\[Firm name\]/g, prospect.company)
@@ -494,12 +505,16 @@ export default function OutreachPage() {
                                 <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleSelect(p.id)} className="rounded border-gray-300" />
                               </td>
                               <td className="px-4 py-3">
-                                <div className="font-semibold text-gray-900">{p.company}</div>
-                                {p.website && (
-                                  <a href={p.website.startsWith('http') ? p.website : `https://${p.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#FF3300] hover:underline text-xs font-medium mt-0.5">
-                                    <Globe size={10} />{p.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}<ExternalLink size={10} />
-                                  </a>
-                                )}
+                                <div className="font-semibold text-gray-900">{decodeEntities(p.company)}</div>
+                                {p.website && (() => {
+                                  const url = decodeEntities(p.website);
+                                  const href = url.startsWith('http') ? url : `https://${url}`;
+                                  return (
+                                    <a href={href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#FF3300] hover:underline text-xs font-medium mt-0.5">
+                                      <Globe size={10} />{url.replace(/^https?:\/\//, '').replace(/\/$/, '')}<ExternalLink size={10} />
+                                    </a>
+                                  );
+                                })()}
                                 {/* Draft status pill */}
                                 <div className="mt-1">
                                   {p.draftMessage ? (

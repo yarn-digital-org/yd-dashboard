@@ -34,6 +34,7 @@ const publicRoutes = [
   '/unsubscribe',
   '/subscribe-confirm',
   '/blog',
+  '/articles',
 ];
 
 // API routes that don't require authentication

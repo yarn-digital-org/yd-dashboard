@@ -15,7 +15,7 @@ import {
 // ─── Types ───────────────────────────────────────────────
 type OutreachStatus =
   | 'identified' | 'pending_approval' | 'approved' | 'sent'
-  | 'replied' | 'call_booked' | 'closed' | 'not_interested';
+  | 'replied' | 'call_booked' | 'closed' | 'not_interested' | 'rejected';
 
 type ContactMethod = 'email' | 'linkedin' | 'instagram' | 'phone';
 type TemplateChannel = 'email' | 'linkedin' | 'instagram';
@@ -77,6 +77,7 @@ const STATUS_CONFIG: Record<OutreachStatus, { label: string; color: string; bg: 
   call_booked:      { label: 'Call Booked',        color: '#065F46', bg: '#D1FAE5' },
   closed:           { label: 'Closed',             color: '#1E3A5F', bg: '#DBEAFE' },
   not_interested:   { label: 'Not Interested',     color: '#DC2626', bg: '#FEF2F2' },
+  rejected:         { label: 'Rejected',           color: '#9CA3AF', bg: '#F3F4F6' },
 };
 
 const CHANNEL_CONFIG: Record<TemplateChannel, { label: string; color: string }> = {
@@ -128,7 +129,7 @@ export default function OutreachPage() {
   const [stats, setStats] = useState<ProspectStats | null>(null);
   const [loadingProspects, setLoadingProspects] = useState(true);
   const [prospectsError, setProspectsError] = useState('');
-  const [statusFilter, setStatusFilter] = useState<OutreachStatus | ''>('');
+  const [statusFilter, setStatusFilter] = useState<OutreachStatus | '' | 'unsent'>('unsent');
   const [sectorFilter, setSectorFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -198,14 +199,21 @@ export default function OutreachPage() {
   }, [user, activeTab, fetchTemplates]);
 
   const filteredProspects = prospects.filter(p => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      p.company.toLowerCase().includes(q) ||
-      p.sector.toLowerCase().includes(q) ||
-      p.decisionMaker.toLowerCase().includes(q) ||
-      p.painPoint.toLowerCase().includes(q)
-    );
+    // Default "unsent" filter: hide sent, closed, not_interested, rejected
+    if (statusFilter === 'unsent') {
+      if (['sent', 'closed', 'not_interested', 'rejected'].includes(p.status)) return false;
+    }
+    // Search filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      if (!(
+        p.company.toLowerCase().includes(q) ||
+        p.sector.toLowerCase().includes(q) ||
+        p.decisionMaker.toLowerCase().includes(q) ||
+        p.painPoint.toLowerCase().includes(q)
+      )) return false;
+    }
+    return true;
   });
 
   // ── Draft helpers ──
@@ -502,9 +510,11 @@ export default function OutreachPage() {
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search prospects..." className="pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300] w-56" />
               </div>
-              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as OutreachStatus | '')} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300]">
-                <option value="">All Statuses</option>
+              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as OutreachStatus | '' | 'unsent')} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300]">
+                <option value="unsent">Unsent</option>
+                <option value="">All</option>
                 {(Object.keys(STATUS_CONFIG) as OutreachStatus[]).map(s => <option key={s} value={s}>{STATUS_CONFIG[s].label}</option>)}
+                <option value="rejected">Rejected</option>
               </select>
               <select value={sectorFilter} onChange={e => setSectorFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300]">
                 <option value="">All Sectors</option>
@@ -610,23 +620,42 @@ export default function OutreachPage() {
 
                                   {/* Approve only (no send) */}
                                   {(p.status === 'identified' || p.status === 'pending_approval') && (
-                                    <button
-                                      onClick={async () => {
-                                        setActionLoading(p.id + '-approve-only');
-                                        await fetch(`/api/outreach/prospects/${p.id}`, {
-                                          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                                          body: JSON.stringify({ action: 'approve' }),
-                                        });
-                                        setActionLoading(null);
-                                        fetchProspects();
-                                      }}
-                                      disabled={!!actionLoading}
-                                      title="Approve without sending — send later"
-                                      className="px-2.5 py-1 bg-blue-600 text-white rounded-md text-xs font-medium hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-1"
-                                    >
-                                      {actionLoading === p.id + '-approve-only' ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
-                                      Approve
-                                    </button>
+                                    <>
+                                      <button
+                                        onClick={async () => {
+                                          setActionLoading(p.id + '-approve-only');
+                                          await fetch(`/api/outreach/prospects/${p.id}`, {
+                                            method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ action: 'approve' }),
+                                          });
+                                          setActionLoading(null);
+                                          fetchProspects();
+                                        }}
+                                        disabled={!!actionLoading}
+                                        title="Approve without sending — send later"
+                                        className="px-2.5 py-1 bg-blue-600 text-white rounded-md text-xs font-medium hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-1"
+                                      >
+                                        {actionLoading === p.id + '-approve-only' ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
+                                        Approve
+                                      </button>
+                                      <button
+                                        onClick={async () => {
+                                          setActionLoading(p.id + '-reject');
+                                          await fetch(`/api/outreach/prospects/${p.id}`, {
+                                            method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ status: 'rejected' }),
+                                          });
+                                          setActionLoading(null);
+                                          fetchProspects();
+                                        }}
+                                        disabled={!!actionLoading}
+                                        title="Reject — hide from default view, revisit later"
+                                        className="px-2.5 py-1 bg-gray-200 text-gray-600 rounded-md text-xs font-medium hover:bg-gray-300 transition disabled:opacity-50 flex items-center gap-1"
+                                      >
+                                        {actionLoading === p.id + '-reject' ? <Loader2 size={11} className="animate-spin" /> : <X size={11} />}
+                                        Reject
+                                      </button>
+                                    </>
                                   )}
 
                                   {/* Send — for approved prospects */}

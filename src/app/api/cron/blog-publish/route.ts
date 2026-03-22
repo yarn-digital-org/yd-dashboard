@@ -171,13 +171,17 @@ export async function POST(request: NextRequest) {
       const fields = await blogCollection.getFields();
       const fieldMap: Record<string, string> = {};
       const fieldTypeMap: Record<string, string> = {};
+      const allFields: Array<{name: string; id: string; type: string}> = [];
       for (const f of fields) {
         const name = (f.name || '').toLowerCase().replace(/\s+/g, '');
+        allFields.push({ name: f.name || name, id: f.id, type: f.type || 'unknown' });
         // Skip slug — Framer manages slug at item level, not as a fieldData entry
         if (name === 'slug') continue;
         fieldMap[name] = f.id;
         fieldTypeMap[f.id] = f.type || 'string';
       }
+      (globalThis as any).__blogPublishFieldMap = fieldMap;
+      (globalThis as any).__blogPublishFieldTypes = allFields;
 
       // Helper: wrap a value in the correct Framer FieldDataEntryInput shape
       function wrapFieldValue(fieldId: string, value: string): Record<string, unknown> {
@@ -286,6 +290,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: error.message || 'Failed to publish blog posts',
+      debug: { fieldMap: (globalThis as any).__blogPublishFieldMap, fieldTypes: (globalThis as any).__blogPublishFieldTypes },
     }, { status: 500 });
   }
 }

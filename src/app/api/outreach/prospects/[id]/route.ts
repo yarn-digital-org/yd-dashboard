@@ -116,5 +116,5 @@ async function handleDelete(
 }
 
 export const GET = withAuth(handleGet);
-export const PATCH = withAuth(handlePatch);
-export const DELETE = withAuth(handleDelete);
+export const PATCH = withAuth(handlePatch, { skipCSRF: true });
+export const DELETE = withAuth(handleDelete, { skipCSRF: true });

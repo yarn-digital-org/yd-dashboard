@@ -81,4 +81,4 @@ async function handlePost(
   });
 }
 
-export const POST = withAuth(handlePost);
+export const POST = withAuth(handlePost, { skipCSRF: true });

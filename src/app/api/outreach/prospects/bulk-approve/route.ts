@@ -39,4 +39,4 @@ async function handlePost(
   return successResponse({ approved: ids.length });
 }
 
-export const POST = withAuth(handlePost);
+export const POST = withAuth(handlePost, { skipCSRF: true });

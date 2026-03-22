@@ -114,4 +114,4 @@ async function handlePost(
 }
 
 export const GET = withAuth(handleGet);
-export const POST = withAuth(handlePost);
+export const POST = withAuth(handlePost, { skipCSRF: true });

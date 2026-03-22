@@ -42,6 +42,21 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      // Canonical blog slug redirects — avoid duplicate indexing
+      {
+        source: '/articles/custom-vs-template-website',
+        destination: '/articles/custom-website-vs-template-belfast',
+        permanent: true,
+      },
+      {
+        source: '/articles/how-long-to-build-a-website',
+        destination: '/articles/how-long-to-build-website-belfast',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

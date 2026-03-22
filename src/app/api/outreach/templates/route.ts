@@ -5,12 +5,13 @@ import {
   withAuth,
   successResponse,
   validateBody,
+  resolveOrgId,
   requireDb,
   AuthUser,
 } from '@/lib/api-middleware';
 import { COLLECTIONS } from '@/types';
 
-const YARN_ORG_ID = 'org_yarn_digital';
+const orgId = orgId;
 
 const createTemplateSchema = z.object({
   sector: z.string().min(1),
@@ -25,10 +26,11 @@ async function handleGet(
   context: { params: Promise<Record<string, string>>; user: AuthUser }
 ) {
   const db = requireDb();
+  const orgId = await resolveOrgId(context.user);
   const { user } = context;
   const snapshot = await db
     .collection(COLLECTIONS.OUTREACH_TEMPLATES)
-    .where('userId', '==', YARN_ORG_ID)
+    .where('userId', '==', orgId)
     .get();
   const templates = snapshot.docs
     .map(doc => ({ id: doc.id, ...doc.data() }))
@@ -41,12 +43,13 @@ async function handlePost(
   context: { params: Promise<Record<string, string>>; user: AuthUser }
 ) {
   const db = requireDb();
+  const orgId = await resolveOrgId(context.user);
   const { user } = context;
   const data = await validateBody(request, createTemplateSchema);
   const now = new Date().toISOString();
 
   const template = {
-    userId: YARN_ORG_ID,
+    userId: orgId,
     sector: data.sector,
     channel: data.channel,
     subject: data.subject.trim(),

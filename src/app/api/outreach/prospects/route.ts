@@ -5,13 +5,12 @@ import {
   withAuth,
   successResponse,
   validateBody,
+  resolveOrgId,
   requireDb,
   AuthUser,
 } from '@/lib/api-middleware';
 import { COLLECTIONS } from '@/types';
 
-// All outreach data is shared across the Yarn Digital team
-const YARN_ORG_ID = 'org_yarn_digital';
 
 export type OutreachStatus =
   | 'identified'
@@ -41,6 +40,7 @@ async function handleGet(
   context: { params: Promise<Record<string, string>>; user: AuthUser }
 ) {
   const db = requireDb();
+  const orgId = await resolveOrgId(context.user);
   const { user } = context;
   const { searchParams } = new URL(request.url);
   const statusFilter = searchParams.get('status');
@@ -48,12 +48,12 @@ async function handleGet(
 
   let query: FirebaseFirestore.Query = db
     .collection(COLLECTIONS.OUTREACH_PROSPECTS)
-    .where('userId', '==', YARN_ORG_ID);
+    .where('userId', '==', orgId);
 
   if (statusFilter) {
     query = db
       .collection(COLLECTIONS.OUTREACH_PROSPECTS)
-      .where('userId', '==', YARN_ORG_ID)
+      .where('userId', '==', orgId)
       .where('status', '==', statusFilter);
   }
 
@@ -85,12 +85,13 @@ async function handlePost(
   context: { params: Promise<Record<string, string>>; user: AuthUser }
 ) {
   const db = requireDb();
+  const orgId = await resolveOrgId(context.user);
   const { user } = context;
   const data = await validateBody(request, createProspectSchema);
   const now = new Date().toISOString();
 
   const prospect = {
-    userId: YARN_ORG_ID,
+    userId: orgId,
     company: data.company.trim(),
     sector: data.sector,
     website: data.website.trim(),

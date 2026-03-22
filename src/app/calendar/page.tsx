@@ -84,7 +84,7 @@ export default function CalendarPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const isMobile = useIsMobile();
-  const { events, loading, error, connectionStatus, refetch } = useCalendarEvents();
+  const { events, loading, error, connectionStatus, refetch, accounts, toggleAccount } = useCalendarEvents();
 
   const [currentView, setCurrentView] = useState<ViewType>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -719,6 +719,43 @@ export default function CalendarPage() {
             </button>
           </div>
         </div>
+
+        {/* Multi-account toggle panel */}
+        {connectionStatus === 'connected' && accounts.length > 1 && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '0.5rem',
+            padding: '0.5rem 1rem', borderBottom: '1px solid #F3F4F6',
+            backgroundColor: '#FAFAFA', flexWrap: 'wrap',
+          }}>
+            <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Calendars:
+            </span>
+            {accounts.map(account => (
+              <button
+                key={account.email}
+                onClick={() => toggleAccount(account.email)}
+                title={account.email}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '5px',
+                  padding: '3px 10px', borderRadius: '999px', cursor: 'pointer',
+                  border: `2px solid ${account.color}`,
+                  backgroundColor: account.enabled ? account.color : 'transparent',
+                  color: account.enabled ? '#fff' : account.color,
+                  fontSize: '0.72rem', fontWeight: 600,
+                  transition: 'all 0.15s ease',
+                  opacity: account.enabled ? 1 : 0.6,
+                }}
+              >
+                <span style={{
+                  width: 7, height: 7, borderRadius: '50%',
+                  backgroundColor: account.enabled ? '#fff' : account.color,
+                  flexShrink: 0,
+                }} />
+                {account.displayName || account.email.split('@')[0]}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Calendar Body */}
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>

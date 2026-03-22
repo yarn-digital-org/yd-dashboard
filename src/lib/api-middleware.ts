@@ -402,6 +402,7 @@ export function requireDb() {
 // ============================================
 
 // In-memory cache for orgId lookups (per-request lifecycle)
+// Note: intentionally short-lived — serverless cold starts clear this automatically
 const orgIdCache = new Map<string, string>();
 
 /**

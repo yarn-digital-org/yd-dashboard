@@ -431,6 +431,28 @@ export default function OutreachPage() {
                     Approve Selected ({selectedIds.size})
                   </button>
                 )}
+                {stats && stats.approved > 0 && (
+                  <button
+                    onClick={async () => {
+                      const approved = prospects.filter(p => p.status === 'approved' && p.draftMessage);
+                      if (!approved.length) return;
+                      if (!window.confirm(`Send ${approved.length} approved email(s) now?`)) return;
+                      setBulkApproving(true);
+                      for (const p of approved) {
+                        try {
+                          await fetch(`/api/outreach/prospects/${p.id}/send`, { method: 'POST' });
+                        } catch { /* continue */ }
+                      }
+                      setBulkApproving(false);
+                      fetchProspects();
+                    }}
+                    disabled={bulkApproving}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#FF3300] text-white rounded-lg font-medium text-sm hover:bg-[#E62E00] transition disabled:opacity-50"
+                  >
+                    {bulkApproving ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                    Send All Approved ({stats.approved})
+                  </button>
+                )}
                 <button onClick={openCreateProspect} className="flex items-center gap-2 px-4 py-2 bg-[#FF3300] text-white rounded-lg font-medium text-sm hover:bg-[#E62E00] transition">
                   <Plus size={16} /> Add Prospect
                 </button>
@@ -586,20 +608,50 @@ export default function OutreachPage() {
                                     {isDraftOpen ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
                                   </button>
 
-                                  {/* Approve & Send */}
+                                  {/* Approve only (no send) */}
                                   {(p.status === 'identified' || p.status === 'pending_approval') && (
                                     <button
+                                      onClick={async () => {
+                                        setActionLoading(p.id + '-approve-only');
+                                        await fetch(`/api/outreach/prospects/${p.id}`, {
+                                          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                                          body: JSON.stringify({ action: 'approve' }),
+                                        });
+                                        setActionLoading(null);
+                                        fetchProspects();
+                                      }}
+                                      disabled={!!actionLoading}
+                                      title="Approve without sending — send later"
+                                      className="px-2.5 py-1 bg-blue-600 text-white rounded-md text-xs font-medium hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-1"
+                                    >
+                                      {actionLoading === p.id + '-approve-only' ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
+                                      Approve
+                                    </button>
+                                  )}
+
+                                  {/* Send — for approved prospects */}
+                                  {p.status === 'approved' && p.draftMessage && (
+                                    <button
+                                      onClick={() => handleSend(p)}
+                                      disabled={!!actionLoading}
+                                      title={p.contactMethod === 'email' ? `Send email to ${p.contactValue}` : `Mark as sent via ${p.contactMethod}`}
+                                      className="px-2.5 py-1 bg-[#FF3300] text-white rounded-md text-xs font-medium hover:bg-[#E62E00] transition disabled:opacity-50 flex items-center gap-1"
+                                    >
+                                      {actionLoading === p.id + '-send' ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
+                                      {p.contactMethod === 'email' ? 'Send Email' : 'Mark Sent'}
+                                    </button>
+                                  )}
+
+                                  {/* Approve & Send combined — for identified prospects with drafts */}
+                                  {(p.status === 'identified' || p.status === 'pending_approval') && p.draftMessage && (
+                                    <button
                                       onClick={() => handleApprove(p)}
-                                      disabled={actionLoading === p.id}
-                                      title={p.draftMessage ? `Approve & ${p.contactMethod === 'email' ? 'send email to ' + p.contactValue : 'mark sent via ' + p.contactMethod}` : 'Save a draft first'}
-                                      className={`px-2.5 py-1 rounded-md text-xs font-medium transition flex items-center gap-1 disabled:opacity-50 ${
-                                        p.draftMessage
-                                          ? 'bg-[#FF3300] text-white hover:bg-[#E62E00]'
-                                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                      }`}
+                                      disabled={!!actionLoading}
+                                      title={`Approve and ${p.contactMethod === 'email' ? 'send email' : 'mark sent'} immediately`}
+                                      className="px-2.5 py-1 bg-[#FF3300] text-white rounded-md text-xs font-medium hover:bg-[#E62E00] transition disabled:opacity-50 flex items-center gap-1"
                                     >
                                       {actionLoading === p.id ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
-                                      {p.draftMessage ? (p.contactMethod === 'email' ? 'Approve & Send' : 'Approve & Mark Sent') : 'Draft needed'}
+                                      Approve &amp; Send
                                     </button>
                                   )}
 
@@ -612,7 +664,7 @@ export default function OutreachPage() {
 
                                   {/* Promote to lead */}
                                   {(p.status === 'replied' || p.status === 'call_booked') && (
-                                    <button onClick={() => handlePromoteToLead(p.id)} disabled={actionLoading === p.id + '-promote'} title="Promote to Lead" className="px-2.5 py-1 bg-emerald-600 text-white rounded-md text-xs font-medium hover:bg-emerald-700 transition disabled:opacity-50 flex items-center gap-1">
+                                    <button onClick={() => handlePromoteToLead(p.id)} disabled={!!actionLoading} title="Promote to Lead" className="px-2.5 py-1 bg-emerald-600 text-white rounded-md text-xs font-medium hover:bg-emerald-700 transition disabled:opacity-50 flex items-center gap-1">
                                       {actionLoading === p.id + '-promote' ? <Loader2 size={11} className="animate-spin" /> : <TrendingUp size={11} />} → Lead
                                     </button>
                                   )}

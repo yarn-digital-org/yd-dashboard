@@ -170,9 +170,23 @@ export async function POST(request: NextRequest) {
 
       const fields = await blogCollection.getFields();
       const fieldMap: Record<string, string> = {};
+      const fieldTypeMap: Record<string, string> = {};
       for (const f of fields) {
         const name = (f.name || '').toLowerCase().replace(/\s+/g, '');
         fieldMap[name] = f.id;
+        fieldTypeMap[f.id] = f.type || 'string';
+      }
+
+      // Helper: wrap a value in the correct Framer FieldDataEntryInput shape
+      function wrapFieldValue(fieldId: string, value: string): Record<string, unknown> {
+        const type = fieldTypeMap[fieldId] || 'string';
+        if (type === 'formattedText') {
+          return { type: 'formattedText', value, contentType: 'html' };
+        }
+        if (type === 'date') {
+          return { type: 'date', value };
+        }
+        return { type: 'string', value };
       }
 
       // Get existing slugs to avoid duplicates
@@ -194,34 +208,35 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Build field data
+        // Build field data — each value must be wrapped per Framer FieldDataEntryInput spec
         const fieldData: Record<string, any> = {};
 
         const titleFieldId = fieldMap.title || fieldMap.name || fieldMap.headline;
-        if (titleFieldId) fieldData[titleFieldId] = post.title;
+        if (titleFieldId) fieldData[titleFieldId] = wrapFieldValue(titleFieldId, post.title);
 
         const bodyFieldId = fieldMap.content || fieldMap.body || fieldMap.text || fieldMap.article;
-        if (bodyFieldId) fieldData[bodyFieldId] = markdownToHtml(stripBriefMetadata(post.content));
+        if (bodyFieldId) fieldData[bodyFieldId] = wrapFieldValue(bodyFieldId, markdownToHtml(stripBriefMetadata(post.content)));
 
         const excerptFieldId = fieldMap.excerpt || fieldMap.description || fieldMap.summary || fieldMap.subtitle;
-        if (excerptFieldId) fieldData[excerptFieldId] = post.excerpt || '';
+        if (excerptFieldId) fieldData[excerptFieldId] = wrapFieldValue(excerptFieldId, post.excerpt || '');
 
         const authorFieldId = fieldMap.author || fieldMap.writer;
-        if (authorFieldId) fieldData[authorFieldId] = post.author || 'Yarn Digital';
+        if (authorFieldId) fieldData[authorFieldId] = wrapFieldValue(authorFieldId, post.author || 'Yarn Digital');
 
         const dateFieldId = fieldMap.date || fieldMap.publishedat || fieldMap.publishdate || fieldMap.published;
-        if (dateFieldId) fieldData[dateFieldId] = post.publishDate || post.publishedAt || now;
+        if (dateFieldId) fieldData[dateFieldId] = wrapFieldValue(dateFieldId, post.publishDate || post.publishedAt || now);
 
         const tagFieldId = fieldMap.tags || fieldMap.category || fieldMap.categories;
         if (tagFieldId && post.tags) {
-          fieldData[tagFieldId] = Array.isArray(post.tags) ? post.tags.join(', ') : post.tags;
+          const tagValue = Array.isArray(post.tags) ? post.tags.join(', ') : post.tags;
+          fieldData[tagFieldId] = wrapFieldValue(tagFieldId, tagValue);
         }
 
         const metaTitleFieldId = fieldMap.metatitle || fieldMap.seotitle;
-        if (metaTitleFieldId) fieldData[metaTitleFieldId] = post.metaTitle || post.title;
+        if (metaTitleFieldId) fieldData[metaTitleFieldId] = wrapFieldValue(metaTitleFieldId, post.metaTitle || post.title);
 
         const metaDescFieldId = fieldMap.metadescription || fieldMap.seodescription;
-        if (metaDescFieldId) fieldData[metaDescFieldId] = post.metaDescription || post.excerpt || '';
+        if (metaDescFieldId) fieldData[metaDescFieldId] = wrapFieldValue(metaDescFieldId, post.metaDescription || post.excerpt || '');
 
         console.log(`[blog-publish] Publishing: "${post.title}" (${post.slug})`);
 

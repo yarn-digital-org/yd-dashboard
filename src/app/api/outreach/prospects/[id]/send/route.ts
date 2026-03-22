@@ -66,10 +66,11 @@ async function handlePost(
 
     return successResponse({
       sent: true,
-      via: 'email',
-      to,
-      fallback: result.fallback || false,
-      messageId: result.messageId,
+      via: 'email' as string,
+      to: to as string,
+      manual: false,
+      messageId: (result.messageId || null) as string | null,
+      note: result.fallback ? 'Sent via fallback' : 'Sent via Resend',
     });
   }
 
@@ -83,8 +84,10 @@ async function handlePost(
 
   return successResponse({
     sent: true,
-    via: prospect.contactMethod,
+    via: prospect.contactMethod as string,
+    to: prospect.contactValue as string,
     manual: true,
+    messageId: null as string | null,
     note: `Mark as sent manually via ${prospect.contactMethod}. Contact: ${prospect.contactValue}`,
   });
 }

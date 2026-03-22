@@ -515,7 +515,6 @@ export default function OutreachPage() {
                 <option value="unsent">Unsent</option>
                 <option value="">All</option>
                 {(Object.keys(STATUS_CONFIG) as OutreachStatus[]).map(s => <option key={s} value={s}>{STATUS_CONFIG[s].label}</option>)}
-                <option value="rejected">Rejected</option>
               </select>
               <select value={sectorFilter} onChange={e => setSectorFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300]">
                 <option value="">All Sectors</option>

@@ -15,6 +15,54 @@ import { adminDb } from '@/lib/firebase-admin';
  *   { "crons": [{ "path": "/api/cron/blog-publish", "schedule": "0 9 * * *" }] }
  */
 
+/**
+ * Strip SEO brief metadata block from content.
+ * Agents sometimes prepend a structured brief (Slug, Publish date, Primary keyword, etc.)
+ * before the actual article content. This function removes it so it never appears on the live site.
+ * 
+ * Pattern: Lines starting with **Key:** at the top of the document, followed by a blank line,
+ * followed by the real content (usually starting with a paragraph or ---).
+ */
+function stripBriefMetadata(content: string): string {
+  const lines = content.split('\n');
+  
+  // Detect if document starts with a metadata block
+  // Metadata lines match: **Key:** value (bold key: value pattern)
+  const metaPattern = /^\*\*[A-Za-z ]+:\*\*/;
+  
+  // Find the first line — if it's not a metadata line, content is clean
+  const firstNonEmpty = lines.find(l => l.trim());
+  if (!firstNonEmpty || !metaPattern.test(firstNonEmpty)) {
+    return content;
+  }
+  
+  // Find where metadata ends: first line after 2+ consecutive blank lines following meta block,
+  // or first line that doesn't match meta pattern after the meta block
+  let inMeta = true;
+  let contentStartIdx = 0;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (inMeta) {
+      if (line.trim() === '' && i > 0) {
+        // Blank line — check if next non-empty line is still metadata
+        let nextNonEmpty = -1;
+        for (let j = i + 1; j < lines.length; j++) {
+          if (lines[j].trim()) { nextNonEmpty = j; break; }
+        }
+        if (nextNonEmpty === -1 || !metaPattern.test(lines[nextNonEmpty])) {
+          // Next non-empty line is real content
+          inMeta = false;
+          contentStartIdx = nextNonEmpty === -1 ? lines.length : nextNonEmpty;
+          break;
+        }
+      }
+    }
+  }
+  
+  return lines.slice(contentStartIdx).join('\n').trim();
+}
+
 // Lightweight markdown → HTML for Framer formattedText fields
 function markdownToHtml(md: string): string {
   let html = md
@@ -153,7 +201,7 @@ export async function POST(request: NextRequest) {
         if (titleFieldId) fieldData[titleFieldId] = post.title;
 
         const bodyFieldId = fieldMap.content || fieldMap.body || fieldMap.text || fieldMap.article;
-        if (bodyFieldId) fieldData[bodyFieldId] = markdownToHtml(post.content);
+        if (bodyFieldId) fieldData[bodyFieldId] = markdownToHtml(stripBriefMetadata(post.content));
 
         const excerptFieldId = fieldMap.excerpt || fieldMap.description || fieldMap.summary || fieldMap.subtitle;
         if (excerptFieldId) fieldData[excerptFieldId] = post.excerpt || '';

@@ -8,19 +8,33 @@ import { google, drive_v3 } from 'googleapis';
 import { adminDb } from '@/lib/firebase-admin';
 
 function parseCredentialsJson(raw: string) {
+  // Strip BOM and carriage returns that corrupt JSON parsing
+  const cleaned = raw.replace(/^\uFEFF/, '').replace(/\r/g, '');
   try {
-    return JSON.parse(raw);
+    return JSON.parse(cleaned);
   } catch {
-    // Handle case where private_key has literal newlines instead of \n
-    const fixed = raw.replace(/\\n/g, '\n');
+    // Handle case where private_key has literal \n sequences that need to be actual newlines
+    const fixed = cleaned.replace(/\\n/g, '\n');
     try {
       return JSON.parse(fixed);
     } catch {
-      // Last resort: fix unescaped newlines inside the JSON string value
-      const fixed2 = raw.replace(/("private_key"\s*:\s*")([\s\S]*?)(")/g, (_m, pre, key, post) => {
-        return pre + key.replace(/\n/g, '\\n') + post;
+      // Fix unescaped newlines inside the private_key JSON string value
+      const fixed2 = cleaned.replace(/("private_key"\s*:\s*")([\s\S]*?)("(?:\s*,|\s*}))/g, (_m, pre, key, post) => {
+        return pre + key.replace(/\n/g, '\\n').replace(/\r/g, '') + post;
       });
-      return JSON.parse(fixed2);
+      try {
+        return JSON.parse(fixed2);
+      } catch {
+        // Last resort: re-escape the entire private key block
+        const fixed3 = cleaned.replace(/("private_key"\s*:\s*")([\s\S]*?)("(?:\s*,|\s*}))/g, (_m, pre, key, post) => {
+          const reescaped = key
+            .replace(/\r/g, '')
+            .replace(/\n/g, '\\n')
+            .replace(/\t/g, '\\t');
+          return pre + reescaped + post;
+        });
+        return JSON.parse(fixed3);
+      }
     }
   }
 }

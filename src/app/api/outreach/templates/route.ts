@@ -11,8 +11,6 @@ import {
 } from '@/lib/api-middleware';
 import { COLLECTIONS } from '@/types';
 
-const orgId = orgId;
-
 const createTemplateSchema = z.object({
   sector: z.string().min(1),
   channel: z.enum(['email', 'linkedin', 'instagram']),

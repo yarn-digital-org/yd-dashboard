@@ -37,7 +37,7 @@ async function getProspect(db: FirebaseFirestore.Firestore, id: string) {
 
 async function handleGet(
   request: NextRequest,
-  context: { params: Promise<{ id: string }>; user: AuthUser }
+  context: { params: Promise<Record<string, string>>; user: AuthUser }
 ) {
   const db = requireDb();
   const { id } = await context.params;
@@ -46,7 +46,7 @@ async function handleGet(
 
 async function handlePatch(
   request: NextRequest,
-  context: { params: Promise<{ id: string }>; user: AuthUser }
+  context: { params: Promise<Record<string, string>>; user: AuthUser }
 ) {
   const db = requireDb();
   const { id } = await context.params;
@@ -93,7 +93,7 @@ async function handlePatch(
 
 async function handleDelete(
   request: NextRequest,
-  context: { params: Promise<{ id: string }>; user: AuthUser }
+  context: { params: Promise<Record<string, string>>; user: AuthUser }
 ) {
   const db = requireDb();
   const { id } = await context.params;

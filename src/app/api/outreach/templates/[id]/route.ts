@@ -18,13 +18,13 @@ async function getTemplate(db: FirebaseFirestore.Firestore, id: string) {
   return { id: doc.id, ...doc.data() };
 }
 
-async function handleGet(request: NextRequest, context: { params: Promise<{ id: string }>; user: AuthUser }) {
+async function handleGet(request: NextRequest, context: { params: Promise<Record<string, string>>; user: AuthUser }) {
   const db = requireDb();
   const { id } = await context.params;
   return successResponse(await getTemplate(db, id));
 }
 
-async function handlePatch(request: NextRequest, context: { params: Promise<{ id: string }>; user: AuthUser }) {
+async function handlePatch(request: NextRequest, context: { params: Promise<Record<string, string>>; user: AuthUser }) {
   const db = requireDb();
   const { id } = await context.params;
   await getTemplate(db, id);
@@ -35,7 +35,7 @@ async function handlePatch(request: NextRequest, context: { params: Promise<{ id
   return successResponse({ id, ...updates });
 }
 
-async function handleDelete(request: NextRequest, context: { params: Promise<{ id: string }>; user: AuthUser }) {
+async function handleDelete(request: NextRequest, context: { params: Promise<Record<string, string>>; user: AuthUser }) {
   const db = requireDb();
   const { id } = await context.params;
   await getTemplate(db, id);

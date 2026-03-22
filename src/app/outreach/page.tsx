@@ -678,9 +678,35 @@ export default function OutreachPage() {
                                             </button>
                                           </div>
                                           {draftMode === 'edit' && (
-                                            <button onClick={() => saveDraft(p.id)} disabled={savingDraft === p.id || !draftEdits[p.id]} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FF3300] text-white rounded-lg text-xs font-medium hover:bg-[#E62E00] transition disabled:opacity-50">
-                                              {savingDraft === p.id ? <Loader2 size={11} className="animate-spin" /> : <Save size={11} />} Save Draft
-                                            </button>
+                                            <div className="flex items-center gap-2">
+                                              <button onClick={() => saveDraft(p.id)} disabled={savingDraft === p.id || !draftEdits[p.id]} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-600 text-white rounded-lg text-xs font-medium hover:bg-gray-700 transition disabled:opacity-50">
+                                                {savingDraft === p.id ? <Loader2 size={11} className="animate-spin" /> : <Save size={11} />} Save Draft
+                                              </button>
+                                              {(p.status === 'identified' || p.status === 'pending_approval') && (
+                                                <button
+                                                  onClick={async () => {
+                                                    // Save draft first, then approve+send
+                                                    if (draftEdits[p.id]) {
+                                                      setSavingDraft(p.id);
+                                                      await fetch(`/api/outreach/prospects/${p.id}`, {
+                                                        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({ draftSubject: draftEdits[p.id].subject, draftMessage: draftEdits[p.id].body }),
+                                                      });
+                                                      setSavingDraft(null);
+                                                    }
+                                                    // Fetch updated prospect with new draft, then approve
+                                                    const updatedRes = await fetch(`/api/outreach/prospects/${p.id}`);
+                                                    const updatedJson = await updatedRes.json();
+                                                    const updatedProspect = { ...p, ...(updatedJson.data || {}), draftSubject: draftEdits[p.id]?.subject || p.draftSubject, draftMessage: draftEdits[p.id]?.body || p.draftMessage };
+                                                    await handleApprove(updatedProspect);
+                                                  }}
+                                                  disabled={actionLoading === p.id || savingDraft === p.id}
+                                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FF3300] text-white rounded-lg text-xs font-medium hover:bg-[#E62E00] transition disabled:opacity-50"
+                                                >
+                                                  {actionLoading === p.id ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />} Approve &amp; Send
+                                                </button>
+                                              )}
+                                            </div>
                                           )}
                                         </div>
                                       </div>

@@ -15,7 +15,7 @@ interface Document {
   id: string;
   title: string;
   filename: string;
-  agent: 'Scout' | 'Bolt' | 'Aria' | 'Radar';
+  agent: 'Scout' | 'Bolt' | 'Aria' | 'Radar' | 'Blaze' | 'Jarvis';
   category: string;
   description: string;
   size: string;

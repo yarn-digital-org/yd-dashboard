@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { adminDb } from '@/lib/firebase-admin';
 import {
   withAuth,
+  resolveOrgId,
   successResponse,
   validateBody,
   requireDb,
@@ -28,49 +29,45 @@ const patchProspectSchema = z.object({
   draftMessage: z.string().optional(),
 });
 
-async function getProspect(db: FirebaseFirestore.Firestore, id: string, userId: string) {
+async function getProspect(db: FirebaseFirestore.Firestore, id: string, orgId: string) {
   const doc = await db.collection(COLLECTIONS.OUTREACH_PROSPECTS).doc(id).get();
   if (!doc.exists) throw new NotFoundError('Prospect not found');
   const data = doc.data()!;
-  if (data.userId !== userId) throw new ForbiddenError('Access denied');
+  if (data.userId !== orgId) throw new ForbiddenError('Access denied');
   return { id: doc.id, ...data };
 }
 
 async function handleGet(
   request: NextRequest,
-  context: { params: Promise<Record<string, string>>; user: AuthUser }
+  context: { params: Promise<{ id: string }>; user: AuthUser }
 ) {
   const db = requireDb();
-  const { user } = context;
   const { id } = await context.params;
-  const prospect = await getProspect(db, id, user.userId);
-  return successResponse(prospect);
+  const orgId = await resolveOrgId(context.user);
+  return successResponse(await getProspect(db, id, orgId));
 }
 
 async function handlePatch(
   request: NextRequest,
-  context: { params: Promise<Record<string, string>>; user: AuthUser }
+  context: { params: Promise<{ id: string }>; user: AuthUser }
 ) {
   const db = requireDb();
-  const { user } = context;
   const { id } = await context.params;
-  const prospect = await getProspect(db, id, user.userId) as any;
+  const orgId = await resolveOrgId(context.user);
+  const prospect = await getProspect(db, id, orgId) as any;
   const data = await validateBody(request, patchProspectSchema);
   const now = new Date().toISOString();
 
   if (data.action === 'approve') {
     await db.collection(COLLECTIONS.OUTREACH_PROSPECTS).doc(id).update({
-      status: 'approved',
-      approvedAt: now,
-      updatedAt: now,
+      status: 'approved', approvedAt: now, updatedAt: now,
     });
     return successResponse({ id, status: 'approved', approvedAt: now });
   }
 
   if (data.action === 'promote_to_lead') {
-    // Create inbound lead
     const lead = {
-      userId: user.userId,
+      userId: orgId,
       name: prospect.decisionMaker || prospect.company,
       email: prospect.contactMethod === 'email' ? prospect.contactValue : '',
       phone: prospect.contactMethod === 'phone' ? prospect.contactValue : undefined,
@@ -85,13 +82,11 @@ async function handlePatch(
     };
     await db.collection(COLLECTIONS.LEADS).add(lead);
     await db.collection(COLLECTIONS.OUTREACH_PROSPECTS).doc(id).update({
-      status: 'call_booked',
-      updatedAt: now,
+      status: 'call_booked', updatedAt: now,
     });
     return successResponse({ id, status: 'call_booked', promotedToLead: true });
   }
 
-  // Regular field update
   const { action: _action, ...fields } = data;
   const update: Record<string, unknown> = { updatedAt: now };
   for (const [k, v] of Object.entries(fields)) {
@@ -103,12 +98,12 @@ async function handlePatch(
 
 async function handleDelete(
   request: NextRequest,
-  context: { params: Promise<Record<string, string>>; user: AuthUser }
+  context: { params: Promise<{ id: string }>; user: AuthUser }
 ) {
   const db = requireDb();
-  const { user } = context;
   const { id } = await context.params;
-  await getProspect(db, id, user.userId);
+  const orgId = await resolveOrgId(context.user);
+  await getProspect(db, id, orgId);
   await db.collection(COLLECTIONS.OUTREACH_PROSPECTS).doc(id).delete();
   return successResponse({ deleted: true });
 }

@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { adminDb } from '@/lib/firebase-admin';
 import {
   withAuth,
+  resolveOrgId,
   successResponse,
   validateBody,
   requireDb,
@@ -11,14 +12,8 @@ import {
 import { COLLECTIONS } from '@/types';
 
 export type OutreachStatus =
-  | 'identified'
-  | 'pending_approval'
-  | 'approved'
-  | 'sent'
-  | 'replied'
-  | 'call_booked'
-  | 'closed'
-  | 'not_interested';
+  | 'identified' | 'pending_approval' | 'approved' | 'sent'
+  | 'replied' | 'call_booked' | 'closed' | 'not_interested';
 
 const createProspectSchema = z.object({
   company: z.string().min(1),
@@ -39,18 +34,19 @@ async function handleGet(
 ) {
   const db = requireDb();
   const { user } = context;
+  const orgId = await resolveOrgId(user);
   const { searchParams } = new URL(request.url);
   const statusFilter = searchParams.get('status');
   const sectorFilter = searchParams.get('sector');
 
   let query: FirebaseFirestore.Query = db
     .collection(COLLECTIONS.OUTREACH_PROSPECTS)
-    .where('userId', '==', user.userId);
+    .where('userId', '==', orgId);
 
   if (statusFilter) {
     query = db
       .collection(COLLECTIONS.OUTREACH_PROSPECTS)
-      .where('userId', '==', user.userId)
+      .where('userId', '==', orgId)
       .where('status', '==', statusFilter);
   }
 
@@ -83,11 +79,12 @@ async function handlePost(
 ) {
   const db = requireDb();
   const { user } = context;
+  const orgId = await resolveOrgId(user);
   const data = await validateBody(request, createProspectSchema);
   const now = new Date().toISOString();
 
   const prospect = {
-    userId: user.userId,
+    userId: orgId,
     company: data.company.trim(),
     sector: data.sector,
     website: data.website.trim(),
@@ -98,11 +95,8 @@ async function handlePost(
     painPoint: data.painPoint.trim(),
     notes: data.notes?.trim() || null,
     status: data.status || 'identified',
-    approvedAt: null,
-    sentAt: null,
-    repliedAt: null,
-    createdAt: now,
-    updatedAt: now,
+    approvedAt: null, sentAt: null, repliedAt: null,
+    createdAt: now, updatedAt: now,
   };
 
   const docRef = await db.collection(COLLECTIONS.OUTREACH_PROSPECTS).add(prospect);

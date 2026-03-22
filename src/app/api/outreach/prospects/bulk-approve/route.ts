@@ -1,14 +1,15 @@
 import { NextRequest } from 'next/server';
-import { z } from 'zod';
 import { adminDb } from '@/lib/firebase-admin';
 import {
   withAuth,
+  resolveOrgId,
   successResponse,
-  validateBody,
   requireDb,
   AuthUser,
+  ForbiddenError,
 } from '@/lib/api-middleware';
 import { COLLECTIONS } from '@/types';
+import { z } from 'zod';
 
 const bulkApproveSchema = z.object({
   ids: z.array(z.string()).min(1),
@@ -19,22 +20,26 @@ async function handlePost(
   context: { params: Promise<Record<string, string>>; user: AuthUser }
 ) {
   const db = requireDb();
-  const { user } = context;
-  const { ids } = await validateBody(request, bulkApproveSchema);
+  const orgId = await resolveOrgId(context.user);
+  const body = await request.json();
+  const { ids } = bulkApproveSchema.parse(body);
   const now = new Date().toISOString();
 
   const batch = db.batch();
-  for (const id of ids) {
-    const ref = db.collection(COLLECTIONS.OUTREACH_PROSPECTS).doc(id);
-    // Verify ownership by checking the doc exists and belongs to user
-    const doc = await ref.get();
-    if (doc.exists && doc.data()?.userId === user.userId) {
-      batch.update(ref, { status: 'approved', approvedAt: now, updatedAt: now });
-    }
-  }
-  await batch.commit();
+  let approved = 0;
 
-  return successResponse({ approved: ids.length });
+  for (const id of ids) {
+    const doc = await db.collection(COLLECTIONS.OUTREACH_PROSPECTS).doc(id).get();
+    if (!doc.exists) continue;
+    if (doc.data()!.userId !== orgId) throw new ForbiddenError('Access denied');
+    batch.update(db.collection(COLLECTIONS.OUTREACH_PROSPECTS).doc(id), {
+      status: 'approved', approvedAt: now, updatedAt: now,
+    });
+    approved++;
+  }
+
+  await batch.commit();
+  return successResponse({ approved });
 }
 
 export const POST = withAuth(handlePost);

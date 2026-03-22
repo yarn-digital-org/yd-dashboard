@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { adminDb } from '@/lib/firebase-admin';
 import {
   withAuth,
+  resolveOrgId,
   successResponse,
   validateBody,
   requireDb,
@@ -23,10 +24,10 @@ async function handleGet(
   context: { params: Promise<Record<string, string>>; user: AuthUser }
 ) {
   const db = requireDb();
-  const { user } = context;
+  const orgId = await resolveOrgId(context.user);
   const snapshot = await db
     .collection(COLLECTIONS.OUTREACH_TEMPLATES)
-    .where('userId', '==', user.userId)
+    .where('userId', '==', orgId)
     .get();
   const templates = snapshot.docs
     .map(doc => ({ id: doc.id, ...doc.data() }))
@@ -39,12 +40,12 @@ async function handlePost(
   context: { params: Promise<Record<string, string>>; user: AuthUser }
 ) {
   const db = requireDb();
-  const { user } = context;
+  const orgId = await resolveOrgId(context.user);
   const data = await validateBody(request, createTemplateSchema);
   const now = new Date().toISOString();
 
   const template = {
-    userId: user.userId,
+    userId: orgId,
     sector: data.sector,
     channel: data.channel,
     subject: data.subject.trim(),

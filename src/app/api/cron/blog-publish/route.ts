@@ -173,6 +173,8 @@ export async function POST(request: NextRequest) {
       const fieldTypeMap: Record<string, string> = {};
       for (const f of fields) {
         const name = (f.name || '').toLowerCase().replace(/\s+/g, '');
+        // Skip slug — Framer manages slug at item level, not as a fieldData entry
+        if (name === 'slug') continue;
         fieldMap[name] = f.id;
         fieldTypeMap[f.id] = f.type || 'string';
       }

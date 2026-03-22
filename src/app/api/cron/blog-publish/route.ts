@@ -172,11 +172,15 @@ export async function POST(request: NextRequest) {
       const fieldMap: Record<string, string> = {};
       const fieldTypeMap: Record<string, string> = {};
       const allFields: Array<{name: string; id: string; type: string}> = [];
+      // Field types that cannot be set via addItems fieldData
+      const SKIP_FIELD_TYPES = new Set(['divider', 'image', 'enum', 'boolean', 'color', 'link', 'file']);
       for (const f of fields) {
         const name = (f.name || '').toLowerCase().replace(/\s+/g, '');
         allFields.push({ name: f.name || name, id: f.id, type: f.type || 'unknown' });
-        // Skip slug — Framer manages slug at item level, not as a fieldData entry
+        // Skip unsettable field types and slug (managed at item level)
         if (name === 'slug') continue;
+        if (!name) continue; // skip unnamed fields (section dividers with no name)
+        if (SKIP_FIELD_TYPES.has(f.type || '')) continue;
         fieldMap[name] = f.id;
         fieldTypeMap[f.id] = f.type || 'string';
       }
@@ -215,29 +219,34 @@ export async function POST(request: NextRequest) {
         }
 
         // Build field data — each value must be wrapped per Framer FieldDataEntryInput spec
+        // Field name lookup uses normalised keys (lowercase, no spaces) matching Framer CMS fields:
+        //   title, shortdescription, date, authorname, authortitle, content, intro, metatitle, metadescription
         const fieldData: Record<string, any> = {};
 
         const titleFieldId = fieldMap.title || fieldMap.name || fieldMap.headline;
         if (titleFieldId) fieldData[titleFieldId] = wrapFieldValue(titleFieldId, post.title);
 
+        // Body/content — formattedText
         const bodyFieldId = fieldMap.content || fieldMap.body || fieldMap.text || fieldMap.article;
         if (bodyFieldId) fieldData[bodyFieldId] = wrapFieldValue(bodyFieldId, markdownToHtml(stripBriefMetadata(post.content)));
 
-        const excerptFieldId = fieldMap.excerpt || fieldMap.description || fieldMap.summary || fieldMap.subtitle;
-        if (excerptFieldId) fieldData[excerptFieldId] = wrapFieldValue(excerptFieldId, post.excerpt || '');
+        // Intro / short description / excerpt
+        const introFieldId = fieldMap.intro || fieldMap.shortdescription || fieldMap.excerpt || fieldMap.description || fieldMap.summary;
+        if (introFieldId) fieldData[introFieldId] = wrapFieldValue(introFieldId, post.excerpt || '');
 
-        const authorFieldId = fieldMap.author || fieldMap.writer;
-        if (authorFieldId) fieldData[authorFieldId] = wrapFieldValue(authorFieldId, post.author || 'Yarn Digital');
+        // Author name (string field, not the divider)
+        const authorNameFieldId = fieldMap.authorname || fieldMap.author || fieldMap.writer;
+        if (authorNameFieldId) fieldData[authorNameFieldId] = wrapFieldValue(authorNameFieldId, post.author || 'Yarn Digital');
 
+        // Author title
+        const authorTitleFieldId = fieldMap.authortitle;
+        if (authorTitleFieldId) fieldData[authorTitleFieldId] = wrapFieldValue(authorTitleFieldId, 'Yarn Digital');
+
+        // Date
         const dateFieldId = fieldMap.date || fieldMap.publishedat || fieldMap.publishdate || fieldMap.published;
         if (dateFieldId) fieldData[dateFieldId] = wrapFieldValue(dateFieldId, post.publishDate || post.publishedAt || now);
 
-        const tagFieldId = fieldMap.tags || fieldMap.category || fieldMap.categories;
-        if (tagFieldId && post.tags) {
-          const tagValue = Array.isArray(post.tags) ? post.tags.join(', ') : post.tags;
-          fieldData[tagFieldId] = wrapFieldValue(tagFieldId, tagValue);
-        }
-
+        // Meta
         const metaTitleFieldId = fieldMap.metatitle || fieldMap.seotitle;
         if (metaTitleFieldId) fieldData[metaTitleFieldId] = wrapFieldValue(metaTitleFieldId, post.metaTitle || post.title);
 

@@ -259,13 +259,50 @@ export default function OutreachPage() {
   };
 
   // ── Prospect actions ──
-  const handleApprove = async (id: string) => {
-    setActionLoading(id);
-    await fetch(`/api/outreach/prospects/${id}`, {
+  const handleApprove = async (p: Prospect) => {
+    // Require a draft before approving
+    if (!p.draftMessage || !p.draftSubject) {
+      setSendResult(prev => ({ ...prev, [p.id]: { ok: false, msg: 'Write and save a draft first' } }));
+      setTimeout(() => setSendResult(prev => { const n = { ...prev }; delete n[p.id]; return n; }), 4000);
+      return;
+    }
+
+    const isEmail = p.contactMethod === 'email';
+    const confirmMsg = isEmail
+      ? `Approve & send email to ${p.decisionMaker} at ${p.company}?\n\nTo: ${p.contactValue}\nSubject: ${p.draftSubject}\n\nSends immediately from jonny@yarndigital.co.uk.`
+      : `Approve & mark as sent via ${p.contactMethod}?\n\nContact: ${p.contactValue}\n\nMake sure you've sent it manually.`;
+
+    if (!window.confirm(confirmMsg)) return;
+
+    setActionLoading(p.id);
+
+    // Step 1: Approve
+    const approveRes = await fetch(`/api/outreach/prospects/${p.id}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'approve' }),
     });
+    if (!approveRes.ok) {
+      setActionLoading(null);
+      setSendResult(prev => ({ ...prev, [p.id]: { ok: false, msg: 'Approval failed' } }));
+      return;
+    }
+
+    // Step 2: Send
+    const sendRes = await fetch(`/api/outreach/prospects/${p.id}/send`, { method: 'POST' });
+    const sendJson = await sendRes.json();
     setActionLoading(null);
+
+    if (sendRes.ok) {
+      const via = sendJson.data?.via || p.contactMethod;
+      const note = sendJson.data?.manual
+        ? `✓ Approved & marked sent via ${via}`
+        : `✓ Approved & sent to ${p.contactValue}`;
+      setSendResult(prev => ({ ...prev, [p.id]: { ok: true, msg: note } }));
+      setTimeout(() => setSendResult(prev => { const n = { ...prev }; delete n[p.id]; return n; }), 5000);
+    } else {
+      // Approved but send failed — show warning
+      setSendResult(prev => ({ ...prev, [p.id]: { ok: false, msg: `Approved but send failed: ${sendJson.error || 'unknown'}` } }));
+    }
     fetchProspects();
   };
 
@@ -549,27 +586,20 @@ export default function OutreachPage() {
                                     {isDraftOpen ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
                                   </button>
 
-                                  {/* Approve */}
+                                  {/* Approve & Send */}
                                   {(p.status === 'identified' || p.status === 'pending_approval') && (
-                                    <button onClick={() => handleApprove(p.id)} disabled={actionLoading === p.id} title="Approve — review the draft first, then approve" className="px-2.5 py-1 bg-blue-600 text-white rounded-md text-xs font-medium hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-1">
-                                      {actionLoading === p.id ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />} Approve
-                                    </button>
-                                  )}
-
-                                  {/* Send — only shown when approved + has draft */}
-                                  {p.status === 'approved' && (
                                     <button
-                                      onClick={() => handleSend(p)}
-                                      disabled={actionLoading === p.id + '-send'}
-                                      title={p.draftMessage ? `Send to ${p.contactValue}` : 'Save a draft first'}
+                                      onClick={() => handleApprove(p)}
+                                      disabled={actionLoading === p.id}
+                                      title={p.draftMessage ? `Approve & ${p.contactMethod === 'email' ? 'send email to ' + p.contactValue : 'mark sent via ' + p.contactMethod}` : 'Save a draft first'}
                                       className={`px-2.5 py-1 rounded-md text-xs font-medium transition flex items-center gap-1 disabled:opacity-50 ${
                                         p.draftMessage
                                           ? 'bg-[#FF3300] text-white hover:bg-[#E62E00]'
                                           : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                       }`}
                                     >
-                                      {actionLoading === p.id + '-send' ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
-                                      {p.contactMethod === 'email' ? 'Send Email' : 'Mark Sent'}
+                                      {actionLoading === p.id ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
+                                      {p.draftMessage ? (p.contactMethod === 'email' ? 'Approve & Send' : 'Approve & Mark Sent') : 'Draft needed'}
                                     </button>
                                   )}
 

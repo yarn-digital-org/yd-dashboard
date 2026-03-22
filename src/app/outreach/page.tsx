@@ -8,7 +8,8 @@ import {
   Plus, ExternalLink, Trash2, Edit, Check, Loader2, X,
   Target, Search, Mail, Linkedin, MessageCircle,
   Phone, Users, Send, CheckCircle2, TrendingUp, Globe,
-  ChevronDown, ChevronUp, FileText, Save,
+  ChevronDown, ChevronUp, FileText, Save, Eye, Pencil,
+  AlertCircle,
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────
@@ -137,6 +138,7 @@ export default function OutreachPage() {
   const [expandedDraft, setExpandedDraft] = useState<string | null>(null);
   const [draftEdits, setDraftEdits] = useState<Record<string, { subject: string; body: string }>>({});
   const [savingDraft, setSavingDraft] = useState<string | null>(null);
+  const [draftModes, setDraftModes] = useState<Record<string, 'preview' | 'edit'>>({});
 
   // Templates (needed for draft auto-fill)
   const [templates, setTemplates] = useState<OutreachTemplate[]>([]);
@@ -471,6 +473,16 @@ export default function OutreachPage() {
                                     <Globe size={10} />{p.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}<ExternalLink size={10} />
                                   </a>
                                 )}
+                                {/* Draft status pill */}
+                                <div className="mt-1">
+                                  {p.draftMessage ? (
+                                    <span className="text-[10px] font-semibold text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded-full">✓ Draft ready</span>
+                                  ) : getTemplateForProspect(p) ? (
+                                    <span className="text-[10px] font-semibold text-yellow-700 bg-yellow-50 border border-yellow-200 px-1.5 py-0.5 rounded-full">⚠ Needs personalising</span>
+                                  ) : (
+                                    <span className="text-[10px] font-semibold text-red-600 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded-full">No template</span>
+                                  )}
+                                </div>
                               </td>
                               <td className="px-4 py-3 hidden md:table-cell">
                                 <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium">{p.sector}</span>
@@ -530,68 +542,134 @@ export default function OutreachPage() {
                             </tr>
 
                             {/* ── DRAFT PANEL ── */}
-                            {isDraftOpen && (
-                              <tr key={p.id + '-draft'} className="border-b border-orange-100 bg-orange-50/20">
-                                <td colSpan={7} className="px-6 py-5">
-                                  <div className="max-w-3xl">
-                                    <div className="flex items-center justify-between mb-3">
-                                      <div className="flex items-center gap-2">
-                                        <FileText size={14} className="text-orange-500" />
-                                        <span className="text-sm font-semibold text-gray-800">Draft message for {p.company}</span>
-                                        {!getTemplateForProspect(p) && (
-                                          <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">No template for {p.sector} — write from scratch</span>
-                                        )}
-                                        {getTemplateForProspect(p) && !(p.draftSubject || p.draftMessage) && (
-                                          <span className="text-xs text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">Auto-filled from {p.sector} template</span>
-                                        )}
-                                        {(p.draftSubject || p.draftMessage) && (
-                                          <span className="text-xs text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">Saved draft</span>
-                                        )}
+                            {isDraftOpen && (() => {
+                              const tmpl = getTemplateForProspect(p);
+                              const isEditing = draftEdits[p.id] !== undefined;
+                              const editDraft = draftEdits[p.id];
+                              const displaySubject = isEditing ? editDraft.subject : (p.draftSubject || (tmpl ? personalise(tmpl.subject, p) : ''));
+                              const displayBody = isEditing ? editDraft.body : (p.draftMessage || (tmpl ? personalise(tmpl.body, p) : ''));
+                              const isPersonalised = !!(p.draftMessage);
+                              const draftMode = draftModes[p.id] || 'preview';
+                              const setDraftMode = (mode: 'preview' | 'edit') => setDraftModes(prev => ({ ...prev, [p.id]: mode }));
+
+                              return (
+                                <tr key={p.id + '-draft'} className="border-b border-blue-100 bg-blue-50/10">
+                                  <td colSpan={7} className="px-6 py-0">
+                                    <div className="max-w-4xl py-5">
+
+                                      {/* Panel header */}
+                                      <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center gap-3 flex-wrap">
+                                          <div className="flex items-center gap-1.5">
+                                            <Mail size={14} className="text-gray-500" />
+                                            <span className="text-sm font-semibold text-gray-800">Outreach message — {p.company}</span>
+                                          </div>
+                                          {/* Template badge */}
+                                          {tmpl ? (
+                                            <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-100 px-2 py-0.5 rounded-full font-medium">
+                                              Template: {tmpl.sector}
+                                            </span>
+                                          ) : (
+                                            <span className="text-xs bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+                                              <AlertCircle size={10} /> No template for {p.sector}
+                                            </span>
+                                          )}
+                                          {/* Personalisation status */}
+                                          {isPersonalised ? (
+                                            <span className="text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full font-medium">
+                                              ✓ Personalised &amp; saved
+                                            </span>
+                                          ) : tmpl ? (
+                                            <span className="text-xs bg-yellow-50 text-yellow-700 border border-yellow-200 px-2 py-0.5 rounded-full font-medium">
+                                              ⚠ Template only — not yet personalised
+                                            </span>
+                                          ) : null}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          {/* Preview / Edit toggle */}
+                                          <div className="flex items-center bg-gray-100 rounded-lg p-0.5 text-xs font-medium">
+                                            <button onClick={() => setDraftMode('preview')} className={`px-3 py-1.5 rounded-md transition flex items-center gap-1 ${draftMode === 'preview' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:text-gray-700'}`}>
+                                              <Eye size={11} /> Preview
+                                            </button>
+                                            <button onClick={() => { setDraftMode('edit'); if (!draftEdits[p.id]) setDraftEdits(prev => ({ ...prev, [p.id]: { subject: displaySubject, body: displayBody } })); }} className={`px-3 py-1.5 rounded-md transition flex items-center gap-1 ${draftMode === 'edit' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:text-gray-700'}`}>
+                                              <Pencil size={11} /> Edit
+                                            </button>
+                                          </div>
+                                          {draftMode === 'edit' && (
+                                            <button onClick={() => saveDraft(p.id)} disabled={savingDraft === p.id || !draftEdits[p.id]} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FF3300] text-white rounded-lg text-xs font-medium hover:bg-[#E62E00] transition disabled:opacity-50">
+                                              {savingDraft === p.id ? <Loader2 size={11} className="animate-spin" /> : <Save size={11} />} Save Draft
+                                            </button>
+                                          )}
+                                        </div>
                                       </div>
-                                      <button
-                                        onClick={() => saveDraft(p.id)}
-                                        disabled={savingDraft === p.id || !draft}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FF3300] text-white rounded-lg text-xs font-medium hover:bg-[#E62E00] transition disabled:opacity-50"
-                                      >
-                                        {savingDraft === p.id ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
-                                        Save Draft
-                                      </button>
-                                    </div>
 
-                                    {/* Subject */}
-                                    <div className="mb-3">
-                                      <label className="block text-xs font-semibold text-gray-500 uppercase mb-1" style={{ letterSpacing: '0.05em' }}>
-                                        Subject / Opening line
-                                      </label>
-                                      <input
-                                        value={draft?.subject ?? (p.draftSubject || '')}
-                                        onChange={e => setDraftEdits(prev => ({ ...prev, [p.id]: { ...prev[p.id], subject: e.target.value } }))}
-                                        placeholder="Email subject or LinkedIn opening line..."
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300] bg-white"
-                                      />
-                                    </div>
+                                      {/* Preview mode — readable email */}
+                                      {draftMode === 'preview' && (
+                                        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                                          {/* Email header strip */}
+                                          <div className="border-b border-gray-100 px-5 py-3 bg-gray-50 space-y-1">
+                                            <div className="flex items-baseline gap-2 text-sm">
+                                              <span className="text-xs font-semibold text-gray-400 w-14 flex-shrink-0">TO</span>
+                                              <span className="font-medium text-gray-800">{p.decisionMaker}{p.decisionMakerTitle ? `, ${p.decisionMakerTitle}` : ''} — {p.company}</span>
+                                            </div>
+                                            <div className="flex items-baseline gap-2 text-sm">
+                                              <span className="text-xs font-semibold text-gray-400 w-14 flex-shrink-0">VIA</span>
+                                              <span className="text-gray-600 capitalize">{p.contactMethod} — {p.contactValue}</span>
+                                            </div>
+                                            {displaySubject && (
+                                              <div className="flex items-baseline gap-2 text-sm">
+                                                <span className="text-xs font-semibold text-gray-400 w-14 flex-shrink-0">SUBJECT</span>
+                                                <span className="font-semibold text-gray-900">{displaySubject}</span>
+                                              </div>
+                                            )}
+                                          </div>
+                                          {/* Body */}
+                                          <div className="px-5 py-5">
+                                            {displayBody ? (
+                                              <div className="text-sm text-gray-800 leading-7 whitespace-pre-wrap font-sans" style={{ maxWidth: '60ch' }}>
+                                                {displayBody}
+                                              </div>
+                                            ) : (
+                                              <div className="text-sm text-gray-400 italic py-4 text-center">
+                                                No message yet — click Edit to write one, or add a template for the {p.sector} sector first.
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
 
-                                    {/* Body */}
-                                    <div>
-                                      <label className="block text-xs font-semibold text-gray-500 uppercase mb-1" style={{ letterSpacing: '0.05em' }}>
-                                        Message body
-                                      </label>
-                                      <textarea
-                                        rows={10}
-                                        value={draft?.body ?? (p.draftMessage || '')}
-                                        onChange={e => setDraftEdits(prev => ({ ...prev, [p.id]: { ...prev[p.id], body: e.target.value } }))}
-                                        placeholder="Write or edit the personalised outreach message..."
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300] bg-white resize-none font-mono leading-relaxed"
-                                      />
-                                    </div>
+                                      {/* Edit mode */}
+                                      {draftMode === 'edit' && (
+                                        <div className="space-y-3">
+                                          <div>
+                                            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1.5" style={{ letterSpacing: '0.05em' }}>Subject / Opening line</label>
+                                            <input
+                                              value={editDraft?.subject ?? displaySubject}
+                                              onChange={e => setDraftEdits(prev => ({ ...prev, [p.id]: { subject: e.target.value, body: prev[p.id]?.body ?? displayBody } }))}
+                                              placeholder="Subject line..."
+                                              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300] bg-white"
+                                            />
+                                          </div>
+                                          <div>
+                                            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1.5" style={{ letterSpacing: '0.05em' }}>Message body</label>
+                                            <textarea
+                                              rows={14}
+                                              value={editDraft?.body ?? displayBody}
+                                              onChange={e => setDraftEdits(prev => ({ ...prev, [p.id]: { subject: prev[p.id]?.subject ?? displaySubject, body: e.target.value } }))}
+                                              placeholder="Personalise the message here..."
+                                              className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm leading-7 focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300] bg-white resize-none"
+                                              style={{ maxWidth: '65ch', fontFamily: 'inherit' }}
+                                            />
+                                          </div>
+                                          <p className="text-xs text-gray-400">Edit the message, then hit <span className="font-semibold text-gray-600">Save Draft</span>. Switch back to Preview to read it as Jonny will see it. Hit <span className="font-semibold text-gray-600">Approve</span> when ready to send.</p>
+                                        </div>
+                                      )}
 
-                                    <p className="text-xs text-gray-400 mt-2">
-                                      Edit to personalise, then click <span className="font-semibold">Save Draft</span> to store it. Use <span className="font-semibold">Approve</span> above once you're happy with the message.
-                                    </p>
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })()}
                           </>
                         );
                       })}

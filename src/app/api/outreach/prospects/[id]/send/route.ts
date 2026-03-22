@@ -14,7 +14,7 @@ import { sendEmail } from '@/lib/email-service';
 
 async function handlePost(
   request: NextRequest,
-  context: { params: Promise<{ id: string }>; user: AuthUser }
+  context: { params: Promise<Record<string, string>>; user: AuthUser }
 ) {
   const db = requireDb();
   const { id } = await context.params;

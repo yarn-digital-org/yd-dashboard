@@ -4,7 +4,6 @@ import { adminDb } from '@/lib/firebase-admin';
 import {
   withAuth,
   successResponse,
-  handleApiError,
   validateBody,
   requireDb,
   AuthUser,

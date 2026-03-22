@@ -36,6 +36,7 @@ import {
   Moon,
   List,
   Globe,
+  Target,
 } from 'lucide-react';
 import { useTheme, getColors } from '@/context/ThemeContext';
 
@@ -86,6 +87,7 @@ export function Sidebar() {
     { name: 'Learnings', icon: Lightbulb, href: '/learnings' },
     { name: 'Clients', icon: Building2, href: '/clients' },
     { name: 'Leads', icon: Users, href: '/leads' },
+    { name: 'Outreach', icon: Target, href: '/outreach' },
     { name: 'Projects', icon: FolderKanban, href: '/projects' },
     { name: 'Contacts', icon: Contact, href: '/contacts' },
     { name: 'Forms', icon: FormInput, href: '/forms' },

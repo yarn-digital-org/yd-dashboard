@@ -698,6 +698,27 @@ export default function OutreachPage() {
                                     </button>
                                   )}
 
+                                  {/* Restore — for rejected/not_interested/closed prospects */}
+                                  {(p.status === 'not_interested' || p.status === 'rejected' || p.status === 'closed') && (
+                                    <button
+                                      onClick={async () => {
+                                        setActionLoading(p.id + '-restore');
+                                        await fetch(`/api/outreach/prospects/${p.id}`, {
+                                          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                                          body: JSON.stringify({ status: 'identified' }),
+                                        });
+                                        setActionLoading(null);
+                                        fetchProspects();
+                                      }}
+                                      disabled={!!actionLoading}
+                                      title="Move back to Identified — reconsider for outreach"
+                                      className="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium hover:bg-blue-200 transition disabled:opacity-50 flex items-center gap-1"
+                                    >
+                                      {actionLoading === p.id + '-restore' ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
+                                      Restore
+                                    </button>
+                                  )}
+
                                   <button onClick={() => openEditProspect(p)} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition" title="Edit"><Edit size={14} /></button>
                                   <button onClick={() => handleDeleteProspect(p.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition" title="Delete"><Trash2 size={14} /></button>
                                 </div>

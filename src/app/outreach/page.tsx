@@ -168,7 +168,8 @@ export default function OutreachPage() {
     setLoadingProspects(true);
     try {
       const params = new URLSearchParams();
-      if (statusFilter) params.set('status', statusFilter);
+      // Only send real statuses to API — 'unsent' is a client-side filter
+      if (statusFilter && statusFilter !== 'unsent') params.set('status', statusFilter);
       if (sectorFilter) params.set('sector', sectorFilter);
       const res = await fetch(`/api/outreach/prospects?${params}`);
       const json = await res.json();

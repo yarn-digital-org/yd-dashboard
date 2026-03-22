@@ -127,6 +127,7 @@ export default function OutreachPage() {
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [stats, setStats] = useState<ProspectStats | null>(null);
   const [loadingProspects, setLoadingProspects] = useState(true);
+  const [prospectsError, setProspectsError] = useState('');
   const [statusFilter, setStatusFilter] = useState<OutreachStatus | ''>('');
   const [sectorFilter, setSectorFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');

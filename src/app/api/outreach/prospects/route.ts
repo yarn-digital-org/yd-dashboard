@@ -20,7 +20,8 @@ export type OutreachStatus =
   | 'replied'
   | 'call_booked'
   | 'closed'
-  | 'not_interested';
+  | 'not_interested'
+  | 'rejected';
 
 const createProspectSchema = z.object({
   company: z.string().min(1),
@@ -32,7 +33,7 @@ const createProspectSchema = z.object({
   contactValue: z.string().min(1),
   painPoint: z.string().min(1),
   notes: z.string().optional(),
-  status: z.enum(['identified','pending_approval','approved','sent','replied','call_booked','closed','not_interested']).optional(),
+  status: z.enum(['identified','pending_approval','approved','sent','replied','call_booked','closed','not_interested','rejected']).optional(),
 });
 
 async function handleGet(

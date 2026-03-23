@@ -129,7 +129,7 @@ export default function OutreachPage() {
   const [stats, setStats] = useState<ProspectStats | null>(null);
   const [loadingProspects, setLoadingProspects] = useState(true);
   const [prospectsError, setProspectsError] = useState('');
-  const [statusFilter, setStatusFilter] = useState<OutreachStatus | '' | 'unsent'>('unsent');
+  const [statusFilter, setStatusFilter] = useState<OutreachStatus | '' | 'unsent' | 'phone_only'>('unsent');
   const [sectorFilter, setSectorFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -168,8 +168,8 @@ export default function OutreachPage() {
     setLoadingProspects(true);
     try {
       const params = new URLSearchParams();
-      // Only send real statuses to API — 'unsent' is a client-side filter
-      if (statusFilter && statusFilter !== 'unsent') params.set('status', statusFilter);
+      // Only send real statuses to API — 'unsent' and 'phone_only' are client-side filters
+      if (statusFilter && statusFilter !== 'unsent' && statusFilter !== 'phone_only') params.set('status', statusFilter);
       if (sectorFilter) params.set('sector', sectorFilter);
       const res = await fetch(`/api/outreach/prospects?${params}`);
       const json = await res.json();
@@ -204,6 +204,10 @@ export default function OutreachPage() {
     if (statusFilter === 'unsent') {
       if (['sent', 'closed', 'not_interested', 'rejected'].includes(p.status)) return false;
     }
+    // Phone-only filter: show only prospects with no email contactMethod
+    if (statusFilter === 'phone_only') {
+      if (p.contactMethod !== 'phone') return false;
+    }
     // Search filter
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -216,6 +220,8 @@ export default function OutreachPage() {
     }
     return true;
   });
+
+  const phoneOnlyCount = prospects.filter(p => p.contactMethod === 'phone').length;
 
   // ── Draft helpers ──
   const getTemplateForProspect = (p: Prospect) =>
@@ -505,14 +511,26 @@ export default function OutreachPage() {
               </div>
             )}
 
+            {/* Phone-only banner */}
+            {statusFilter === 'phone_only' && (
+              <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-xl flex items-start gap-3">
+                <Phone size={18} className="text-orange-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-semibold text-orange-900 text-sm">Phone-only prospects ({phoneOnlyCount})</div>
+                  <div className="text-xs text-orange-700 mt-0.5">These prospects have no email address. Call them to get a contact email, or pitch directly on the call. FIT Physiotherapy is the highest priority — &quot;coming soon&quot; Squarespace site, no agency commitment yet.</div>
+                </div>
+              </div>
+            )}
+
             {/* Filters */}
             <div className="flex flex-wrap gap-3 mb-4">
               <div className="relative">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search prospects..." className="pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300] w-56" />
               </div>
-              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as OutreachStatus | '' | 'unsent')} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300]">
+              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as OutreachStatus | '' | 'unsent' | 'phone_only')} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#FF3300]/20 focus:border-[#FF3300]">
                 <option value="unsent">Unsent</option>
+                <option value="phone_only">📞 Phone Only ({phoneOnlyCount})</option>
                 <option value="">All</option>
                 {(Object.keys(STATUS_CONFIG) as OutreachStatus[]).map(s => <option key={s} value={s}>{STATUS_CONFIG[s].label}</option>)}
               </select>
@@ -586,10 +604,15 @@ export default function OutreachPage() {
                               </td>
                               <td className="px-4 py-3 hidden lg:table-cell">
                                 <div className="flex items-center gap-1.5">
-                                  <ContactIcon size={12} className="text-gray-400 flex-shrink-0" />
+                                  <ContactIcon size={12} className={`flex-shrink-0 ${p.contactMethod === 'phone' ? 'text-orange-500' : 'text-gray-400'}`} />
                                   <div>
                                     <div className="font-medium text-gray-800 text-xs">{p.decisionMaker}</div>
                                     {p.decisionMakerTitle && <div className="text-gray-400 text-xs">{p.decisionMakerTitle}</div>}
+                                    {p.contactMethod === 'phone' && p.contactValue && (
+                                      <a href={`tel:${p.contactValue}`} className="text-orange-600 text-xs font-semibold hover:underline mt-0.5 block">
+                                        📞 {p.contactValue}
+                                      </a>
+                                    )}
                                   </div>
                                 </div>
                               </td>

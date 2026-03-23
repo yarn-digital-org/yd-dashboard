@@ -695,8 +695,8 @@ export default function LeadsPage() {
               </thead>
               <tbody>
                 {leads.map((lead) => {
-                  const statusConfig = STATUS_CONFIG[lead.status];
-                  const priorityConfig = PRIORITY_CONFIG[lead.priority];
+                  const statusConfig = STATUS_CONFIG[lead.status] || STATUS_CONFIG['new'];
+                  const priorityConfig = PRIORITY_CONFIG[lead.priority] || PRIORITY_CONFIG['medium'];
                   const budget = formatBudget(lead.budgetMin, lead.budgetMax);
 
                   return (

@@ -339,8 +339,8 @@ export default function LeadDetailPage() {
     );
   }
 
-  const statusConfig = STATUS_CONFIG[lead.status];
-  const priorityConfig = PRIORITY_CONFIG[lead.priority];
+  const statusConfig = STATUS_CONFIG[lead.status] || STATUS_CONFIG['new'];
+  const priorityConfig = PRIORITY_CONFIG[lead.priority] || PRIORITY_CONFIG['medium'];
 
   const inputStyle: React.CSSProperties = {
     width: '100%',

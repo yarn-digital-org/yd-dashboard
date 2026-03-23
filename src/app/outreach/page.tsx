@@ -104,17 +104,54 @@ const DEFAULT_TEMPLATE_FORM = {
 
 // ─── Personalise template ─────────────────────────────────
 function personalise(text: string, prospect: Prospect): string {
-  return text
-    .replace(/\[Name\]/g, prospect.decisionMaker)
-    .replace(/\[name\]/g, prospect.decisionMaker)
-    .replace(/\[Firm name\]/g, prospect.company)
-    .replace(/\[firm name\]/g, prospect.company)
-    .replace(/\[Company name\]/g, prospect.company)
-    .replace(/\[company name\]/g, prospect.company)
-    .replace(/\[Clinic name\]/g, prospect.company)
-    .replace(/\[clinic name\]/g, prospect.company)
-    .replace(/\[Store name\]/g, prospect.company)
-    .replace(/\[practice area\]/g, '[practice area]');
+  // Extract first name from decisionMaker
+  const firstName = prospect.decisionMaker?.split(' ')[0] || prospect.decisionMaker || '';
+
+  // Derive location from website domain or leave as placeholder
+  const locationMatch = prospect.website?.match(/(?:belfast|lisburn|bangor|newry|armagh|derry|antrim|coleraine|ballymena|downpatrick|newcastle|omagh|enniskillen|dungannon|strabane|larne|carrickfergus|newtownards|comber|saintfield|moira|galgorm|coleraine)/i);
+  const location = locationMatch ? locationMatch[0].charAt(0).toUpperCase() + locationMatch[0].slice(1).toLowerCase() : 'your area';
+
+  // Use painPoint as the specific issue / ranking issue / context
+  const painPoint = prospect.painPoint || '';
+
+  const replacements: Record<string, string> = {
+    // {{curly}} style
+    '{{company}}': prospect.company,
+    '{{firstName}}': firstName,
+    '{{name}}': prospect.decisionMaker,
+    '{{sector}}': prospect.sector,
+    '{{location}}': location,
+    '{{service}}': prospect.sector,
+    '{{painPoint}}': painPoint,
+    '{{problemDetail}}': painPoint,
+    '{{specificIssue}}': painPoint,
+    '{{rankingIssue}}': painPoint,
+    '{{contextLine}}': painPoint,
+    '{{specificGap}}': painPoint,
+    '{{credentialDetail}}': painPoint,
+    '{{credentialLine}}': painPoint,
+    '{{yearsEstablished}}': painPoint,
+    // [square bracket] style
+    '[Name]': prospect.decisionMaker,
+    '[name]': prospect.decisionMaker,
+    '[Firm name]': prospect.company,
+    '[firm name]': prospect.company,
+    '[Company name]': prospect.company,
+    '[company name]': prospect.company,
+    '[Clinic name]': prospect.company,
+    '[clinic name]': prospect.company,
+    '[Store name]': prospect.company,
+    '[CONTACT NAME]': prospect.decisionMaker,
+    '[BUSINESS NAME]': prospect.company,
+    '[SECTOR]': prospect.sector,
+    '[SPECIFIC DETAIL]': painPoint,
+  };
+
+  let result = text;
+  for (const [token, value] of Object.entries(replacements)) {
+    result = result.split(token).join(value);
+  }
+  return result;
 }
 
 // ─── Component ───────────────────────────────────────────

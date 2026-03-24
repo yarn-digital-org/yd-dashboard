@@ -135,9 +135,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Filter to posts with publishDate <= now (or no publishDate = publish immediately)
+    // Note: framerSynced=true means it was previously synced (possibly as draft) — we still
+    // need to publish it if publishDate has passed. Don't skip based on framerSynced alone.
     const duePosts = snapshot.docs.filter(doc => {
       const data = doc.data();
-      if (data.framerSynced) return false; // Already synced
       if (!data.publishDate) return true; // No date = publish now
       return new Date(data.publishDate) <= new Date(now);
     });

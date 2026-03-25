@@ -26,10 +26,6 @@
     {
       "path": "/api/cron/blog-publish",
       "schedule": "0 21 * * *"
-    },
-    {
-      "path": "/api/cron/lead-radar-twitter",
-      "schedule": "0 8 * * *"
     }
   ]
 }

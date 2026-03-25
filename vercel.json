@@ -27,7 +27,7 @@
     },
     {
       "path": "/api/cron/lead-radar-twitter",
-      "schedule": "0 */6 * * *"
+      "schedule": "0 8 * * *"
     }
   ]
 }

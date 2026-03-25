@@ -26,20 +26,14 @@ export type OutreachStatus =
 const createProspectSchema = z.object({
   company: z.string().min(1),
   sector: z.string().min(1),
-  website: z.string().default(''),
+  website: z.string().min(1),
   decisionMaker: z.string().min(1),
   decisionMakerTitle: z.string().optional(),
-  contactMethod: z.enum(['email', 'linkedin', 'instagram', 'phone', 'social']),
+  contactMethod: z.enum(['email', 'linkedin', 'instagram', 'phone']),
   contactValue: z.string().min(1),
   painPoint: z.string().min(1),
   notes: z.string().optional(),
   status: z.enum(['identified','pending_approval','approved','sent','replied','call_booked','closed','not_interested','rejected']).optional(),
-  // Social monitoring fields (populated by Lead Radar / webhook sources)
-  source: z.string().optional(), // 'reddit' | 'twitter' | 'facebook' | 'linkedin' | 'manual'
-  channel: z.string().optional(), // 'facebook_group' | 'linkedin_post' | 'twitter' | 'reddit'
-  intentScore: z.enum(['high', 'medium', 'low']).optional(),
-  matchedKeyword: z.string().optional(),
-  sourceUrl: z.string().optional(),
 });
 
 async function handleGet(
@@ -119,12 +113,6 @@ async function handlePost(
     painPoint: decodeEntities(data.painPoint.trim()),
     notes: data.notes ? decodeEntities(data.notes.trim()) : null,
     status: data.status || 'identified',
-    // Social monitoring fields
-    source: data.source || 'manual',
-    channel: data.channel || null,
-    intentScore: data.intentScore || null,
-    matchedKeyword: data.matchedKeyword || null,
-    sourceUrl: data.sourceUrl || null,
     approvedAt: null,
     sentAt: null,
     repliedAt: null,

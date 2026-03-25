@@ -98,6 +98,7 @@ async function fetchNitterRss(keyword: string): Promise<Array<{ title: string; l
 }
 
 export async function GET(request: NextRequest) {
+  try {
   // Auth
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = request.headers.get('authorization');
@@ -184,4 +185,8 @@ export async function GET(request: NextRequest) {
 
   console.log('Lead Radar Twitter cron complete:', stats);
   return NextResponse.json({ success: true, ...stats });
+  } catch (err: any) {
+    console.error('Lead Radar Twitter cron fatal error:', err.message);
+    return NextResponse.json({ error: 'Cron failed', details: err.message }, { status: 500 });
+  }
 }

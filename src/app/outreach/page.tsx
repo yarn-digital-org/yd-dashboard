@@ -650,6 +650,16 @@ export default function OutreachPage() {
                                         📞 {p.contactValue}
                                       </a>
                                     )}
+                                    {p.contactMethod === 'email' && p.contactValue && (
+                                      <a href={`mailto:${p.contactValue}`} className="text-blue-600 text-xs font-medium hover:underline mt-0.5 block truncate max-w-[200px]" title={p.contactValue}>
+                                        {p.contactValue}
+                                      </a>
+                                    )}
+                                    {(p.contactMethod === 'linkedin' || p.contactMethod === 'instagram') && p.contactValue && (
+                                      <span className="text-gray-500 text-xs mt-0.5 block truncate max-w-[200px]" title={p.contactValue}>
+                                        {p.contactValue}
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
                               </td>

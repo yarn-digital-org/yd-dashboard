@@ -64,7 +64,8 @@ interface ProspectStats {
 
 // ─── Constants ───────────────────────────────────────────
 const SECTORS = [
-  'Accountancy', 'Solicitors', 'Physio/Sports Rehab', 'Restaurant/Hospitality',
+  'Accountancy', 'Solicitors', 'Healthcare / Physiotherapy', 'Healthcare / Dentistry',
+  'Healthcare', 'Legal', 'Physio/Sports Rehab', 'Restaurant/Hospitality',
   'Construction/Trades', 'Estate Agent', 'Retail', 'Gym/Fitness', 'Wedding Venue', 'Other',
 ];
 
@@ -261,8 +262,21 @@ export default function OutreachPage() {
   const phoneOnlyCount = prospects.filter(p => p.contactMethod === 'phone').length;
 
   // ── Draft helpers ──
-  const getTemplateForProspect = (p: Prospect) =>
-    templates.find(t => t.sector === p.sector) || templates.find(t => t.sector.toLowerCase() === p.sector.toLowerCase()) || null;
+  const getTemplateForProspect = (p: Prospect) => {
+    // Exact match first
+    const exact = templates.find(t => t.sector === p.sector);
+    if (exact) return exact;
+    // Case-insensitive match
+    const ci = templates.find(t => t.sector.toLowerCase() === p.sector.toLowerCase());
+    if (ci) return ci;
+    // Fuzzy: check if either contains the other (e.g. "Healthcare / Physiotherapy" ↔ "Physio/Sports Rehab")
+    const pLower = p.sector.toLowerCase();
+    const fuzzy = templates.find(t => {
+      const tLower = t.sector.toLowerCase();
+      return pLower.includes(tLower) || tLower.includes(pLower);
+    });
+    return fuzzy || null;
+  };
 
   const toggleDraft = (p: Prospect) => {
     if (expandedDraft === p.id) { setExpandedDraft(null); return; }

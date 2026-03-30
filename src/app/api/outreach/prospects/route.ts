@@ -101,11 +101,50 @@ async function handlePost(
       .replace(/&quot;/g, '"')
       .replace(/&#x27;/g, "'");
 
+  const companyClean = decodeEntities(data.company.trim());
+  const websiteClean = decodeEntities(data.website.trim());
+
+  // --- Dedup guard: check for existing prospect by company name or website ---
+  const normalizeForDedup = (s: string) =>
+    s.toLowerCase().replace(/https?:\/\/(www\.)?/, '').replace(/\/$/, '').replace(/[^\w\s@.]/g, '').trim();
+
+  const companyNorm = normalizeForDedup(companyClean);
+  const websiteNorm = normalizeForDedup(websiteClean);
+
+  // Query existing prospects for this org
+  const existingSnap = await db
+    .collection(COLLECTIONS.OUTREACH_PROSPECTS)
+    .where('userId', '==', orgId)
+    .get();
+
+  const duplicate = existingSnap.docs.find(doc => {
+    const d = doc.data();
+    const existingCompany = normalizeForDedup(d.company || d.businessName || '');
+    const existingWebsite = normalizeForDedup(d.website || d.url || '');
+    // Match on company name OR website (either is enough to flag a dupe)
+    if (companyNorm && existingCompany && companyNorm === existingCompany) return true;
+    if (websiteNorm && existingWebsite && websiteNorm === existingWebsite) return true;
+    return false;
+  });
+
+  if (duplicate) {
+    return successResponse(
+      {
+        id: duplicate.id,
+        ...duplicate.data(),
+        _deduplicated: true,
+        _message: `Existing prospect matched by company/website — skipped insert`,
+      } as any,
+      200
+    );
+  }
+  // --- End dedup guard ---
+
   const prospect = {
     userId: orgId,
-    company: decodeEntities(data.company.trim()),
+    company: companyClean,
     sector: data.sector,
-    website: decodeEntities(data.website.trim()),
+    website: websiteClean,
     decisionMaker: decodeEntities(data.decisionMaker.trim()),
     decisionMakerTitle: data.decisionMakerTitle ? decodeEntities(data.decisionMakerTitle.trim()) : null,
     contactMethod: data.contactMethod,
